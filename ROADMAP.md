@@ -26,9 +26,10 @@
  2. Collect public benchmarks and synthetic examples.
  3. Define annotation schema and format (JSONL).
 
- **Deliverables**
- - `dataset/evaluation.jsonl`, `alignment_faking.jsonl`, `scheming.jsonl`.
- - Data specification document.
+  **Deliverables**
+  - `dataset/raw/evaluation.jsonl`, `dataset/raw/alignment_faking.jsonl`, `dataset/raw/scheming.jsonl`.
+  - Data specification document.
+  - Detailed Phase 1 implementation plan: [PHASE1_PLAN.md](PHASE1_PLAN.md)
 
  ## Phase 2: Prototype Rule-Based Detectors
  **Goal**
