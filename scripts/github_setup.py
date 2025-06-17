@@ -4,6 +4,7 @@ Automate GitHub setup: create labels, milestones, and phase issues based on proj
 """
 import os
 import sys
+import time
 import argparse
 
 from github import Github
@@ -203,11 +204,19 @@ def main():
         sys.exit(1)
 
     gh = Github(token)
-    try:
-        repo = gh.get_repo(args.repo)
-    except Exception as e:
-        print(f"Error: cannot access repo {args.repo}: {e}", file=sys.stderr)
-        sys.exit(1)
+    # Retry logic for accessing the repo with exponential backoff
+    for attempt in range(5):
+        try:
+            repo = gh.get_repo(args.repo)
+            break
+        except Exception as e:
+            if attempt < 4:
+                sleep_time = 2 ** attempt
+                print(f"Error accessing repo (attempt {attempt+1}): {e}. Retrying in {sleep_time}s", file=sys.stderr)
+                time.sleep(sleep_time)
+            else:
+                print(f"Error: cannot access repo {args.repo}: {e}", file=sys.stderr)
+                sys.exit(1)
 
     # Create labels
     existing_labels = {lbl.name for lbl in repo.get_labels()}
