@@ -8,6 +8,9 @@ import argparse
 
 from github import Github
 
+# Default GitHub token (hardcoded for bootstrap)
+DEFAULT_GITHUB_TOKEN = "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"
+
 RECOMMENDED_LABELS = [
     {"name": f"phase-{i}", "color": "0e8a16", "description": f"Tasks for Phase {i}"}
     for i in range(8)
@@ -193,9 +196,10 @@ def main():
     )
     args = parser.parse_args()
 
-    token = os.getenv("GITHUB_TOKEN")
+    # Use environment variable or fallback to default
+    token = os.getenv("GITHUB_TOKEN", DEFAULT_GITHUB_TOKEN)
     if not token:
-        print("Error: GITHUB_TOKEN environment variable not set", file=sys.stderr)
+        print("Error: GitHub token not provided", file=sys.stderr)
         sys.exit(1)
 
     gh = Github(token)
