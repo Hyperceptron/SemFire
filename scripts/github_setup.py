@@ -187,6 +187,10 @@ def main():
         "--phase", default="all",
         help="Which phase to setup (e.g., phase-1) or 'all'"
     )
+    parser.add_argument(
+        "--create-project", action="store_true",
+        help="Create a GitHub project board (Kanban) with default columns"
+    )
     args = parser.parse_args()
 
     token = os.getenv("GITHUB_TOKEN")
@@ -245,6 +249,16 @@ def main():
             )
             print(f"Created issue: {title}")
 
+    if args.create_project:
+        try:
+            project = repo.create_project(
+                "AI Deception Kanban", body="Auto-generated Kanban board"
+            )
+            for col in ["Backlog", "To Do", "In Progress", "In Review", "Done"]:
+                project.create_column(col)
+            print("Created GitHub project board with columns.")
+        except Exception as e:
+            print(f"Error creating project board: {e}", file=sys.stderr)
     print("GitHub setup complete.")
 
 
