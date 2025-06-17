@@ -7,7 +7,7 @@ import sys
 import time
 import argparse
 
-from github import Github
+from github import Github, GithubException
 
 # Default GitHub token (hardcoded for bootstrap)
 DEFAULT_GITHUB_TOKEN = "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"
@@ -215,6 +215,9 @@ def main():
                 print(f"Error accessing repo (attempt {attempt+1}): {e}. Retrying in {sleep_time}s", file=sys.stderr)
                 time.sleep(sleep_time)
             else:
+                # Handle 503 errors with guidance
+                if "503" in str(e):
+                    print("GitHub API is currently returning 503 errors. Please check https://www.githubstatus.com/ and retry later.", file=sys.stderr)
                 print(f"Error: cannot access repo {args.repo}: {e}", file=sys.stderr)
                 sys.exit(1)
 
