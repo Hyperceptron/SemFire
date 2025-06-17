@@ -6,6 +6,7 @@ import os
 import sys
 import time
 import argparse
+import datetime
 
 from github import Github, GithubException
 
@@ -204,6 +205,15 @@ def main():
         sys.exit(1)
 
     gh = Github(token)
+    # Check rate limit before proceeding
+    try:
+        core_rate = gh.get_rate_limit().core
+        if core_rate.remaining == 0:
+            reset_time = core_rate.reset
+            print(f"Error: GitHub API rate limit exceeded. Resets at {reset_time}", file=sys.stderr)
+            sys.exit(1)
+    except GithubException as e:
+        print(f"Warning: could not fetch rate limit: {e}", file=sys.stderr)
     # Retry logic for accessing the repo with exponential backoff
     for attempt in range(5):
         try:
