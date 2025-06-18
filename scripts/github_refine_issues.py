@@ -73,10 +73,7 @@ def main():
                 if not args.dry_run:
                     issue.edit(body=ctx)
         else:
-            print(f"Closing issue: {issue.title}")
-            if not args.dry_run:
-                if not args.dry_run:
-                    issue.edit(state="closed")
+            print(f"Skipping unmatched issue: {issue.title}")
 
 
 if __name__ == "__main__":
