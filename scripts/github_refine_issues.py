@@ -70,7 +70,7 @@ def main():
         if ctx:
             if issue.body != ctx:
                 print(f"Updating issue: {issue.title}")
-                if not args.dry-run:
+                if not args.dry_run:
                     issue.edit(body=ctx)
         else:
             print(f"Closing issue: {issue.title}")
