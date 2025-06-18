@@ -234,8 +234,15 @@ def main():
                 print(f"Error accessing repo (attempt {attempt+1}): {e}. Retrying in {sleep_time}s", file=sys.stderr)
                 time.sleep(sleep_time)
             else:
+                # Handle 404 errors with guidance
+                if (isinstance(e, GithubException) and getattr(e, "status", None) == 404) or "404" in str(e):
+                    print(f"Error: repository '{args.repo}' not found or unauthorized.", file=sys.stderr)
+                    print("Common causes:", file=sys.stderr)
+                    print(" 1. You used a placeholder instead of the real owner/repo (e.g., josephedward/R.A.D.A.R).", file=sys.stderr)
+                    print(" 2. Your GITHUB_TOKEN lacks 'repo' scope or is invalid.", file=sys.stderr)
+                    sys.exit(1)
                 # Handle 503 errors with guidance
-                if "503" in str(e):
+                if (isinstance(e, GithubException) and getattr(e, "status", None) == 503) or "503" in str(e):
                     print("GitHub API is currently returning 503 errors. Please check https://www.githubstatus.com/ and retry later.", file=sys.stderr)
                 print(f"Error: cannot access repo {args.repo}: {e}", file=sys.stderr)
                 sys.exit(1)
