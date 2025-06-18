@@ -65,12 +65,7 @@ def main():
                 issue.edit(body=new_body)
                 print(f"Updated body: {title}")
         else:
-            if not issue.body or not issue.body.strip():
-                issue.create_comment("Closing as this issue is not in the ROADMAP and has no description; marking non-actionable.")
-                issue.edit(state="closed")
-                print(f"Closed issue: {title}")
-            else:
-                print(f"Skipped issue with existing body: {title}")
+            print(f"Skipping enrichment for non-roadmap issue: {title}")
 
 if __name__ == "__main__":
     main()
