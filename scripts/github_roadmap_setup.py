@@ -24,7 +24,7 @@ def parse_roadmap(path="ROADMAP.md"):  # noqa: C901
         with open(path, encoding="utf-8") as f:
             for line in f:
                 line = line.rstrip()
-                m_phase = phase_header.match(line)
+                m_phase = phase_header.match(line.strip())
                 if m_phase:
                     num, desc = m_phase.group(1), m_phase.group(2).strip()
                     current_ms = f"Phase {num}: {desc}"
