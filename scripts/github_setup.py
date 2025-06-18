@@ -8,10 +8,19 @@ import time
 import argparse
 import datetime
 
+# GitHub third-party client import
+# Load environment variables from .env if available
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 from github import Github, GithubException
+# Load environment variables from .env file if present
+from dotenv import load_dotenv
+load_dotenv()
 
-# Default GitHub token (hardcoded for bootstrap)
-DEFAULT_GITHUB_TOKEN = "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"
+# GitHub token should be supplied via environment or .env file (no hardcoded defaults)
 
 RECOMMENDED_LABELS = [
     {"name": f"phase-{i}", "color": "0e8a16", "description": f"Tasks for Phase {i}"}
@@ -198,10 +207,10 @@ def main():
     )
     args = parser.parse_args()
 
-    # Use environment variable or fallback to default
-    token = os.getenv("GITHUB_TOKEN", DEFAULT_GITHUB_TOKEN)
+    # Load GitHub token from environment
+    token = os.getenv("GITHUB_TOKEN")
     if not token:
-        print("Error: GitHub token not provided", file=sys.stderr)
+        print("Error: GitHub token not provided. Please set GITHUB_TOKEN in environment or in a .env file.", file=sys.stderr)
         sys.exit(1)
 
     gh = Github(token)
