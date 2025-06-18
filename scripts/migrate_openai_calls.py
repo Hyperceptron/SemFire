@@ -2,7 +2,7 @@
 """
 A one-off migration script to update OpenAI API calls and requirements.
 
-  * Replaces `openai.ChatCompletion.create` with `openai.chat.completions.create`
+  * Replaces `openai.chat.completions.create` with `openai.chat.completions.create`
     across all Python source files.
   * Ensures `openai>=0.27.0` is present in requirements.txt.
 """
