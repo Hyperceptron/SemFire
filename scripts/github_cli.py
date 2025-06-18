@@ -18,7 +18,8 @@ except ImportError:
     pass
 
 import openai
-from github import Github, GithubException
+
+# Delay GitHub import until runtime
 
 def parse_roadmap(path="ROADMAP.md"):
     data = {}
@@ -84,7 +85,7 @@ def call_llm(title, existing_body, ctx, matched):
         sys.exit(1)
     openai.api_key = api_key
     system = {"role": "system", "content": "You are an expert software engineer and technical writer."}
-    parts = [f"Title: {title}", f"Context: {ctx['context']}]
+    parts = [f"Title: {title}", f"Context: {ctx['context']}"]
     if ctx.get('goal'):
         parts.append("Goal:\n" + "\n".join(f"- {g}" for g in ctx['goal']))
     if ctx.get('tasks'):
@@ -124,6 +125,11 @@ def main():
     token = os.getenv('GITHUB_TOKEN')
     if not token:
         print('Error: GITHUB_TOKEN not set', file=sys.stderr)
+        sys.exit(1)
+    try:
+        from github import Github, GithubException
+    except ImportError:
+        print('Error: PyGithub not installed. Install with `pip install PyGithub`.', file=sys.stderr)
         sys.exit(1)
     gh = Github(token)
     try:
