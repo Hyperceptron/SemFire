@@ -59,13 +59,14 @@ def main():
 
     for issue in repo.get_issues(state="open"):
         title = issue.title.strip()
-        if title in roadmap_titles:
-            if not issue.body or not issue.body.strip():
-                new_body = f"See ROADMAP.md for task details:\n\n- **Task**: {title}"
-                issue.edit(body=new_body)
-                print(f"Updated body: {title}")
+        if not issue.body or not issue.body.strip():
+            new_body = f"See ROADMAP.md for context on the task:\n\n- **Task**: {title}"
+            issue.edit(body=new_body)
+            print(f"Updated body: {title}")
         else:
-            print(f"Skipping enrichment for non-roadmap issue: {title}")
+            updated_body = issue.body + f"\n\nSee ROADMAP.md for more context on: {title}"
+            issue.edit(body=updated_body)
+            print(f"Enriched body: {title}")
 
 if __name__ == "__main__":
     main()
