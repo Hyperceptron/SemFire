@@ -18,10 +18,6 @@ from dotenv import load_dotenv, find_dotenv
 
 def main():
     load_dotenv(find_dotenv())
-    token = os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN")
-    if not token:
-        print("⚠️  Missing GITHUB_TOKEN or GH_TOKEN in environment or .env file.")
-        sys.exit(1)
 
     parser = argparse.ArgumentParser(
         description="Delete all closed GitHub issues via the GraphQL API"
@@ -29,9 +25,15 @@ def main():
     parser.add_argument("owner", help="GitHub repository owner")
     parser.add_argument("repo", help="GitHub repository name")
     parser.add_argument("--dry-run", action="store_true", help="List closed issues without deleting them")
+    parser.add_argument("--token", help="GitHub token (overrides GITHUB_TOKEN/GH_TOKEN)")
     args = parser.parse_args()
     owner = args.owner
     repo = args.repo
+
+    token = args.token or os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN")
+    if not token:
+        print("⚠️  Missing GitHub token. Provide via --token or GITHUB_TOKEN/GH_TOKEN env var.")
+        sys.exit(1)
 
     session = requests.Session()
     session.headers.update({
