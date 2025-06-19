@@ -6,13 +6,17 @@ import os
 import argparse
 
 from dotenv import load_dotenv
-from github import Github
+from github import Github, GithubException
 
 def delete_closed_issues(owner, repo_name):
     token = os.getenv("GITHUB_TOKEN")
     if not token:
         raise SystemExit("Missing GITHUB_TOKEN in environment or .env file.")
     gh = Github(token)
+    try:
+        gh.get_user()
+    except GithubException:
+        raise SystemExit("Authentication failed: Bad credentials. Please check your GITHUB_TOKEN and its scopes.")
     repo = gh.get_repo(f"{owner}/{repo_name}")
     closed_issues = repo.get_issues(state="closed")
     mutation = """
