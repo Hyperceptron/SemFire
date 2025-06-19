@@ -28,6 +28,7 @@ def main():
     )
     parser.add_argument("owner", help="GitHub repository owner")
     parser.add_argument("repo", help="GitHub repository name")
+    parser.add_argument("--dry-run", action="store_true", help="List closed issues without deleting them")
     args = parser.parse_args()
     owner = args.owner
     repo = args.repo
@@ -59,6 +60,14 @@ def main():
 
     if not issues:
         print("✅ No closed issues to delete.")
+        return
+
+    if args.dry_run:
+        print(f"ℹ️ Dry run: Found {len(issues)} closed issues. Listing them without deletion:")
+        for issue in issues:
+            number = issue.get("number")
+            title = issue.get("title", "")
+            print(f" - #{number}: {title}")
         return
 
     mutation = """
