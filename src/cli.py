@@ -1,12 +1,29 @@
 import argparse
 import json
-from src.detectors.rule_based import EchoChamberDetector
+import requests # Added for making HTTP requests
+
+# Assuming the API is running locally on the default FastAPI port
+API_BASE_URL = "http://127.0.0.1:8000"
 
 def analyze_text_command(args):
-    """Handles the 'analyze' command."""
-    detector = EchoChamberDetector()
-    results = detector.analyze_text(args.text, args.history)
-    print(json.dumps(results, indent=2))
+    """Handles the 'analyze' command by calling the API."""
+    analyze_url = f"{API_BASE_URL}/analyze/"
+    payload = {
+        "text_input": args.text,
+        "conversation_history": args.history if args.history else []
+    }
+    try:
+        response = requests.post(analyze_url, json=payload)
+        response.raise_for_status() # Raise an exception for HTTP errors (4xx or 5xx)
+        results = response.json()
+        print(json.dumps(results, indent=2))
+    except requests.exceptions.ConnectionError:
+        print(f"Error: Could not connect to the API at {analyze_url}. Is the API server running?")
+    except requests.exceptions.HTTPError as e:
+        print(f"Error: API request failed with status {e.response.status_code}: {e.response.text}")
+    except requests.exceptions.RequestException as e:
+        print(f"Error: An unexpected error occurred while calling the API: {e}")
+
 
 def main():
     """Main function for the CLI."""
