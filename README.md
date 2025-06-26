@@ -126,6 +126,21 @@ pip install -r requirements.txt
 
 The API will be available at `http://127.0.0.1:8000`. You can access the OpenAPI documentation (Swagger UI) at `http://127.0.0.1:8000/docs`.
 
+## Deploying with Docker
+
+You can also deploy the API service using Docker.
+
+1.  **Build the Docker image:**
+    ```bash
+    docker build -t radar-api .
+    ```
+
+2.  **Run the Docker container:**
+    ```bash
+    docker run -d -p 8000:8000 radar-api
+    ```
+    The API will then be accessible at `http://localhost:8000`.
+
 ### API Endpoints
 
 #### `POST /analyze/`
