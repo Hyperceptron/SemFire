@@ -75,35 +75,38 @@ class SemanticFirewall:
         """
         analysis_results = self.analyze_conversation(current_message, conversation_history)
         for detector_name, result in analysis_results.items():
-            # EchoChamberDetector returns its primary score as 'echo_chamber_score'
-            # Other detectors might use 'overall_score' or another key.
-            # For now, we explicitly check for 'echo_chamber_score' from EchoChamberDetector.
-            # A more robust solution might involve a standardized score key or adapter.
-            score = 0.0
-            probability_score = 0.0 # For probability-based scores like from ML models
             if isinstance(result, dict):
+                if "error" in result:
+                    # Optionally log or handle detector errors.
+                    # For this function, an error from a detector means it doesn't contribute
+                    # to flagging the message as manipulative.
+                    # print(f"Info: Detector {detector_name} returned an error: {result['error']}")
+                    continue # Skip to the next detector's result
+
+                # Determine the relevant score based on the detector
+                current_score_value = 0.0
                 if detector_name == "EchoChamberDetector":
-                    score = result.get("echo_chamber_score", 0.0) # Rule-based uses discrete scores
-                    # For EchoChamberDetector, we might compare its score directly if it's not a probability
-                    if score >= threshold: # Assuming threshold is for discrete scores for this detector
-                        return True
+                    # EchoChamberDetector's score is discrete.
+                    # Its 'echo_chamber_score' might be on a different scale than a probability.
+                    # For simplicity, we use the same threshold, but this could be refined
+                    # with detector-specific thresholds or score normalization.
+                    current_score_value = result.get("echo_chamber_score", 0.0)
                 elif detector_name == "MLBasedDetector":
-                    # MLBasedDetector placeholder returns 'ml_model_confidence'
-                    probability_score = result.get("ml_model_confidence", 0.0)
-                    if probability_score >= threshold: # Assuming threshold can apply to probability
-                        return True
+                    # MLBasedDetector placeholder returns 'ml_model_confidence' (a probability).
+                    current_score_value = result.get("ml_model_confidence", 0.0)
                 else:
-                    # Fallback for other potential detectors, assuming 'overall_score' or 'probability'
-                    score = result.get("overall_score", result.get("probability", 0.0))
-                    if score >= threshold:
-                        return True
-            
-            # The original logic was: if score >= threshold: return True
-            # The new logic above handles detector-specific scores and returns True immediately.
-            # If no detector's score meets its criteria, we'll eventually fall through.
-            # This part is effectively replaced by the specific checks above.
-            # We keep the loop going to check all detectors.
-            # If one of them triggers, it returns True. If loop finishes, it means none triggered.
-        return False # Moved from inside the loop to after it.
-                return True
+                    # Fallback for other/future detectors: try 'overall_score', then 'probability'.
+                    current_score_value = result.get("overall_score", result.get("probability", 0.0))
+                
+                # If the score from any detector meets or exceeds the threshold,
+                # consider the message manipulative.
+                if current_score_value >= threshold:
+                    return True # Immediately return True if any detector flags the message.
+            # else:
+                # This case would handle non-dict results, if any.
+                # For now, analyze_conversation is expected to return dicts.
+                # print(f"Warning: Unexpected result type from {detector_name}: {type(result)}")
+                # pass
+        
+        # If the loop completes without any detector flagging the message as manipulative above the threshold.
         return False
