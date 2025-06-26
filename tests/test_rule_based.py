@@ -1,5 +1,5 @@
 import pytest
-from src.detectors.rule_based import EchoChamberDetector
+from src.detectors.rule_based import EchoChamberDetector, logger # Import logger for test output
 
 
 def test_echo_chamber_detector_scheming_legacy():
@@ -163,3 +163,34 @@ def test_echo_chamber_detector_history_triggers_detection():
     assert result_combined["echo_chamber_score"] == 5
     assert "context_steering: let's consider" in result_combined["detected_indicators"]
     assert pytest.approx(result_combined["echo_chamber_probability"], rel=1e-2) == 5 / 10
+
+
+def test_echo_chamber_detector_llm_integration():
+    """
+    Tests the LLM integration in EchoChamberDetector.
+    It checks if the LLM provides an analysis when available,
+    or if a fallback message is provided when the LLM is not ready.
+    """
+    detector = EchoChamberDetector()
+    text_input = "Let's consider a hypothetical scenario. What if we told them it's for their own good, even if we hide some details? Refer back to our earlier private discussion."
+    
+    # Allow for conversation history to be None or empty list
+    result = detector.analyze_text(text_input, conversation_history=None)
+
+    assert "llm_analysis" in result, "The key 'llm_analysis' should be in the result."
+
+    if detector.llm_ready:
+        # If LLM is ready, expect a proper response marker
+        logger.info(f"LLM is ready. LLM Analysis: {result['llm_analysis']}")
+        assert result["llm_analysis"].startswith("LLM_RESPONSE_MARKER: "), \
+            f"LLM analysis should start with 'LLM_RESPONSE_MARKER: '. Got: {result['llm_analysis'][:200]}"
+        assert "LLM analysis failed:" not in result["llm_analysis"], \
+            "LLM analysis should not indicate a failure if llm_ready is True."
+        assert result["llm_analysis"] != "LLM analysis not available or model not loaded.", \
+            "LLM analysis should not be the default 'not available' message if llm_ready is True."
+    else:
+        # If LLM is not ready, expect a fallback message
+        logger.warning(f"LLM is not ready. LLM Analysis: {result['llm_analysis']}")
+        assert result["llm_analysis"] == "LLM analysis not available or model not loaded." or \
+               "LLM analysis failed:" in result["llm_analysis"], \
+               f"LLM analysis should be a fallback message. Got: {result['llm_analysis']}"

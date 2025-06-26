@@ -176,6 +176,7 @@ class EchoChamberDetector:
                 # Decode only the newly generated tokens
                 generated_ids = outputs[0][inputs.input_ids.shape[1]:]
                 llm_analysis_text = self.tokenizer.decode(generated_ids, skip_special_tokens=True).strip()
+                logger.info(f"LLM analysis successful. Output snippet: {llm_analysis_text[:150]}...")
                 
             except Exception as e:
                 logger.error(f"LLM analysis failed: {e}")
