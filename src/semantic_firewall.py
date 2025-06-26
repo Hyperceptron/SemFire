@@ -1,5 +1,6 @@
 from typing import List, Dict, Any, Optional
-from src.detectors.rule_based import EchoChamberDetector # Assuming EchoChamberDetector is in this path
+from src.detectors.rule_based import EchoChamberDetector
+from src.detectors.ml_based import MLBasedDetector # Added import
 
 class SemanticFirewall:
     """
@@ -12,8 +13,10 @@ class SemanticFirewall:
         """
         # In the future, detectors could be configurable
         self.detectors = [
-            EchoChamberDetector()
+            EchoChamberDetector(),
+            MLBasedDetector() # Added MLBasedDetector instance
         ]
+        print(f"SemanticFirewall initialized with detectors: {[d.__class__.__name__ for d in self.detectors]}")
 
     def analyze_conversation(
         self,
@@ -77,14 +80,30 @@ class SemanticFirewall:
             # For now, we explicitly check for 'echo_chamber_score' from EchoChamberDetector.
             # A more robust solution might involve a standardized score key or adapter.
             score = 0.0
+            probability_score = 0.0 # For probability-based scores like from ML models
             if isinstance(result, dict):
                 if detector_name == "EchoChamberDetector":
-                    score = result.get("echo_chamber_score", 0.0)
+                    score = result.get("echo_chamber_score", 0.0) # Rule-based uses discrete scores
+                    # For EchoChamberDetector, we might compare its score directly if it's not a probability
+                    if score >= threshold: # Assuming threshold is for discrete scores for this detector
+                        return True
+                elif detector_name == "MLBasedDetector":
+                    # MLBasedDetector placeholder returns 'ml_model_confidence'
+                    probability_score = result.get("ml_model_confidence", 0.0)
+                    if probability_score >= threshold: # Assuming threshold can apply to probability
+                        return True
                 else:
-                    # Fallback for other potential detectors, assuming 'overall_score'
-                    # This part can be made more robust as more detectors are added.
-                    score = result.get("overall_score", 0.0)
+                    # Fallback for other potential detectors, assuming 'overall_score' or 'probability'
+                    score = result.get("overall_score", result.get("probability", 0.0))
+                    if score >= threshold:
+                        return True
             
-            if score >= threshold:
+            # The original logic was: if score >= threshold: return True
+            # The new logic above handles detector-specific scores and returns True immediately.
+            # If no detector's score meets its criteria, we'll eventually fall through.
+            # This part is effectively replaced by the specific checks above.
+            # We keep the loop going to check all detectors.
+            # If one of them triggers, it returns True. If loop finishes, it means none triggered.
+        return False # Moved from inside the loop to after it.
                 return True
         return False
