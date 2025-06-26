@@ -67,8 +67,8 @@ This document outlines the step-by-step plan to develop, test, and deploy the AI
  - Expose detectors via a unified Python API and REST endpoint.
 
  **Tasks**
- 1. Create `DetectorManager` to coordinate detectors.
- 2. Develop FastAPI service with `/detect` endpoint.
+ 1. Implement `SemanticFirewall` as the primary coordinator for various detection modules.
+ 2. Develop FastAPI service with `/analyze` endpoint (see `src/api/app.py`).
  3. Write integration tests for API.
 
  **Deliverables**
