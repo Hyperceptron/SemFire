@@ -45,7 +45,7 @@ class SemanticFirewall:
         self.detectors = [
             EchoChamberDetector(), # This will use its own instances of RuleBased and MLBased
             GenericRuleBasedDetector(), # This is a general one, potentially with different rules
-            MLBasedDetector(),          # This is a general one
+            # MLBasedDetector(),          # Removed as file is no longer present or used
         ]
         print(f"SemanticFirewall initialized with detectors: {[d.__class__.__name__ for d in self.detectors]}")
 
@@ -124,8 +124,8 @@ class SemanticFirewall:
                     current_score_value = result.get("echo_chamber_score", 0.0)
                 elif detector_name == "GenericRuleBasedDetector":
                     current_score_value = result.get("generic_rule_score", 0.0)
-                elif detector_name == "MLBasedDetector":
-                    current_score_value = result.get("ml_model_confidence", 0.0)
+                # elif detector_name == "MLBasedDetector": # Removed
+                #     current_score_value = result.get("ml_model_confidence", 0.0)
                 else:
                     # Fallback for other/future detectors: try 'overall_score', then 'probability'.
                     # This case should ideally not be hit if all detectors are handled above.

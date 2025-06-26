@@ -9,7 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from src.semantic_firewall import SemanticFirewall
 # Assuming EchoChamberDetector is a primary detector used by SemanticFirewall or for direct use
-from src.detectors.rule_based import EchoChamberDetector
+from src.detectors.echo_chamber import EchoChamberDetector
 
 # Initialize the SemanticFirewall
 # It should load its default detectors, including EchoChamberDetector

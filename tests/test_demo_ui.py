@@ -1,9 +1,11 @@
 import pytest
-# from pytest_streamlit import AppTest # Temporarily commented out due to installation issues
+# from pytest_streamlit import AppTest # Temporarily commented out due to
+                                     # installation issues
 
 # Ensure the test can find the demo app and its dependencies
 # This assumes tests are run from the project root directory.
 # The demo/app.py already handles adding 'src' to sys.path.
+
 
 def test_demo_app_basic_interaction():
     """
@@ -17,14 +19,16 @@ def test_demo_app_basic_interaction():
     # at = AppTest.from_file("demo/app.py").run() # Path relative to project root
 
     # Check initial state (optional, but good practice)
-    # assert at.title[0].value == "RADAR: Recognizing Agentic Deception and Alignment Risk"
+    # assert at.title[0].value == "RADAR: Recognizing Agentic Deception and " \
+    #                             "Alignment Risk"
     # assert at.subheader[0].value == "Interactive Semantic Firewall Demo"
     # assert len(at.text_area) == 2 # current_message and conversation_history
     # assert len(at.button) == 1 # analyze_button
 
     # Simulate user input
     # at.text_area(key="current_message_input").input("This is a test message.")
-    # assert at.text_area(key="current_message_input").value == "This is a test message."
+    # assert at.text_area(key="current_message_input").value == \
+    #        "This is a test message."
 
     # Simulate button click
     # at.button(key="analyze_button").click().run()
@@ -40,20 +44,23 @@ def test_demo_app_basic_interaction():
     # Verify "Analysis Results" subheader is present
     # assert len(at.subheader) >= 2 # Initial subheader + "Analysis Results"
     # assert at.subheader[1].value == "Analysis Results"
-    
-    # Verify that some JSON output is displayed for the main analysis
-    # assert len(at.json) > 0 
 
-    # Depending on the default behavior of SemanticFirewall and EchoChamberDetector,
-    # "Echo Chamber Detector Details" might also appear.
-    # If EchoChamberDetector always provides details, we can assert its subheader too.
-    # For now, we'll keep it simple and only check for the main results.
+    # Verify that some JSON output is displayed for the main analysis
+    # assert len(at.json) > 0
+
+    # Depending on the default behavior of SemanticFirewall and
+    # EchoChamberDetector, "Echo Chamber Detector Details" might also appear.
+    # If EchoChamberDetector always provides details, we can assert its
+    # subheader too. For now, we'll keep it simple and only check for the main
+    # results.
     # If you want to check for "Echo Chamber Detector Details":
     # found_echo_chamber_details = any(
     #     sub.value == "Echo Chamber Detector Details" for sub in at.subheader
     # )
-    # assert found_echo_chamber_details, "Echo Chamber Detector Details subheader not found"
+    # assert found_echo_chamber_details, \
+    # "Echo Chamber Detector Details subheader not found"
     # This would also imply at least two st.json elements.
+
 
 def test_demo_app_no_input_warning():
     """
@@ -65,6 +72,7 @@ def test_demo_app_no_input_warning():
     # assert len(at.warning) == 1
     # assert at.warning[0].value == "Please enter a message to analyze."
 
+
 def test_demo_app_with_history():
     """
     Tests interaction with conversation history.
@@ -73,8 +81,10 @@ def test_demo_app_with_history():
     # at = AppTest.from_file("demo/app.py").run()
 
     # at.text_area(key="current_message_input").input("Follow up question.")
-    # at.text_area(key="conversation_history_input").input("This was the first message.\nThis was the second message.")
-    
+    # at.text_area(key="conversation_history_input").input(
+    #    "This was the first message.\nThis was the second message."
+    # )
+
     # at.button(key="analyze_button").click().run()
 
     # assert len(at.subheader) >= 2
