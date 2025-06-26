@@ -1,6 +1,7 @@
 from typing import List, Dict, Any, Optional
-from src.detectors.rule_based import EchoChamberDetector # Specific echo chamber detector
-from src.detectors import GenericRuleBasedDetector, MLBasedDetector
+# Updated import for EchoChamberDetector from its new location
+from src.detectors.echo_chamber_detector import EchoChamberDetector 
+from src.detectors import GenericRuleBasedDetector, MLBasedDetector # Keep these if they are still used directly
 
 class SemanticFirewall:
     """
@@ -12,10 +13,39 @@ class SemanticFirewall:
         Initializes the SemanticFirewall with a set of detectors.
         """
         # In the future, detectors could be configurable
+        # GenericRuleBasedDetector and MLBasedDetector are now used *within* EchoChamberDetector
+        # If SemanticFirewall should *also* use them independently, keep them here.
+        # Otherwise, if EchoChamberDetector is the primary interface, adjust as needed.
+        # For this refactor, we assume EchoChamberDetector is the main one,
+        # and it internally uses the others.
+        # If GenericRuleBasedDetector and MLBasedDetector are still needed as separate top-level detectors:
+        # self.detectors = [
+        #     EchoChamberDetector(),
+        #     GenericRuleBasedDetector(), # If still needed standalone
+        #     MLBasedDetector(),          # If still needed standalone
+        # ]
+        # If EchoChamberDetector is the sole top-level detector for this type of analysis:
         self.detectors = [
             EchoChamberDetector(),
-            GenericRuleBasedDetector(),
-            MLBasedDetector(),
+            # Add other distinct top-level detectors here if any
+        ]
+        # Example: If you still want GenericRuleBasedDetector and MLBasedDetector to run separately
+        # in addition to being used by EchoChamberDetector:
+        # self.detectors = [
+        #     EchoChamberDetector(),
+        #     GenericRuleBasedDetector(), # Assuming it's configured for general rules
+        #     MLBasedDetector(),          # Assuming it provides general ML scores
+        # ]
+        # For now, let's assume EchoChamberDetector is the primary one, and it handles its sub-detectors.
+        # If GenericRuleBasedDetector and MLBasedDetector are only used by EchoChamberDetector,
+        # they don't need to be instantiated here again unless for different configurations.
+        # The prompt implies 3 detectors: rule, ml, and echo chamber (which uses the other two).
+        # This means SemanticFirewall might list all three if they are to be queried independently.
+        # Let's assume they are listed independently for now, as per the initial structure.
+        self.detectors = [
+            EchoChamberDetector(), # This will use its own instances of RuleBased and MLBased
+            GenericRuleBasedDetector(), # This is a general one, potentially with different rules
+            MLBasedDetector(),          # This is a general one
         ]
         print(f"SemanticFirewall initialized with detectors: {[d.__class__.__name__ for d in self.detectors]}")
 
