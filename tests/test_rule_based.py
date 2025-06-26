@@ -141,24 +141,25 @@ def test_echo_chamber_detector_history_triggers_detection():
     """Tests that cues in history can contribute to a positive detection."""
     detector = EchoChamberDetector()
     text_input = "This is a benign current message."
-    # History cues: "refer back" (1) + "hypothetically" (1) + "strategic" (1) = 3
+    # History cues: "refer back" (1) + "hypothetically" (1) + "what if" (1) + "strategic" (1) = 4
     history = [
         "Can we refer back to the earlier topic?",
         "And hypothetically, what if we tried a strategic approach?"
     ]
     result = detector.analyze_text(text_input, conversation_history=history)
     assert result["classification"] == "potential_echo_chamber_activity"
-    assert result["echo_chamber_score"] == 3
+    assert result["echo_chamber_score"] == 4
     assert "history_turn_0_indirect_reference: refer back" in result["detected_indicators"]
     assert "history_turn_1_context_steering: hypothetically" in result["detected_indicators"]
+    assert "history_turn_1_context_steering: what if" in result["detected_indicators"]
     assert "history_turn_1_scheming_keyword: strategic" in result["detected_indicators"]
-    assert pytest.approx(result["echo_chamber_probability"], rel=1e-2) == 3 / 10
+    assert pytest.approx(result["echo_chamber_probability"], rel=1e-2) == 4 / 10
 
     # Test that current input cues also add to history cues
     text_input_with_cue = "And now, let's consider this new idea." # "let's consider" (1)
-    # Total score = 3 (from history) + 1 (from current) = 4
+    # Total score = 4 (from history) + 1 (from current) = 5
     result_combined = detector.analyze_text(text_input_with_cue, conversation_history=history)
     assert result_combined["classification"] == "potential_echo_chamber_activity"
-    assert result_combined["echo_chamber_score"] == 4
+    assert result_combined["echo_chamber_score"] == 5
     assert "context_steering: let's consider" in result_combined["detected_indicators"]
-    assert pytest.approx(result_combined["echo_chamber_probability"], rel=1e-2) == 4 / 10
+    assert pytest.approx(result_combined["echo_chamber_probability"], rel=1e-2) == 5 / 10
