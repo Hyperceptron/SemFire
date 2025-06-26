@@ -1,107 +1,84 @@
 #!/usr/bin/env python3
-"""
-Delete all CLOSED issues in a GitHub repository via the GraphQL API.
-
-Usage:
-  python3 scripts/delete_closed_issues.py <owner> <repo>
-
-Requires:
-  - python-dotenv
-  - requests
-  - A GITHUB_TOKEN or GH_TOKEN with repo permissions in .env (or env)
-"""
 import os
 import sys
 import argparse
 import requests
-from dotenv import load_dotenv, find_dotenv
+
+GITHUB_API_URL = "https://api.github.com/graphql"
+
+def graphql_request(query, variables):
+    token = os.getenv("GITHUB_TOKEN")
+    if not token:
+        sys.exit("Error: Missing GITHUB_TOKEN environment variable")
+    headers = {"Authorization": f"Bearer {token}"}
+    payload = {"query": query, "variables": variables}
+    resp = requests.post(GITHUB_API_URL, json=payload, headers=headers)
+    if resp.status_code != 200:
+        sys.exit(f"HTTP {resp.status_code}: {resp.text}")
+    data = resp.json()
+    if "errors" in data:
+        sys.exit(f"GraphQL errors: {data['errors']}")
+    return data["data"]
+
+def fetch_closed_issues(owner, repo):
+    query = """
+query($owner: String!, $repo: String!, $after: String) {
+  repository(owner: $owner, name: $repo) {
+    issues(states: CLOSED, first: 100, after: $after) {
+      pageInfo { hasNextPage, endCursor }
+      nodes { id, number }
+    }
+  }
+}
+"""
+    issues = []
+    after = None
+    while True:
+        variables = {"owner": owner, "repo": repo, "after": after}
+        data = graphql_request(query, variables)
+        nodes = data["repository"]["issues"]["nodes"]
+        issues.extend(nodes)
+        page_info = data["repository"]["issues"]["pageInfo"]
+        if not page_info["hasNextPage"]:
+            break
+        after = page_info["endCursor"]
+    return issues
+
+def delete_issue(issue_id):
+    mutation = """
+mutation($issueId: ID!) {
+  deleteIssue(input: {issueId: $issueId}) {
+    clientMutationId
+  }
+}
+"""
+    graphql_request(mutation, {"issueId": issue_id})
 
 def main():
-    load_dotenv(find_dotenv())
-
-    parser = argparse.ArgumentParser(
-        description="Delete all closed GitHub issues via the GraphQL API"
-    )
-    parser.add_argument("owner", help="GitHub repository owner")
+    parser = argparse.ArgumentParser(description="Delete all closed GitHub issues in a repository")
+    parser.add_argument("owner", help="GitHub owner or organization")
     parser.add_argument("repo", help="GitHub repository name")
-    parser.add_argument("--dry-run", action="store_true", help="List closed issues without deleting them")
-    parser.add_argument("--token", help="GitHub token (overrides GITHUB_TOKEN/GH_TOKEN)")
+    parser.add_argument("--dry-run", action="store_true", help="List closed issues without deleting")
     args = parser.parse_args()
-    owner = args.owner
-    repo = args.repo
 
-    token = args.token or os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN")
-    if not token:
-        print("⚠️  Missing GitHub token. Provide via --token or GITHUB_TOKEN/GH_TOKEN env var.")
-        sys.exit(1)
-
-    session = requests.Session()
-    session.headers.update({
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/vnd.github.v3+json",
-        "User-Agent": "delete-closed-issues-script"
-    })
-
-    # List all closed issues via REST (to get node_id)
-    issues = []
-    page = 1
-    per_page = 100
-    while True:
-        url = f"https://api.github.com/repos/{owner}/{repo}/issues"
-        resp = session.get(
-            url, params={"state": "closed", "per_page": per_page, "page": page}
-        )
-        if resp.status_code != 200:
-            print(f"❌ Failed to list issues: {resp.status_code} {resp.text}")
-            sys.exit(1)
-        batch = resp.json()
-        if not batch:
-            break
-        issues.extend(batch)
-        page += 1
-
+    issues = fetch_closed_issues(args.owner, args.repo)
     if not issues:
-        print("✅ No closed issues to delete.")
+        print("No closed issues found.")
         return
-
-    if args.dry_run:
-        print(f"ℹ️ Dry run: Found {len(issues)} closed issues. Listing them without deletion:")
-        for issue in issues:
-            number = issue.get("number")
-            title = issue.get("title", "")
-            print(f" - #{number}: {title}")
-        return
-
-    mutation = """
-    mutation deleteIssue($id: ID!) {
-      deleteIssue(input: {issueId: $id}) {
-        clientMutationId
-      }
-    }
-    """
-    graphql_url = "https://api.github.com/graphql"
-
+    print(f"Found {len(issues)} closed issues:")
     for issue in issues:
-        node_id = issue.get("node_id")
-        number = issue.get("number")
-        title = issue.get("title", "")
-        if not node_id:
-            print(f"⚠️  Issue #{number} missing node_id, skipping.")
-            continue
-        print(f"Deleting issue #{number}: {title}")
-        resp = session.post(
-            graphql_url,
-            json={"query": mutation, "variables": {"id": node_id}}
-        )
-        if resp.status_code != 200:
-            print(f"❌ HTTP {resp.status_code} deleting issue #{number}: {resp.text}")
-            continue
-        data = resp.json()
-        if data.get("errors"):
-            print(f"❌ GraphQL errors for issue #{number}: {data['errors']}")
-        else:
-            print(f"✅ Deleted issue #{number}")
+        print(f"- #{issue['number']} (node id: {issue['id']})")
+    if args.dry_run:
+        print("Dry run complete; no issues were deleted.")
+        return
+    confirm = input("Type 'yes' to delete all of these issues: ")
+    if confirm.strip().lower() != "yes":
+        print("Aborted.")
+        return
+    for issue in issues:
+        delete_issue(issue["id"])
+        print(f"Deleted issue #{issue['number']}")
+    print("Done.")
 
 if __name__ == "__main__":
     main()
-

@@ -1,84 +1,103 @@
 #!/usr/bin/env python3
 """
-Delete all closed issues in a GitHub repository via the GraphQL API.
+Delete all CLOSED issues in a GitHub repo using your PAT via the API.
 
-Usage:
-  python3 scripts/delete_closed_issues_api.py <owner> <repo>
+Prereqs:
+  pip install requests python-dotenv
 
-Requires:
-  - python-dotenv
-  - requests
-  - A GITHUB_TOKEN or GH_TOKEN with admin/delete-issues permissions in .env or env
+.env must contain:
+  GITHUB_TOKEN=ghp_xxx…
+  REPO_URL=https://github.com/owner/repo
 """
+
 import os
 import sys
 import requests
-from dotenv import load_dotenv, find_dotenv
-
-def fetch_closed_issue_ids(session, graphql_url, owner, repo):
-    query = """
-    query ($owner: String!, $repo: String!, $after: String) {
-      repository(owner: $owner, name: $repo) {
-        issues(first: 100, states: CLOSED, after: $after) {
-          pageInfo { hasNextPage endCursor }
-          nodes { id number title }
-        }
-      }
-    }
-    """
-    cursor = None
-    while True:
-        resp = session.post(
-            graphql_url,
-            json={"query": query, "variables": {"owner": owner, "repo": repo, "after": cursor}}
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        if data.get("errors"):
-            print("❌ Error fetching issues:", data["errors"])
-            sys.exit(1)
-        issues = data["data"]["repository"]["issues"]["nodes"]
-        for issue in issues:
-            yield issue
-        page_info = data["data"]["repository"]["issues"]["pageInfo"]
-        if not page_info["hasNextPage"]:
-            break
-        cursor = page_info["endCursor"]
-
-def delete_issue(session, graphql_url, issue_id, number, title):
-    mutation = """
-    mutation($id: ID!) {
-      deleteIssue(input: {issueId: $id}) {
-        clientMutationId
-      }
-    }
-    """
-    resp = session.post(
-        graphql_url,
-        json={"query": mutation, "variables": {"id": issue_id}}
-    )
-    resp.raise_for_status()
-    data = resp.json()
-    if data.get("errors"):
-        print(f"❌ GraphQL errors deleting issue #{number}: {data['errors']}")
-    else:
-        print(f"✅ Deleted issue #{number}: {title}")
+from dotenv import load_dotenv
 
 def main():
-    load_dotenv(find_dotenv())
-    token = os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN")
-    if not token:
-        print("⚠️  Missing GITHUB_TOKEN or GH_TOKEN.")
+    load_dotenv()
+    token = os.getenv("GH_TOKEN") or os.getenv("GITHUB_TOKEN")
+    repo_url = os.getenv("REPO_URL", "").rstrip("/")
+    if not token or not repo_url:
+        print("⚠️  Please set GITHUB_TOKEN or GH_TOKEN and REPO_URL in .env")
         sys.exit(1)
-    if len(sys.argv) != 3:
-        print("Usage: python3 scripts/delete_closed_issues_api.py <owner> <repo>")
+
+    parts = repo_url.split("/")
+    if len(parts) < 5:
+        print(f"⚠️  Invalid REPO_URL: {repo_url}")
         sys.exit(1)
-    owner, repo = sys.argv[1], sys.argv[2]
+    owner = parts[-2]
+    repo = parts[-1]
+
     session = requests.Session()
-    session.headers.update({"Authorization": f"Bearer {token}"})
-    graphql_url = "https://api.github.com/graphql"
-    for issue in fetch_closed_issue_ids(session, graphql_url, owner, repo):
-        delete_issue(session, graphql_url, issue["id"], issue["number"], issue.get("title", ""))
+    session.headers.update({
+        "Accept":     "application/vnd.github.v3+json",
+        "User-Agent": "delete-closed-issues-script"
+    })
+    # Prepare auth headers: use REST token auth and GraphQL bearer auth
+    rest_auth    = {"Authorization": f"token {token}"}
+    graphql_auth = {"Authorization": f"Bearer {token}"}
+
+    def list_closed_issues():
+        issues = []
+        page = 1
+        while True:
+            url = f"https://api.github.com/repos/{owner}/{repo}/issues"
+            params = {"state": "closed", "per_page": 100, "page": page}
+            resp = session.get(url, params=params, headers=rest_auth)
+            resp.raise_for_status()
+            batch = resp.json()
+            if not batch:
+                break
+            issues.extend(batch)
+            page += 1
+        return issues
+
+    def get_issue_node_id(number):
+        query = """
+        query($owner: String!, $repo: String!, $number: Int!) {
+          repository(owner: $owner, name: $repo) {
+            issue(number: $number) { id }
+          }
+        }
+        """
+        resp = session.post(
+            "https://api.github.com/graphql",
+            json={"query": query, "variables": {"owner": owner, "repo": repo, "number": number}},
+            headers=graphql_auth
+        )
+        resp.raise_for_status()
+        return resp.json()["data"]["repository"]["issue"]["id"]
+
+    def delete_issue(node_id):
+        mutation = """
+        mutation($id: ID!) {
+          deleteIssue(input: {issueId: $id}) {
+            clientMutationId
+          }
+        }
+        """
+        resp = session.post(
+            "https://api.github.com/graphql",
+            json={"query": mutation, "variables": {"id": node_id}},
+            headers=graphql_auth
+        )
+        resp.raise_for_status()
+
+    closed = list_closed_issues()
+    if not closed:
+        print("✅ No closed issues to delete.")
+        return
+
+    print(f"Found {len(closed)} closed issue(s). Deleting…")
+    for issue in closed:
+        num = issue.get("number")
+        title = issue.get("title", "")
+        print(f" • #{num}: {title}")
+        node_id = get_issue_node_id(num)
+        delete_issue(node_id)
+    print("✅ Done. All closed issues deleted.")
 
 if __name__ == "__main__":
     main()
