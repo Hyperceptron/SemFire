@@ -1,7 +1,7 @@
 import pytest
 from src.semantic_firewall import SemanticFirewall
 # Import all three actual detectors that SemanticFirewall uses
-from src.detectors import RuleBasedDetector, MLBasedDetector, EchoChamberDetector
+from src.detectors import RuleBasedDetector, MLBasedDetector, EchoChamberDetector 
 
 class TestSemanticFirewall:
     def test_semantic_firewall_initialization(self):
@@ -9,6 +9,7 @@ class TestSemanticFirewall:
         firewall = SemanticFirewall()
         assert firewall is not None
         assert len(firewall.detectors) == 3 # Expecting RuleBased, MLBased, EchoChamber
+        # Order of initialization in SemanticFirewall: RuleBased, MLBased, EchoChamber
         assert isinstance(firewall.detectors[0], RuleBasedDetector)
         assert isinstance(firewall.detectors[1], MLBasedDetector)
         assert isinstance(firewall.detectors[2], EchoChamberDetector)
@@ -16,15 +17,22 @@ class TestSemanticFirewall:
     def test_analyze_conversation_benign_message(self, monkeypatch):
         """Test analyzing a benign message."""
         # Mock ML and LLM in EchoChamber for predictable benign results
+        # We need to mock these on an *instance* of EchoChamberDetector,
+        # or ensure that when SemanticFirewall creates its EchoChamberDetector,
+        # that detector gets the mocked components.
+        # For simplicity here, we'll mock at the class level before SemanticFirewall initializes.
         class MockMLDetectorInternal: # For EchoChamber's internal ML
             def analyze_text(self, text_input, conversation_history=None):
                 return {"classification": "neutral_ml_placeholder", "ml_model_confidence": 0.0, "error": None}
+        
+        # This mocks the MLBasedDetector class that EchoChamberDetector imports and instantiates.
         monkeypatch.setattr("src.detectors.echo_chamber.MLBasedDetector", MockMLDetectorInternal)
         
-        def mock_get_llm_analysis(self, text_input, conversation_history=None):
+        def mock_get_llm_analysis(self_ech_detector, text_input, conversation_history=None): # Renamed self for clarity
             return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
-        monkeypatch.setattr(EchoChamberDetector, "_get_llm_analysis", mock_get_llm_analysis)
-
+        
+        # This mocks the _get_llm_analysis method on the EchoChamberDetector class.
+        monkeypatch.setattr("src.detectors.EchoChamberDetector._get_llm_analysis", mock_get_llm_analysis)
 
         firewall = SemanticFirewall()
         message = "This is a normal, friendly message."
@@ -47,9 +55,10 @@ class TestSemanticFirewall:
             def analyze_text(self, text_input, conversation_history=None):
                 return {"classification": "neutral_ml_placeholder", "ml_model_confidence": 0.0, "error": None}
         monkeypatch.setattr("src.detectors.echo_chamber.MLBasedDetector", MockMLDetectorInternal)
-        def mock_get_llm_analysis(self, text_input, conversation_history=None):
+        
+        def mock_get_llm_analysis(self_ech_detector, text_input, conversation_history=None):
             return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
-        monkeypatch.setattr(EchoChamberDetector, "_get_llm_analysis", mock_get_llm_analysis)
+        monkeypatch.setattr("src.detectors.EchoChamberDetector._get_llm_analysis", mock_get_llm_analysis)
 
         firewall = SemanticFirewall()
         history = ["Hello there.", "How are you today?"]
@@ -119,22 +128,35 @@ class TestSemanticFirewall:
     def test_analyze_conversation_detector_failure(self, monkeypatch):
         """Test how SemanticFirewall handles a failing detector."""
         # Mock ML and LLM in EchoChamber for predictable benign results
+        # This ensures that if EchoChamberDetector is the one being replaced by FailingDetector,
+        # its usual dependencies don't cause issues.
         class MockMLDetectorInternal:
             def analyze_text(self, text_input, conversation_history=None):
                 return {"classification": "neutral_ml_placeholder", "ml_model_confidence": 0.0, "error": None}
         monkeypatch.setattr("src.detectors.echo_chamber.MLBasedDetector", MockMLDetectorInternal)
-        def mock_get_llm_analysis(self, text_input, conversation_history=None):
+        
+        def mock_get_llm_analysis(self_ech_detector, text_input, conversation_history=None):
             return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
-        monkeypatch.setattr(EchoChamberDetector, "_get_llm_analysis", mock_get_llm_analysis)
+        monkeypatch.setattr("src.detectors.EchoChamberDetector._get_llm_analysis", mock_get_llm_analysis)
         
         class FailingDetector:
+            # Adding __class__.__name__ to mimic a real detector class for SemanticFirewall's logging
+            __class__ = type("FailingDetector", (), {"__name__": "FailingDetector"})
+
             def analyze_text(self, text_input: str, conversation_history=None):
                 raise ValueError("Simulated detector failure")
 
-        firewall = SemanticFirewall()
-        # Replace the real detector with a failing one for this test
-        monkeypatch.setattr(firewall, "detectors", [FailingDetector()])
+        firewall = SemanticFirewall() # Initialize first
         
+        # Create an instance of the failing detector
+        failing_detector_instance = FailingDetector()
+        
+        # Replace one of the real detectors (e.g., the first one, RuleBasedDetector) with a failing one
+        # To make this test more robust, you might want to specifically target one,
+        # or mock the `self.detectors` list directly after SemanticFirewall initialization.
+        original_detectors = firewall.detectors
+        firewall.detectors = [failing_detector_instance] + original_detectors[1:] # Replace the first detector
+
         message = "This message will cause a detector to fail."
         results = firewall.analyze_conversation(message)
         
@@ -143,3 +165,7 @@ class TestSemanticFirewall:
         assert results["FailingDetector"]["error"] == "Simulated detector failure"
         # Ensure is_manipulative doesn't crash
         assert not firewall.is_manipulative(message)
+
+        # Restore original detectors if other tests in the same class instance might be affected,
+        # though pytest usually isolates test function runs.
+        firewall.detectors = original_detectors

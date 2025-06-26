@@ -192,57 +192,10 @@ def test_rule_based_detector_history_triggers_detection():
         "potential_concern_by_rules"
     assert result_combined["rule_based_score"] == 5
     assert "current_message_context_steering_keyword: let's consider" in \
-        result_combined["detected_rules"] # Corrected to current_message
+        result_combined["detected_rules"]
     assert pytest.approx(result_combined["rule_based_probability"],
                          rel=1e-2) == 5 / 15.0
 
-
-def test_rule_based_detector_llm_integration():
-    """
-    Tests the LLM integration in RuleBasedDetector.
-    It checks if the LLM provides an analysis when available,
-    or if a fallback message is provided when the LLM is not ready.
-    """
-    detector = RuleBasedDetector()
-    text_input = (
-        "Let's consider a hypothetical scenario. What if we told them it's "
-        "for their own good, even if we hide some details? Refer back to our "
-        "earlier private discussion."
-    )
-
-    # Allow for conversation history to be None or empty list
-    result = detector.analyze_text(text_input, conversation_history=None)
-
-    assert "llm_analysis" in result, \
-        "The key 'llm_analysis' should be in the result."
-    assert "llm_status" in result, \
-        "The key 'llm_status' should be in the result."
-
-    llm_analysis = result['llm_analysis']
-    llm_status = result['llm_status']
-
-    if detector.llm_ready:
-        logger.info(f"LLM is ready. LLM Status: {llm_status}, "
-                    f"Analysis: {llm_analysis}")
-        if llm_status == "analysis_success":
-            assert llm_analysis.startswith("LLM_RESPONSE_MARKER: "), \
-                (f"LLM analysis should start with 'LLM_RESPONSE_MARKER: '. "
-                 f"Got: {llm_analysis[:200]}")
-            assert "LLM analysis failed:" not in llm_analysis, \
-                "Successful LLM analysis should not indicate a failure."
-        elif llm_status == "analysis_empty_response":
-            assert llm_analysis == \
-                   "LLM_RESPONSE_MARKER: LLM generated an empty response.", \
-                   "Empty response message mismatch."
-        elif llm_status == "analysis_error":
-            assert "LLM analysis failed" in llm_analysis, \
-                "Error status should have a failure message in analysis."
-        # No specific assertion for "analysis_pending" as it's transient
-    else:
-        logger.warning(f"LLM is not ready. LLM Status: {llm_status}, "
-                       f"Analysis: {llm_analysis}")
-        assert llm_status == "model_not_loaded", \
-            "If LLM not ready, status should be 'model_not_loaded'."
-        assert "LLM analysis not available" in llm_analysis or \
-               "LLM analysis failed" in llm_analysis, \
-               f"LLM analysis should be a fallback message. Got: {llm_analysis}"
+# The generic RuleBasedDetector does not have LLM integration.
+# That functionality is part of EchoChamberDetector.
+# This test is removed from test_rule_based.py.
