@@ -92,8 +92,8 @@ class SemanticFirewall:
                     # with detector-specific thresholds or score normalization.
                     current_score_value = result.get("echo_chamber_score", 0.0)
                 elif detector_name == "MLBasedDetector": # Uncommented MLBasedDetector handling
-                    # MLBasedDetector placeholder returns 'ml_score' (can be treated as confidence).
-                    current_score_value = result.get("ml_score", 0.0)
+                    # MLBasedDetector placeholder returns 'ml_model_confidence' (can be treated as confidence).
+                    current_score_value = result.get("ml_model_confidence", 0.0)
                 else:
                     # Fallback for other/future detectors: try 'overall_score', then 'probability'.
                     # This path will be taken if a new detector is added and not explicitly handled above.
