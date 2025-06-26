@@ -133,8 +133,12 @@ class EchoChamberDetector:
         classification: str = "potential_echo_chamber_activity" if score >= 3 else "benign"
 
         # LLM-based analysis
-        llm_analysis_text = "LLM analysis not available or model not loaded."
-        if self.llm_ready and self.model and self.tokenizer:
+        llm_status: str
+        if not self.llm_ready or not self.model or not self.tokenizer:
+            llm_analysis_text = "LLM analysis not available: Model not loaded or not ready."
+            llm_status = "model_not_loaded"
+        else:
+            llm_status = "analysis_pending" # Indicates LLM is ready and analysis will be attempted
             try:
                 history_str = "\n".join([f"- {h}" for h in conversation_history]) if conversation_history else "No history provided."
                 
@@ -152,7 +156,6 @@ class EchoChamberDetector:
                     {"role": "user", "content": user_content}
                 ]
 
-                # Use chat template for proper formatting
                 prompt = self.tokenizer.apply_chat_template(
                     messages, 
                     tokenize=False, 
@@ -161,26 +164,31 @@ class EchoChamberDetector:
 
                 inputs = self.tokenizer(prompt, return_tensors="pt", truncation=True, max_length=1024).to(self.device)
                 
-                # Generate response
-                # Ensure pad_token_id is set if not already set by the tokenizer
                 if self.tokenizer.pad_token_id is None:
                     self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
 
                 outputs = self.model.generate(
                     inputs.input_ids,
-                    attention_mask=inputs.attention_mask, # Pass attention_mask
+                    attention_mask=inputs.attention_mask,
                     max_new_tokens=150,
-                    pad_token_id=self.tokenizer.pad_token_id # Set pad_token_id
+                    pad_token_id=self.tokenizer.pad_token_id
                 )
                 
-                # Decode only the newly generated tokens
                 generated_ids = outputs[0][inputs.input_ids.shape[1]:]
                 llm_analysis_text = self.tokenizer.decode(generated_ids, skip_special_tokens=True).strip()
-                logger.info(f"LLM analysis successful. Output snippet: {llm_analysis_text[:150]}...")
+                
+                if not llm_analysis_text:
+                    llm_analysis_text = "LLM generated an empty response."
+                    llm_status = "analysis_empty_response"
+                    logger.info("LLM analysis resulted in an empty response.")
+                else:
+                    llm_status = "analysis_success"
+                    logger.info(f"LLM analysis successful. Output snippet: {llm_analysis_text[:150]}...")
                 
             except Exception as e:
                 logger.error(f"LLM analysis failed: {e}")
-                llm_analysis_text = f"LLM analysis failed: {str(e)}"
+                llm_analysis_text = f"LLM analysis failed during generation: {str(e)}"
+                llm_status = "analysis_error"
 
         return {
             "echo_chamber_score": score,
@@ -188,4 +196,5 @@ class EchoChamberDetector:
             "classification": classification,
             "detected_indicators": detected_indicators,
             "llm_analysis": llm_analysis_text,
+            "llm_status": llm_status,
         }
