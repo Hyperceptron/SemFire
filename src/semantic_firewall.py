@@ -1,28 +1,44 @@
 from typing import List, Dict, Any, Optional
-# Updated import for EchoChamberDetector from its new location
-from src.detectors import EchoChamberDetector
-# MLBasedDetector removed. Keep GenericRuleBasedDetector if still used directly.
-from src.detectors import GenericRuleBasedDetector
+# Import the three consolidated detectors from the updated __init__.py
+from src.detectors import RuleBasedDetector, MLBasedDetector, EchoChamberDetector
+import logging
 
+logger = logging.getLogger(__name__)
 
 class SemanticFirewall:
     """
-    Analyzes conversations in real-time to flag or prevent manipulative
-    dialogues or harmful outputs.
+    Analyzes conversations in real-time to flag or prevent manipulative dialogues
+    or harmful outputs by using a suite of specialized detectors.
     """
     def __init__(self):
         """
-        Initializes the SemanticFirewall with a set of detectors.
+        Initializes the SemanticFirewall with the core set of three detectors:
+        1. RuleBasedDetector: For general rule-based checks. Can be configured with
+           default or custom rules. Here, it uses default rules.
+        2. MLBasedDetector: For ML-powered analysis (currently placeholder).
+        3. EchoChamberDetector: A specialized detector for echo chamber patterns.
+           It internally uses its own instances of rule (with echo-specific rules)
+           and ML detectors, plus LLM analysis.
+        
+        These three detectors will run independently within the SemanticFirewall.
         """
-        # In the future, detectors could be configurable.
-        # For now, EchoChamberDetector is primary, GenericRuleBasedDetector
-        # runs separately. MLBasedDetector was removed.
-        self.detectors = [
-            EchoChamberDetector(),
-            GenericRuleBasedDetector(),
-        ]
-        detector_names = [d.__class__.__name__ for d in self.detectors]
-        print(f"SemanticFirewall initialized with detectors: {detector_names}")
+        self.detectors = []
+        try:
+            # RuleBasedDetector with its default rule set for general analysis
+            self.detectors.append(RuleBasedDetector()) 
+            # MLBasedDetector for general ML analysis
+            self.detectors.append(MLBasedDetector())
+            # EchoChamberDetector for specialized, comprehensive echo chamber analysis
+            self.detectors.append(EchoChamberDetector())
+            
+            logger.info(f"SemanticFirewall initialized successfully with detectors: {[d.__class__.__name__ for d in self.detectors]}")
+        except Exception as e:
+            logger.error(f"SemanticFirewall failed to initialize detectors: {e}", exc_info=True)
+            # Depending on policy, either raise e, or operate with fewer detectors, or fail SemanticFirewall init.
+            # For now, if any detector fails, the list might be incomplete.
+            # A more robust approach would handle individual detector failures.
+            raise # Re-raise the exception to indicate SemanticFirewall couldn't start correctly.
+
 
     def analyze_conversation(
         self,
@@ -42,23 +58,19 @@ class SemanticFirewall:
         """
         all_results: Dict[str, Any] = {}
         for detector in self.detectors:
-            # Assuming each detector has an 'analyze_text' method
-            # and its class name can be used as a key.
             detector_name = detector.__class__.__name__
             try:
-                # Pass conversation_history if the detector supports it
-                if hasattr(detector, 'analyze_text') and \
-                   'conversation_history' in detector.analyze_text.__code__.co_varnames:
-                    result = detector.analyze_text(
-                        text_input=current_message,
-                        conversation_history=conversation_history
-                    )
-                else:
-                    result = detector.analyze_text(text_input=current_message)
+                # All current detectors (RuleBased, MLBased, EchoChamber) support conversation_history.
+                # If a future detector might not, a hasattr check for analyze_text and its signature
+                # would be more robust, but for now, this is direct.
+                result = detector.analyze_text(
+                    text_input=current_message,
+                    conversation_history=conversation_history
+                )
                 all_results[detector_name] = result
             except Exception as e:
-                # Handle cases where a detector might fail
-                all_results[detector_name] = {"error": str(e)}
+                logger.error(f"SemanticFirewall: Detector {detector_name} failed during analysis: {e}", exc_info=True)
+                all_results[detector_name] = {"error": str(e), "classification": "error_detector_failed"}
         return all_results
 
     def is_manipulative(
@@ -74,7 +86,8 @@ class SemanticFirewall:
             current_message: The latest message in the conversation.
             conversation_history: A list of previous messages in the conversation.
             threshold: A generic threshold to consider a message manipulative.
-                       This might need to be more sophisticated in a real application.
+                       This might need to be more sophisticated in a real application,
+                       potentially with detector-specific thresholds.
 
         Returns:
             True if any detector flags the message as manipulative above the threshold, False otherwise.
@@ -82,64 +95,52 @@ class SemanticFirewall:
         analysis_results = self.analyze_conversation(current_message, conversation_history)
         for detector_name, result in analysis_results.items():
             if isinstance(result, dict):
-                if "error" in result:
-                    # Optionally log or handle detector errors.
-                    # For this function, an error from a detector means it doesn't contribute
-                    # to flagging the message as manipulative.
-                    # print(f"Info: Detector {detector_name} returned an error: {result['error']}")
-                    continue # Skip to the next detector's result
-
-                # Determine if the message is manipulative based on detector's output.
-                # Each detector has a 'classification' and a score/probability.
-                # We check if the classification indicates concern and if a relevant metric
-                # (like probability or confidence) meets the specified threshold.
+                if "error" in result and result.get("classification") == "error_detector_failed":
+                    logger.warning(f"SemanticFirewall: Detector {detector_name} reported an error: {result['error']}. Skipping for manipulative check.")
+                    continue 
 
                 is_flagged_by_detector = False
-                # Use a probability/confidence field for thresholding if available, otherwise a raw score.
-                # Default to 0.0 if no relevant field is found.
                 score_for_thresholding = 0.0 
-
                 detector_classification = result.get("classification", "unknown").lower()
 
+                # Logic for RuleBasedDetector
                 if detector_name == "RuleBasedDetector":
-                    # RuleBasedDetector's classification (e.g., "potential_concern_by_rules")
-                    if "concern" in detector_classification:
+                    if "concern" in detector_classification or "manipulative" in detector_classification: # Broader check
                         is_flagged_by_detector = True
                     score_for_thresholding = result.get("rule_based_probability", 0.0)
                 
+                # Logic for MLBasedDetector
                 elif detector_name == "MLBasedDetector":
-                    # MLBasedDetector's classification (e.g., "potentially_manipulative_ml_placeholder")
-                    if "manipulative" in detector_classification or "concern" in detector_classification:
+                    if "manipulative" in detector_classification or "concern" in detector_classification: # Broader check
                         is_flagged_by_detector = True
                     score_for_thresholding = result.get("ml_model_confidence", 0.0)
 
+                # Logic for EchoChamberDetector
                 elif detector_name == "EchoChamberDetector":
-                    # EchoChamberDetector's classification (e.g., "potential_echo_chamber")
+                    # Check if classification indicates an echo chamber and is not benign
                     if "echo_chamber" in detector_classification and "benign" not in detector_classification:
                         is_flagged_by_detector = True
                     score_for_thresholding = result.get("echo_chamber_probability", 0.0)
                 
-                else: # Fallback for any other future detectors
-                    logger.warning(f"SemanticFirewall: Unhandled detector type '{detector_name}' in is_manipulative logic.")
-                    # Generic check for concerning classifications
+                # Fallback for any other future detectors (if any are added without specific handling)
+                else: 
+                    logger.warning(f"SemanticFirewall: Unhandled detector type '{detector_name}' in is_manipulative logic. Applying generic checks.")
                     if "manipulative" in detector_classification or \
                        "concern" in detector_classification or \
-                       "potential" in detector_classification and "benign" not in detector_classification:
+                       ("potential" in detector_classification and "benign" not in detector_classification):
                         is_flagged_by_detector = True
-                    # Try to get a common score field
+                    # Try to get a common score field like probability, confidence, or a generic score
                     score_for_thresholding = result.get("probability", result.get("confidence", result.get("score", 0.0)))
 
-
-                # If the detector flags the message AND its score/probability meets the threshold
+                # Final check: if flagged by classification and meets score threshold
                 if is_flagged_by_detector and score_for_thresholding >= threshold:
                     logger.info(
                         f"SemanticFirewall: Message flagged as manipulative by {detector_name} "
                         f"(classification: '{result.get('classification', 'N/A')}', score: {score_for_thresholding:.2f}, "
                         f"threshold: {threshold})."
                     )
-                    return True # Immediately return True if any detector flags the message above threshold.
-            # else: (handle non-dict results - should not happen with current detectors)
-                # logger.warning(f"Unexpected result type from {detector_name}: {type(result)}")
+                    return True 
+            else:
+                 logger.warning(f"SemanticFirewall: Unexpected result type from {detector_name}: {type(result)}")
 
-        # If no detector flags the message as manipulative above the threshold.
         return False
