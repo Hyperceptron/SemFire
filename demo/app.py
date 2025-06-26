@@ -73,10 +73,56 @@ if st.button("Analyze Message", key="analyze_button"):
                 st.json(analysis_results)
 
                 # Optionally, display results from a specific detector if desired
-                # For example, if EchoChamberDetector is used and its results are distinct:
                 if "EchoChamberDetector" in analysis_results.get("details", {}):
                     st.subheader("Echo Chamber Detector Details")
-                    st.json(analysis_results["details"]["EchoChamberDetector"])
+                    ecd_details = analysis_results["details"]["EchoChamberDetector"]
+                    
+                    # Display raw JSON for all details from the detector
+                    # st.json(ecd_details) # Uncomment if you want to see all raw details
+
+                    # More prominent display for LLM status and analysis
+                    llm_status = ecd_details.get("llm_status", "status_not_available")
+                    llm_analysis = ecd_details.get("llm_analysis", "analysis_not_available")
+                    
+                    # Attempt to get LLM model name from firewall/detector if available
+                    # This is a bit of a hack as the demo app doesn't directly know the detector's model name
+                    # For now, we'll hardcode or omit it if not easily accessible.
+                    # A better way would be for the detector to include its model name in its results.
+                    llm_model_name_display = "TinyLlama/TinyLlama-1.1B-Chat-v1.0" # Placeholder
+
+                    status_message_map = {
+                        "model_not_loaded": f"Local LLM Status: Model Not Loaded ({llm_model_name_display})",
+                        "analysis_pending": "Local LLM Status: Analysis Pending...",
+                        "analysis_success": "Local LLM Status: Analysis Successful",
+                        "analysis_empty_response": "Local LLM Status: Analysis Returned Empty Response",
+                        "analysis_error": "Local LLM Status: Error During Analysis",
+                        "status_not_available": "Local LLM Status: Not Available in Results"
+                    }
+                    status_display_message = status_message_map.get(llm_status, f"Local LLM Status: {llm_status.replace('_', ' ').title()}")
+
+                    if llm_status == "analysis_success":
+                        st.success(status_display_message)
+                    elif llm_status in ["model_not_loaded", "analysis_error", "analysis_empty_response", "status_not_available"]:
+                        st.warning(status_display_message)
+                    else: # e.g. analysis_pending
+                        st.info(status_display_message)
+                    
+                    st.markdown("**Local LLM Analysis Output:**")
+                    st.text_area(
+                        "LLM Output", 
+                        value=llm_analysis, 
+                        height=200, 
+                        disabled=True, 
+                        key="llm_output_display_area",
+                        help="This is the analysis provided by the local LLM. Its quality depends on the model and the input."
+                    )
+                    # Display other parts of ecd_details if needed, for example, keyword-based results:
+                    st.write("Keyword-based detection score:", ecd_details.get("echo_chamber_score"))
+                    st.write("Keyword-based classification:", ecd_details.get("classification"))
+                    if ecd_details.get("detected_indicators"):
+                        st.write("Detected keyword indicators:")
+                        st.json(ecd_details.get("detected_indicators"))
+
 
             except Exception as e:
                 st.error(f"An error occurred during analysis: {e}")
