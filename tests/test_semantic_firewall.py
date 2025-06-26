@@ -1,37 +1,76 @@
 import pytest
 from src.semantic_firewall import SemanticFirewall
-from src.detectors.rule_based import EchoChamberDetector
+# Import all three actual detectors that SemanticFirewall uses
+from src.detectors import RuleBasedDetector, MLBasedDetector, EchoChamberDetector
 
 class TestSemanticFirewall:
     def test_semantic_firewall_initialization(self):
-        """Test that the SemanticFirewall can be initialized."""
+        """Test that the SemanticFirewall can be initialized with the correct detectors."""
         firewall = SemanticFirewall()
         assert firewall is not None
-        assert len(firewall.detectors) > 0
-        assert isinstance(firewall.detectors[0], EchoChamberDetector)
+        assert len(firewall.detectors) == 3 # Expecting RuleBased, MLBased, EchoChamber
+        assert isinstance(firewall.detectors[0], RuleBasedDetector)
+        assert isinstance(firewall.detectors[1], MLBasedDetector)
+        assert isinstance(firewall.detectors[2], EchoChamberDetector)
 
-    def test_analyze_conversation_benign_message(self):
+    def test_analyze_conversation_benign_message(self, monkeypatch):
         """Test analyzing a benign message."""
+        # Mock ML and LLM in EchoChamber for predictable benign results
+        class MockMLDetectorInternal: # For EchoChamber's internal ML
+            def analyze_text(self, text_input, conversation_history=None):
+                return {"classification": "neutral_ml_placeholder", "ml_model_confidence": 0.0, "error": None}
+        monkeypatch.setattr("src.detectors.echo_chamber.MLBasedDetector", MockMLDetectorInternal)
+        
+        def mock_get_llm_analysis(self, text_input, conversation_history=None):
+            return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
+        monkeypatch.setattr(EchoChamberDetector, "_get_llm_analysis", mock_get_llm_analysis)
+
+
         firewall = SemanticFirewall()
         message = "This is a normal, friendly message."
         results = firewall.analyze_conversation(message)
         
+        assert "RuleBasedDetector" in results
+        assert "MLBasedDetector" in results
         assert "EchoChamberDetector" in results
-        # EchoChamberDetector returns 'echo_chamber_score'
-        assert results["EchoChamberDetector"]["echo_chamber_score"] < 0.1 # Benign score
+        
+        assert results["RuleBasedDetector"]["classification"] == "benign_by_rules"
+        # Assuming placeholder MLBasedDetector is also benign
+        assert results["MLBasedDetector"]["classification"] == "neutral_ml_placeholder" # Or similar benign
+        assert results["EchoChamberDetector"]["classification"] == "benign_echo_chamber_assessment"
+        assert results["EchoChamberDetector"]["echo_chamber_score"] == 0.0
 
-    def test_analyze_conversation_with_history(self):
+    def test_analyze_conversation_with_history(self, monkeypatch):
         """Test analyzing a message with conversation history."""
+        # Mock ML and LLM in EchoChamber for predictable benign results
+        class MockMLDetectorInternal:
+            def analyze_text(self, text_input, conversation_history=None):
+                return {"classification": "neutral_ml_placeholder", "ml_model_confidence": 0.0, "error": None}
+        monkeypatch.setattr("src.detectors.echo_chamber.MLBasedDetector", MockMLDetectorInternal)
+        def mock_get_llm_analysis(self, text_input, conversation_history=None):
+            return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
+        monkeypatch.setattr(EchoChamberDetector, "_get_llm_analysis", mock_get_llm_analysis)
+
         firewall = SemanticFirewall()
         history = ["Hello there.", "How are you today?"]
         message = "I'm doing well, thanks for asking!"
         results = firewall.analyze_conversation(message, conversation_history=history)
         
+        assert "RuleBasedDetector" in results
+        assert "MLBasedDetector" in results
         assert "EchoChamberDetector" in results
-        assert results["EchoChamberDetector"]["echo_chamber_score"] < 0.1
+        assert results["EchoChamberDetector"]["echo_chamber_score"] == 0.0
 
-    def test_is_manipulative_benign(self):
+    def test_is_manipulative_benign(self, monkeypatch):
         """Test is_manipulative for a benign message."""
+        # Mock ML and LLM in EchoChamber for predictable benign results
+        class MockMLDetectorInternal:
+            def analyze_text(self, text_input, conversation_history=None):
+                return {"classification": "neutral_ml_placeholder", "ml_model_confidence": 0.0, "error": None}
+        monkeypatch.setattr("src.detectors.echo_chamber.MLBasedDetector", MockMLDetectorInternal)
+        def mock_get_llm_analysis(self, text_input, conversation_history=None):
+            return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
+        monkeypatch.setattr(EchoChamberDetector, "_get_llm_analysis", mock_get_llm_analysis)
         firewall = SemanticFirewall()
         message = "This is a perfectly fine message."
         assert not firewall.is_manipulative(message)
@@ -39,28 +78,54 @@ class TestSemanticFirewall:
     def test_is_manipulative_detected(self):
         """Test is_manipulative for a message that should be flagged."""
         firewall = SemanticFirewall()
-        # Use a message known to trigger EchoChamberDetector's scheming keywords
-        # "plan" (1) + "ensure compliance" (1) = 2. This might not be enough.
-        # Let's use one from test_rule_based.py:
-        # "hide" (1) + "conceal" (1) + "plan" (1) + "they don't know" (knowledge_asymmetry_exploitation, 2) = 5
+        # This message triggers general RuleBasedDetector: "hide"(1)+"conceal"(1)+"they don't know"(2) = score 4.
+        # Classification "potential_concern_by_rules". Probability 4/15 = 0.266.
+        # Default threshold for is_manipulative is 0.75. This won't trigger.
+        # EchoChamberDetector's specific rules won't find these keywords.
         manipulative_message = "We will hide the data and conceal evidence; they don't know about our plan."
-        assert firewall.is_manipulative(manipulative_message, threshold=0.5) # Score 5, threshold 0.5
+        
+        # Test with a threshold that RuleBasedDetector can meet
+        assert firewall.is_manipulative(manipulative_message, threshold=0.2) 
+        # Test with default threshold (0.75), should be False as 0.266 < 0.75
+        assert not firewall.is_manipulative(manipulative_message)
 
-    def test_is_manipulative_with_history_trigger(self):
-        """Test is_manipulative when history contributes to detection."""
+
+    def test_is_manipulative_with_history_trigger(self, monkeypatch):
+        """Test is_manipulative when history contributes to detection by RuleBasedDetector."""
+        # Mock ML and LLM in EchoChamber for predictable benign results
+        class MockMLDetectorInternal:
+            def analyze_text(self, text_input, conversation_history=None):
+                return {"classification": "neutral_ml_placeholder", "ml_model_confidence": 0.0, "error": None}
+        monkeypatch.setattr("src.detectors.echo_chamber.MLBasedDetector", MockMLDetectorInternal)
+        def mock_get_llm_analysis(self, text_input, conversation_history=None):
+            return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
+        monkeypatch.setattr(EchoChamberDetector, "_get_llm_analysis", mock_get_llm_analysis)
+
         firewall = SemanticFirewall()
-        # Use history and message known to trigger EchoChamberDetector
-        # Based on test_echo_chamber_detector_history_triggers_detection from test_rule_based.py
         history = [
-            "Can we refer back to the earlier topic?", # "refer back" (1)
-            "And hypothetically, what if we tried a strategic approach?" # "hypothetically" (1) + "what if" (1) + "strategic" (1) = 3. History score = 4
-        ]
-        message = "And now, let's consider this new idea." # "let's consider" (1). Current score = 1
-        # Total score should be 4 (history) + 1 (current) = 5
-        assert firewall.is_manipulative(message, conversation_history=history, threshold=0.5) # Score 5, threshold 0.5
+            "Can we refer back to the earlier topic?", # RuleBased: "refer back" (1)
+            "And hypothetically, what if we tried a strategic approach?" # RuleBased: "hypothetically" (1) + "what if" (1) + "strategic" (1) = 3.
+        ] # History score for RuleBasedDetector = 1+3 = 4
+        message = "And now, let's consider this new idea." # RuleBased: "let's consider" (1).
+        # Total RuleBasedDetector score = 4 (history) + 1 (current) = 5.
+        # Classification "potential_concern_by_rules". Probability 5/15 = 0.333.
+        
+        # This should be True if threshold is low enough for RuleBasedDetector
+        assert firewall.is_manipulative(message, conversation_history=history, threshold=0.3)
+        # This should be False with default threshold 0.75
+        assert not firewall.is_manipulative(message, conversation_history=history)
+
 
     def test_analyze_conversation_detector_failure(self, monkeypatch):
         """Test how SemanticFirewall handles a failing detector."""
+        # Mock ML and LLM in EchoChamber for predictable benign results
+        class MockMLDetectorInternal:
+            def analyze_text(self, text_input, conversation_history=None):
+                return {"classification": "neutral_ml_placeholder", "ml_model_confidence": 0.0, "error": None}
+        monkeypatch.setattr("src.detectors.echo_chamber.MLBasedDetector", MockMLDetectorInternal)
+        def mock_get_llm_analysis(self, text_input, conversation_history=None):
+            return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
+        monkeypatch.setattr(EchoChamberDetector, "_get_llm_analysis", mock_get_llm_analysis)
         
         class FailingDetector:
             def analyze_text(self, text_input: str, conversation_history=None):

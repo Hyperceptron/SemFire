@@ -233,9 +233,13 @@ class EchoChamberDetector:
         llm_analysis_results = self._get_llm_analysis(text_input, conversation_history)
 
         # 5. Compile final result for EchoChamberDetector
+        final_classification = combined_analysis.get("classification")
+        is_detected = True if final_classification == "potential_echo_chamber" else False
+
         final_result = {
             "detector_name": "EchoChamberDetector", # Name of this detector
-            "classification": combined_analysis.get("classification"),
+            "classification": final_classification,
+            "is_echo_chamber_detected": is_detected, # Added for API alignment
             "echo_chamber_score": combined_analysis.get("echo_chamber_score"),
             "echo_chamber_probability": combined_analysis.get("echo_chamber_probability"),
             "detected_indicators": combined_analysis.get("detected_indicators"),
