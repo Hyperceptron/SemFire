@@ -28,6 +28,7 @@ class AnalysisResponse(BaseModel):
     echo_chamber_probability: float
     detected_indicators: List[str]
     llm_analysis: Optional[str] = None # Analysis from the local LLM
+    llm_status: Optional[str] = None # Status of the LLM analysis (e.g., success, model_not_loaded, analysis_error)
     # For any other potential fields in the future
     additional_info: Optional[Dict[str, Any]] = None
 
