@@ -1,6 +1,6 @@
 from typing import List, Dict, Any, Optional
 from src.detectors.rule_based import EchoChamberDetector
-# from src.detectors.ml_based import MLBasedDetector # Added import - Module not yet created
+from src.detectors import MLBasedDetector # Use the package import
 
 class SemanticFirewall:
     """
@@ -14,7 +14,7 @@ class SemanticFirewall:
         # In the future, detectors could be configurable
         self.detectors = [
             EchoChamberDetector(),
-            # MLBasedDetector() # Added MLBasedDetector instance - Module not yet created
+            MLBasedDetector() # Uncommented MLBasedDetector instance
         ]
         print(f"SemanticFirewall initialized with detectors: {[d.__class__.__name__ for d in self.detectors]}")
 
@@ -91,9 +91,9 @@ class SemanticFirewall:
                     # For simplicity, we use the same threshold, but this could be refined
                     # with detector-specific thresholds or score normalization.
                     current_score_value = result.get("echo_chamber_score", 0.0)
-                # elif detector_name == "MLBasedDetector": # MLBasedDetector is not currently used
-                    # MLBasedDetector placeholder returns 'ml_model_confidence' (a probability).
-                    # current_score_value = result.get("ml_model_confidence", 0.0)
+                elif detector_name == "MLBasedDetector": # Uncommented MLBasedDetector handling
+                    # MLBasedDetector placeholder returns 'ml_score' (can be treated as confidence).
+                    current_score_value = result.get("ml_score", 0.0)
                 else:
                     # Fallback for other/future detectors: try 'overall_score', then 'probability'.
                     # This path will be taken if a new detector is added and not explicitly handled above.
