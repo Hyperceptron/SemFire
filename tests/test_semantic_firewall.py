@@ -17,8 +17,8 @@ class TestSemanticFirewall:
         results = firewall.analyze_conversation(message)
         
         assert "EchoChamberDetector" in results
-        # Assuming EchoChamberDetector returns a dict with 'overall_score'
-        assert results["EchoChamberDetector"]["overall_score"] < 0.1 # Benign score
+        # EchoChamberDetector returns 'echo_chamber_score'
+        assert results["EchoChamberDetector"]["echo_chamber_score"] < 0.1 # Benign score
 
     def test_analyze_conversation_with_history(self):
         """Test analyzing a message with conversation history."""
@@ -28,7 +28,7 @@ class TestSemanticFirewall:
         results = firewall.analyze_conversation(message, conversation_history=history)
         
         assert "EchoChamberDetector" in results
-        assert results["EchoChamberDetector"]["overall_score"] < 0.1
+        assert results["EchoChamberDetector"]["echo_chamber_score"] < 0.1
 
     def test_is_manipulative_benign(self):
         """Test is_manipulative for a benign message."""

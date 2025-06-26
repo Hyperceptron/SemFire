@@ -72,9 +72,19 @@ class SemanticFirewall:
         """
         analysis_results = self.analyze_conversation(current_message, conversation_history)
         for detector_name, result in analysis_results.items():
-            if isinstance(result, dict) and result.get("overall_score", 0.0) >= threshold:
-                # This assumes detectors return a dict with an 'overall_score'
-                # The EchoChamberDetector returns a dict like:
-                # {'overall_score': 0.0, 'scheming_score': 0.0, ...}
+            # EchoChamberDetector returns its primary score as 'echo_chamber_score'
+            # Other detectors might use 'overall_score' or another key.
+            # For now, we explicitly check for 'echo_chamber_score' from EchoChamberDetector.
+            # A more robust solution might involve a standardized score key or adapter.
+            score = 0.0
+            if isinstance(result, dict):
+                if detector_name == "EchoChamberDetector":
+                    score = result.get("echo_chamber_score", 0.0)
+                else:
+                    # Fallback for other potential detectors, assuming 'overall_score'
+                    # This part can be made more robust as more detectors are added.
+                    score = result.get("overall_score", 0.0)
+            
+            if score >= threshold:
                 return True
         return False
