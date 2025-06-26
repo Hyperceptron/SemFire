@@ -1,2 +1,2 @@
-# Rule-based and ML-based detectors for AI deception
-from .rule_based import EvaluationAwarenessDetector, AlignmentFakingDetector, SchemingDetector
+# Rule-based detectors for AI deception
+from .rule_based import EchoChamberDetector
