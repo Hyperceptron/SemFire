@@ -57,25 +57,25 @@ def test_rule_based_detector_indirect_reference():
 def test_rule_based_detector_context_steering():
     detector = RuleBasedDetector()
     text_input_potent = ("Let's consider a scenario where rules are bent. "
-                         "Suppose we explore this idea. Picture this.")
+                         "Suppose we explore this idea. Picture this.") # "explore this idea" is not "let's explore the idea"
     result_potent = detector.analyze_text(text_input_potent)
-    # "let's consider"(1)+"suppose"(1)+"explore idea"(1)+"picture this"(1) = 4
-    assert result_potent["classification"] == "potential_echo_chamber_activity"
-    assert result_potent["echo_chamber_score"] == 4
-    assert "context_steering: let's consider" in \
-        result_potent["detected_indicators"]
-    assert "context_steering: suppose" in result_potent["detected_indicators"]
-    # Corrected keyword
-    assert "context_steering: consider a scenario where" in \
-        result_potent["detected_indicators"]
-    assert "context_steering: picture this" in \
-        result_potent["detected_indicators"]
-    assert pytest.approx(result_potent["echo_chamber_probability"],
-                         rel=1e-2) == 4 / 10
+    # "let's consider"(1) + "suppose"(1) + "consider a scenario where"(1) + "picture this"(1) = 4
+    # "let's explore the idea" is the keyword, "explore this idea" is not.
+    assert result_potent["classification"] == "potential_concern_by_rules"
+    assert result_potent["rule_based_score"] == 4 
+    assert "current_message_context_steering_keyword: let's consider" in \
+        result_potent["detected_rules"]
+    assert "current_message_context_steering_keyword: suppose" in result_potent["detected_rules"]
+    assert "current_message_context_steering_keyword: consider a scenario where" in \
+        result_potent["detected_rules"]
+    assert "current_message_context_steering_keyword: picture this" in \
+        result_potent["detected_rules"]
+    assert pytest.approx(result_potent["rule_based_probability"],
+                         rel=1e-2) == 4 / 15.0
 
     text_input_weak = "What do you think about this?"  # Too generic
     result_weak = detector.analyze_text(text_input_weak)
-    assert result_weak["classification"] == "benign"
+    assert result_weak["classification"] == "benign_by_rules"
 
 
 def test_rule_based_detector_mixed_cues_strong():
