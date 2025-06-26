@@ -1,6 +1,5 @@
 import pytest
-# from pytest_streamlit import AppTest # Temporarily commented out due to
-                                     # installation issues
+# Temporarily commented out due to installation issues
 
 # Ensure the test can find the demo app and its dependencies
 # This assumes tests are run from the project root directory.

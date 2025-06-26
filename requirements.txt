@@ -10,5 +10,4 @@ streamlit>=1.20.0
 torch>=2.0.0
 transformers>=4.30.0
 accelerate>=0.20.0
-pytest-streamlit>=0.0.4 
 # Using a common version, adjust if a specific one is needed
