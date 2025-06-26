@@ -8,3 +8,4 @@ src/detectors/__pycache__/__init__.cpython-311.pyc
 src/detectors/__pycache__/rule_based.cpython-311.pyc
 tests/__pycache__/test_rule_based.cpython-311-pytest-8.3.5.pyc
 *.pyc*
+*.pyc
