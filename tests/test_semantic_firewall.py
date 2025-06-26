@@ -74,11 +74,3 @@ class TestSemanticFirewall:
         assert results["FailingDetector"]["error"] == "Simulated detector failure"
         # Ensure is_manipulative doesn't crash
         assert not firewall.is_manipulative(message)
-
-```
-
-```python
-src/__init__.py
-<<<<<<< SEARCH
-# Package for AI Deception Detection Toolkit
-__version__ = "0.1.0"
