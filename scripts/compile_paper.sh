@@ -20,12 +20,14 @@ pdflatex -output-directory="../paper" "${LATEX_MAIN_FILE}"
 
 # Clean up auxiliary files
 # You can uncomment these lines if you want to remove .aux, .log, .out, .toc files
-# rm -f "../paper/${LATEX_MAIN_FILE%.tex}.aux"
-# rm -f "../paper/${LATEX_MAIN_FILE%.tex}.log"
-# rm -f "../paper/${LATEX_MAIN_FILE%.tex}.out"
-# rm -f "../paper/${LATEX_MAIN_FILE%.tex}.toc"
-# rm -f "../paper/${LATEX_MAIN_FILE%.tex}.nav"
-# rm -f "../paper/${LATEX_MAIN_FILE%.tex}.snm"
+rm -f "../paper/${LATEX_MAIN_FILE%.tex}.aux"
+rm -f "../paper/${LATEX_MAIN_FILE%.tex}.log"
+rm -f "../paper/${LATEX_MAIN_FILE%.tex}.out"
+rm -f "../paper/${LATEX_MAIN_FILE%.tex}.toc"
+rm -f "../paper/${LATEX_MAIN_FILE%.tex}.nav"
+rm -f "../paper/${LATEX_MAIN_FILE%.tex}.snm"
+rm -f "../paper/${LATEX_MAIN_FILE%.tex}.bbl"
+rm -f "../paper/${LATEX_MAIN_FILE%.tex}.blg"
 
 # Navigate back to the original directory
 cd - > /dev/null || exit 1
