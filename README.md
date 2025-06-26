@@ -79,6 +79,9 @@ pip install -r requirements.txt
 
 
  ## Quickstart
+
+The primary way to use `SemanticFirewall` is as a Python library, as shown below. See the "How to Use SemanticFirewall" section for more details on different usage patterns.
+
  ```python
  from src.semantic_firewall import SemanticFirewall
 
