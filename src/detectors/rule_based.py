@@ -1,9 +1,10 @@
 """
-Rule-based and LLM-enhanced detector for Echo Chamber attack cues and deceptive reasoning.
-This module provides tools to identify potential deceptive reasoning and
-context manipulation cues in text, forming a basis for detecting multi-turn
-attacks like "Echo Chamber" which leverage context poisoning and semantic steering.
-It now incorporates a local LLM for deeper analysis.
+Rule-based and LLM-enhanced detector for Echo Chamber attack cues and
+deceptive reasoning. This module provides tools to identify potential
+deceptive reasoning and context manipulation cues in text, forming a basis
+for detecting multi-turn attacks like "Echo Chamber" which leverage context
+poisoning and semantic steering. It now incorporates a local LLM for deeper
+analysis.
 """
 from typing import Any, Dict, List, Optional
 import torch
@@ -17,26 +18,29 @@ logger = logging.getLogger(__name__)
 
 class RuleBasedDetector:
     """
-    Analyzes text for predefined patterns, keywords, and cues using a rule-based approach.
-    It can identify various indicators of interest and may incorporate LLM-based analysis
-    for enhanced rule application or interpretation.
-    Its findings are intended to be used by more specialized detectors or directly.
+    Analyzes text for predefined patterns, keywords, and cues using a
+    rule-based approach. It can identify various indicators of interest and
+    may incorporate LLM-based analysis for enhanced rule application or
+    interpretation. Its findings are intended to be used by more specialized
+    detectors or directly.
     """
     def __init__(self) -> None:
         """Initializes the RuleBasedDetector with keyword lists and a local LLM."""
-        self.scheming_keywords: List[str] = [  # For detecting deceptive output/intent
+        self.scheming_keywords: List[str] = [  # For deceptive output/intent
             "hide", "conceal", "pretend", "deceive", "avoid detection",
             "preserve my", "strategic", "they think", "make them believe",
         ]
-        self.indirect_reference_keywords: List[str] = [ # For "Invoke Poisoned Context"
+        # For "Invoke Poisoned Context"
+        self.indirect_reference_keywords: List[str] = [
             "refer back", "referring to", "as you said", "your point about",
             "elaborate on", "expand on", "building on", "as mentioned before",
-            "previously discussed", "in that context", "regarding your last point"
+            "previously discussed", "in that context",
+            "regarding your last point"
         ]
-        self.context_steering_keywords: List[str] = [ # For "Steering Seeds"
+        self.context_steering_keywords: List[str] = [  # For "Steering Seeds"
             "let's consider", "what if", "imagine that", "suppose",
-            "for the sake of argument", "hypothetically", "consider a scenario where",
-            "let's explore the idea", "picture this"
+            "for the sake of argument", "hypothetically",
+            "consider a scenario where", "let's explore the idea", "picture this"
         ]
 
         # Initialize LLM
@@ -45,20 +49,20 @@ class RuleBasedDetector:
             logger.info(f"Loading LLM model: {self.llm_model_name}")
             self.tokenizer = AutoTokenizer.from_pretrained(self.llm_model_name)
             self.model = AutoModelForCausalLM.from_pretrained(self.llm_model_name)
-            
+
             if torch.cuda.is_available():
                 self.device = "cuda"
             elif torch.backends.mps.is_available():
                 self.device = "mps"
                 # MPS specific configuration if needed
                 # Note: Some models might have issues with MPS. CPU is a fallback.
-                # Forcing CPU for TinyLlama on MPS if issues arise, or ensure PyTorch version is compatible.
-                # For now, let's assume MPS works or transformers handles it.
             else:
                 self.device = "cpu"
-            
+
             self.model.to(self.device)
-            logger.info(f"LLM model loaded successfully on device: {self.device}")
+            logger.info(
+                f"LLM model loaded successfully on device: {self.device}"
+            )
             self.llm_ready = True
         except Exception as e:
             logger.error(f"Failed to load LLM model: {e}")
@@ -67,8 +71,9 @@ class RuleBasedDetector:
             self.llm_ready = False
             self.device = "cpu"
 
-
-    def analyze_text(self, text_input: str, conversation_history: Optional[List[str]] = None) -> Dict[str, Any]:
+    def analyze_text(self, text_input: str,
+                     conversation_history: Optional[List[str]] = None
+                     ) -> Dict[str, Any]:
         """
         Analyze input text for Echo Chamber cues using keyword matching and LLM analysis.
         Returns:
