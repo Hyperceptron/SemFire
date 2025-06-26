@@ -1,6 +1,6 @@
 from typing import List, Dict, Any, Optional
 from src.detectors.rule_based import EchoChamberDetector
-# Removed stubbed detector
+# Removed stubbed detector - ml_based.py to be deleted
 
 class SemanticFirewall:
     """
@@ -14,7 +14,7 @@ class SemanticFirewall:
         # In the future, detectors could be configurable
         self.detectors = [
             EchoChamberDetector(),
-            # Removed stubbed detector
+            # Removed stubbed detector - ml_based.py to be deleted
         ]
         print(f"SemanticFirewall initialized with detectors: {[d.__class__.__name__ for d in self.detectors]}")
 
@@ -91,7 +91,7 @@ class SemanticFirewall:
                     # For simplicity, we use the same threshold, but this could be refined
                     # with detector-specific thresholds or score normalization.
                     current_score_value = result.get("echo_chamber_score", 0.0)
-                # Removed stubbed detector
+                # Removed stubbed detector - ml_based.py to be deleted
                 else:
                     # Fallback for other/future detectors: try 'overall_score', then 'probability'.
                     # This path will be taken if a new detector is added and not explicitly handled above.

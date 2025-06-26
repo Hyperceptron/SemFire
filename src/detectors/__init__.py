@@ -2,9 +2,9 @@
 from .rule_based import EchoChamberDetector
 
 # ML-based detectors
-# Removed stubbed detector
+# Removed stubbed detector - ml_based.py to be deleted
 
 __all__ = [
     "EchoChamberDetector",
-    # Removed stubbed detector
+    # Removed stubbed detector - ml_based.py to be deleted
 ]
