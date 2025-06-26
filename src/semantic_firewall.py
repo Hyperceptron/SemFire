@@ -1,6 +1,6 @@
 from typing import List, Dict, Any, Optional
 # Updated import for EchoChamberDetector from its new location
-from src.detectors.echo_chamber_detector import EchoChamberDetector 
+from src.detectors import EchoChamberDetector 
 from src.detectors import GenericRuleBasedDetector, MLBasedDetector # Keep these if they are still used directly
 
 class SemanticFirewall:
