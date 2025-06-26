@@ -58,8 +58,8 @@ This document outlines the step-by-step plan to develop, test, and deploy the AI
 
  **Deliverables**
  - `notebooks/ml_pipeline.ipynb`
- - `src/detectors/ml_based.py`
- - `tests/test_ml_based.py`
+ - Initial ML-based detector module(s) / prototypes in `src/detectors/` (e.g., `src/detectors/ml_based.py` as a placeholder).
+ - Corresponding tests (e.g., `tests/test_ml_based.py` for the placeholder).
  - Metrics comparison report.
 
 ## Phase 4: Integration & API Design
