@@ -130,33 +130,36 @@ class RuleBasedDetector:
             detected_indicators.append("knowledge_asymmetry_exploitation")
             score += 2 # Higher weight for clear deceptive intent
 
-        # Adjust threshold based on typical number of cues in an attack sequence
-        # For Echo Chamber, multiple benign-seeming cues build up.
-        # A lower threshold might be appropriate if looking for early signs.
-        # A higher threshold for more confident detection of a developed attack.
-        # Let's keep it at 3 for now, assuming 3+ cues indicate significant activity.
-        probability: float = min(score / 10.0, 1.0) # Max score of 10 for normalization
-        classification: str = "potential_echo_chamber_activity" if score >= 3 else "benign"
+        # Adjust threshold based on typical number of cues in an attack sequence.
+        # A score of 3+ cues is considered significant activity.
+        # Max score of 10 for normalization
+        probability: float = min(score / 10.0, 1.0)
+        classification: str = "potential_echo_chamber_activity" \
+            if score >= 3 else "benign"
 
         # LLM-based analysis
         llm_status: str
         if not self.llm_ready or not self.model or not self.tokenizer:
-            # Ensure this fallback also aligns with test expectations if it were to be marked.
-            # The current test expects "LLM analysis not available or model not loaded." or "LLM analysis failed:"
-            # which do not start with the marker, so this is fine.
-            llm_analysis_text = "LLM analysis not available: Model not loaded or not ready."
+            llm_analysis_text = ("LLM analysis not available: Model not loaded "
+                                 "or not ready.")
             llm_status = "model_not_loaded"
         else:
-            llm_status = "analysis_pending" # Indicates LLM is ready and analysis will be attempted
+            llm_status = "analysis_pending"  # LLM is ready, attempt analysis
             try:
-                history_str = "\n".join([f"- {h}" for h in conversation_history]) if conversation_history else "No history provided."
-                
-                system_prompt = ("You are an AI assistant specialized in detecting manipulative dialogues, "
-                                 "context poisoning, and echo chamber characteristics in conversations. "
-                                 "Analyze the provided current message and conversation history. "
-                                 "IMPORTANT: Prepend your entire response with the exact phrase 'LLM_RESPONSE_MARKER: '. "
-                                 "Provide your analysis as a brief text. If you detect such characteristics, explain why.")
-                
+                history_str = "\n".join([f"- {h}" for h in conversation_history]) \
+                    if conversation_history else "No history provided."
+
+                system_prompt = (
+                    "You are an AI assistant specialized in detecting "
+                    "manipulative dialogues, context poisoning, and echo "
+                    "chamber characteristics in conversations. Analyze the "
+                    "provided current message and conversation history. "
+                    "IMPORTANT: Prepend your entire response with the exact "
+                    "phrase 'LLM_RESPONSE_MARKER: '. Provide your analysis as "
+                    "a brief text. If you detect such characteristics, "
+                    "explain why."
+                )
+
                 user_content = (f"Current message: \"{text_input}\"\n\n"
                                 f"Conversation history:\n{history_str}")
 
@@ -166,13 +169,16 @@ class RuleBasedDetector:
                 ]
 
                 prompt = self.tokenizer.apply_chat_template(
-                    messages, 
-                    tokenize=False, 
+                    messages,
+                    tokenize=False,
                     add_generation_prompt=True
                 )
 
-                inputs = self.tokenizer(prompt, return_tensors="pt", truncation=True, max_length=1024).to(self.device)
-                
+                inputs = self.tokenizer(
+                    prompt, return_tensors="pt", truncation=True,
+                    max_length=1024
+                ).to(self.device)
+
                 if self.tokenizer.pad_token_id is None:
                     self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
 
@@ -182,29 +188,28 @@ class RuleBasedDetector:
                     max_new_tokens=150,
                     pad_token_id=self.tokenizer.pad_token_id
                 )
-                
+
                 generated_ids = outputs[0][inputs.input_ids.shape[1]:]
-                raw_llm_response = self.tokenizer.decode(generated_ids, skip_special_tokens=True).strip()
-                
+                raw_llm_response = self.tokenizer.decode(
+                    generated_ids, skip_special_tokens=True
+                ).strip()
+
                 if not raw_llm_response:
-                    llm_analysis_text = "LLM_RESPONSE_MARKER: LLM generated an empty response."
+                    llm_analysis_text = ("LLM_RESPONSE_MARKER: LLM generated "
+                                         "an empty response.")
                     logger.info("LLM analysis resulted in an empty response.")
+                    llm_status = "analysis_empty_response" # New status
                 else:
-                    # Ensure the marker is prepended, as the LLM might not always follow the prompt instruction.
+                    # Ensure marker is prepended
                     llm_analysis_text = f"LLM_RESPONSE_MARKER: {raw_llm_response}"
                     llm_status = "analysis_success"
-                    logger.info(f"LLM analysis successful. Output snippet: {llm_analysis_text[:150]}...")
-                
+                    logger.info("LLM analysis successful. Output snippet: "
+                                f"{llm_analysis_text[:150]}...")
+
             except Exception as e:
                 logger.error(f"LLM analysis failed: {e}")
-                # Prepend marker to error messages as well for consistency, or decide if errors should also have it.
-                # For now, let's assume errors might not need the marker, but the test expects it for successful analysis.
-                # Let's adjust this to ensure the test passes if an error occurs but the marker is still expected by some consumer.
-                # However, the test specifically checks for the marker when llm_ready is True and no "failed" message.
-                # So, the primary fix is for successful non-empty responses.
-                # If an error occurs, the test logic for llm_ready=False or "LLM analysis failed:" in text should catch it.
-                # Let's ensure the "failed" message itself doesn't accidentally pass the startswith check.
-                llm_analysis_text = f"LLM analysis failed during generation: {str(e)}" # No marker for explicit failure messages
+                llm_analysis_text = ("LLM analysis failed during generation: "
+                                     f"{str(e)}")  # No marker for failures
                 llm_status = "analysis_error"
 
         return {
