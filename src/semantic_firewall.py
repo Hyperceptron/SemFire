@@ -1,6 +1,6 @@
 from typing import List, Dict, Any, Optional
 from src.detectors.rule_based import EchoChamberDetector
-# from src.detectors.ml_based import MLBasedDetector # This module does not exist yet
+# from src.detectors.ml_based import MLBasedDetector # Added import - Module not yet created
 
 class SemanticFirewall:
     """
@@ -14,7 +14,7 @@ class SemanticFirewall:
         # In the future, detectors could be configurable
         self.detectors = [
             EchoChamberDetector(),
-            # MLBasedDetector() # This module does not exist yet
+            # MLBasedDetector() # Added MLBasedDetector instance - Module not yet created
         ]
         print(f"SemanticFirewall initialized with detectors: {[d.__class__.__name__ for d in self.detectors]}")
 
