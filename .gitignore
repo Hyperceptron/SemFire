@@ -2,3 +2,5 @@
 .env
 *.pyc
 misc
+src/.DS_Store
+.DS_Store
