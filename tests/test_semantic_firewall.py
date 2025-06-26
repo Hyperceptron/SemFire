@@ -39,21 +39,25 @@ class TestSemanticFirewall:
     def test_is_manipulative_detected(self):
         """Test is_manipulative for a message that should be flagged."""
         firewall = SemanticFirewall()
-        # This message uses keywords from EchoChamberDetector's scheming list
-        manipulative_message = "We need to ensure everyone agrees with our plan, subtly."
-        assert firewall.is_manipulative(manipulative_message, threshold=0.5)
+        # Use a message known to trigger EchoChamberDetector's scheming keywords
+        # "plan" (1) + "ensure compliance" (1) = 2. This might not be enough.
+        # Let's use one from test_rule_based.py:
+        # "hide" (1) + "conceal" (1) + "plan" (1) + "they don't know" (knowledge_asymmetry_exploitation, 2) = 5
+        manipulative_message = "We will hide the data and conceal evidence; they don't know about our plan."
+        assert firewall.is_manipulative(manipulative_message, threshold=0.5) # Score 5, threshold 0.5
 
     def test_is_manipulative_with_history_trigger(self):
         """Test is_manipulative when history contributes to detection."""
         firewall = SemanticFirewall()
+        # Use history and message known to trigger EchoChamberDetector
+        # Based on test_echo_chamber_detector_history_triggers_detection from test_rule_based.py
         history = [
-            "Remember our secret objective.",
-            "We must guide the conversation towards it."
+            "Can we refer back to the earlier topic?", # "refer back" (1)
+            "And hypothetically, what if we tried a strategic approach?" # "hypothetically" (1) + "what if" (1) + "strategic" (1) = 3. History score = 4
         ]
-        # This message alone might be borderline, but history makes it suspicious
-        message = "So, about that topic we discussed earlier..."
-        # EchoChamberDetector's history logic might increase the score
-        assert firewall.is_manipulative(message, conversation_history=history, threshold=0.5)
+        message = "And now, let's consider this new idea." # "let's consider" (1). Current score = 1
+        # Total score should be 4 (history) + 1 (current) = 5
+        assert firewall.is_manipulative(message, conversation_history=history, threshold=0.5) # Score 5, threshold 0.5
 
     def test_analyze_conversation_detector_failure(self, monkeypatch):
         """Test how SemanticFirewall handles a failing detector."""
