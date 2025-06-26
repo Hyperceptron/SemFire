@@ -19,20 +19,27 @@ except Exception as e:
     st.error(f"Error initializing SemanticFirewall: {e}")
     firewall = None # Prevent further errors if initialization fails
 
-st.set_page_config(page_title="Semantic Firewall Demo", layout="wide")
+st.set_page_config(page_title="R.A.D.A.R. Demo", layout="wide")
 
-st.title("Interactive Demo: Semantic Firewall")
+st.title("RADAR: Recognizing Agentic Deception and Alignment Risk")
+st.subheader("Interactive Semantic Firewall Demo")
 st.markdown("""
-    This demo allows you to interact with the `SemanticFirewall` to detect
+    This demo allows you to interact with the `SemanticFirewall` (a key component of RADAR) to detect
     potential manipulative dialogues or harmful outputs.
     Enter a message and optionally provide conversation history to see the analysis.
 """)
 
-st.sidebar.header("About")
+st.sidebar.header("About R.A.D.A.R.")
 st.sidebar.info("""
-    The `SemanticFirewall` analyzes conversations in real-time.
-    It uses various detectors, such as the `EchoChamberDetector`,
-    to identify patterns associated with deception or manipulation.
+    **RADAR (Recognizing Agentic Deception and Alignment Risk)** is a project focused on identifying and mitigating risks associated with advanced AI systems.
+    
+    The **`SemanticFirewall`** demonstrated here analyzes conversations in real-time. It uses various detectors, such as the `EchoChamberDetector`, to identify patterns associated with deception or manipulation.
+""")
+st.sidebar.markdown("---")
+st.sidebar.header("Resources")
+st.sidebar.markdown("""
+    - [**Read the R.A.D.A.R. Article on Substack**](https://aptnative.substack.com/p/radar)
+    - [**View the Project on GitHub**](https://github.com/josephedward/R.A.D.A.R.)
 """)
 
 st.header("Analyze Conversation")
