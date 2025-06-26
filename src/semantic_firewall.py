@@ -1,6 +1,6 @@
 from typing import List, Dict, Any, Optional
-from src.detectors.rule_based import EchoChamberDetector
-# Removed stubbed detector - ml_based.py to be deleted
+from src.detectors.rule_based import EchoChamberDetector # Specific echo chamber detector
+from src.detectors import GenericRuleBasedDetector, MLBasedDetector
 
 class SemanticFirewall:
     """
@@ -14,7 +14,8 @@ class SemanticFirewall:
         # In the future, detectors could be configurable
         self.detectors = [
             EchoChamberDetector(),
-            # Removed stubbed detector - ml_based.py to be deleted
+            GenericRuleBasedDetector(),
+            MLBasedDetector(),
         ]
         print(f"SemanticFirewall initialized with detectors: {[d.__class__.__name__ for d in self.detectors]}")
 
@@ -91,10 +92,13 @@ class SemanticFirewall:
                     # For simplicity, we use the same threshold, but this could be refined
                     # with detector-specific thresholds or score normalization.
                     current_score_value = result.get("echo_chamber_score", 0.0)
-                # Removed stubbed detector - ml_based.py to be deleted
+                elif detector_name == "GenericRuleBasedDetector":
+                    current_score_value = result.get("generic_rule_score", 0.0)
+                elif detector_name == "MLBasedDetector":
+                    current_score_value = result.get("ml_model_confidence", 0.0)
                 else:
                     # Fallback for other/future detectors: try 'overall_score', then 'probability'.
-                    # This path will be taken if a new detector is added and not explicitly handled above.
+                    # This case should ideally not be hit if all detectors are handled above.
                     current_score_value = result.get("overall_score", result.get("probability", 0.0))
                 
                 # If the score from any detector meets or exceeds the threshold,
