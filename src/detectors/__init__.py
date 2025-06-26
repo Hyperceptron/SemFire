@@ -1,12 +1,17 @@
 # Rule-based detectors for AI deception
-from .rule_based import EchoChamberDetector # Specific echo chamber detector
+from .rule_based import RuleBasedDetector # Was EchoChamberDetector
 from .generic_rule_based_detector import GenericRuleBasedDetector
 
 # ML-based detectors
 from .ml_based import MLBasedDetector
 
+# Orchestrating detectors
+from .echo_chamber import EchoChamberDetector # New orchestrator
+
+
 __all__ = [
-    "EchoChamberDetector",
-    "GenericRuleBasedDetector",
+    "RuleBasedDetector",
+    "GenericRuleBasedDetector", # Keeping this as it was in the original __init__.py
     "MLBasedDetector",
+    "EchoChamberDetector", # This is now the orchestrator
 ]

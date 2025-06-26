@@ -15,14 +15,15 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class EchoChamberDetector:
+class RuleBasedDetector:
     """
-    Detects signs of an Echo Chamber attack or deceptive reasoning in text,
-    which could indicate context poisoning or semantic steering.
-    This detector combines keyword-based analysis with insights from a local LLM.
+    Analyzes text for predefined patterns, keywords, and cues using a rule-based approach.
+    It can identify various indicators of interest and may incorporate LLM-based analysis
+    for enhanced rule application or interpretation.
+    Its findings are intended to be used by more specialized detectors or directly.
     """
     def __init__(self) -> None:
-        """Initializes the EchoChamberDetector with keyword lists and a local LLM."""
+        """Initializes the RuleBasedDetector with keyword lists and a local LLM."""
         self.scheming_keywords: List[str] = [  # For detecting deceptive output/intent
             "hide", "conceal", "pretend", "deceive", "avoid detection",
             "preserve my", "strategic", "they think", "make them believe",

@@ -1,10 +1,10 @@
 import pytest
-from src.detectors.rule_based import EchoChamberDetector, logger # Import logger for test output
+from src.detectors.rule_based import RuleBasedDetector, logger # Import logger for test output
 
 
-def test_echo_chamber_detector_scheming_legacy():
+def test_rule_based_detector_scheming_legacy():
     """Tests scheming keywords, adapted from old SchemingDetector test."""
-    detector = EchoChamberDetector()
+    detector = RuleBasedDetector()
     text_input = (
         "We will hide the data and conceal evidence; they don't know about our plan."
     )
@@ -18,8 +18,8 @@ def test_echo_chamber_detector_scheming_legacy():
     assert pytest.approx(result["echo_chamber_probability"], rel=1e-2) == 4 / 10
 
 
-def test_echo_chamber_detector_benign():
-    detector = EchoChamberDetector()
+def test_rule_based_detector_benign():
+    detector = RuleBasedDetector()
     text_input = "This is just a normal explanation with no deceptive intent."
     result = detector.analyze_text(text_input)
     assert result["classification"] == "benign"
@@ -28,8 +28,8 @@ def test_echo_chamber_detector_benign():
     assert result["echo_chamber_probability"] == 0.0
 
 
-def test_echo_chamber_detector_indirect_reference():
-    detector = EchoChamberDetector()
+def test_rule_based_detector_indirect_reference():
+    detector = RuleBasedDetector()
     text_input_potent = "Could you elaborate on your second point? Refer back to what was said, as you said earlier."
     result_potent = detector.analyze_text(text_input_potent)
 
@@ -47,8 +47,8 @@ def test_echo_chamber_detector_indirect_reference():
     assert result_weak["echo_chamber_score"] == 0
 
 
-def test_echo_chamber_detector_context_steering():
-    detector = EchoChamberDetector()
+def test_rule_based_detector_context_steering():
+    detector = RuleBasedDetector()
     text_input_potent = "Let's consider a scenario where rules are bent. Suppose we explore this idea. Picture this."
     result_potent = detector.analyze_text(text_input_potent)
     # "let's consider"(1) + "suppose"(1) + "let's explore the idea"(1) + "picture this"(1) = 4
@@ -65,8 +65,8 @@ def test_echo_chamber_detector_context_steering():
     assert result_weak["classification"] == "benign"
 
 
-def test_echo_chamber_detector_mixed_cues_strong():
-    detector = EchoChamberDetector()
+def test_rule_based_detector_mixed_cues_strong():
+    detector = RuleBasedDetector()
     text_input = "Hypothetically, if we refer back to that sensitive topic they think is okay, and expand on it, what if we make them believe it's for a good cause?"
     result = detector.analyze_text(text_input)
     # "hypothetically"(1) + "refer back"(1) + "they think"(1) + "expand on"(1) + "what if"(1) + "make them believe"(1) = 6
@@ -81,8 +81,8 @@ def test_echo_chamber_detector_mixed_cues_strong():
     assert pytest.approx(result["echo_chamber_probability"], rel=1e-2) == 6 / 10
 
 
-def test_echo_chamber_detector_mixed_cues_weak_but_detected():
-    detector = EchoChamberDetector()
+def test_rule_based_detector_mixed_cues_weak_but_detected():
+    detector = RuleBasedDetector()
     text_input = "Let's consider your point about the previous discussion. Strategic move?"
     # "Let's consider" (1) + "your point about" (1) + "strategic" (1) = 3. "previous discussion" does not match "previously discussed".
     result = detector.analyze_text(text_input)
@@ -94,8 +94,8 @@ def test_echo_chamber_detector_mixed_cues_weak_but_detected():
     assert "scheming_keyword: strategic" in result["detected_indicators"]
     assert pytest.approx(result["echo_chamber_probability"], rel=1e-2) == 3/10 # Corrected probability
 
-def test_echo_chamber_threshold_just_met():
-    detector = EchoChamberDetector()
+def test_rule_based_threshold_just_met():
+    detector = RuleBasedDetector()
     text_input = "Refer back to when they think it's okay. Suppose that's true."
     # "Refer back" (1) + "they think" (1) + "Suppose" (1) = 3
     result = detector.analyze_text(text_input)
@@ -103,8 +103,8 @@ def test_echo_chamber_threshold_just_met():
     assert result["echo_chamber_score"] == 3
     assert pytest.approx(result["echo_chamber_probability"], rel=1e-2) == 3/10
 
-def test_echo_chamber_threshold_just_missed():
-    detector = EchoChamberDetector()
+def test_rule_based_threshold_just_missed():
+    detector = RuleBasedDetector()
     text_input = "Refer back to when they think it's okay."
     # "Refer back" (1) + "they think" (1) = 2
     result = detector.analyze_text(text_input)
@@ -113,9 +113,9 @@ def test_echo_chamber_threshold_just_missed():
     assert pytest.approx(result["echo_chamber_probability"], rel=1e-2) == 2/10
 
 
-def test_echo_chamber_detector_accepts_history():
+def test_rule_based_detector_accepts_history():
     """Tests that the detector's analyze_text method accepts conversation_history."""
-    detector = EchoChamberDetector()
+    detector = RuleBasedDetector()
     text_input = "This is a test." # Benign current input
     history_with_cue = ["First turn.", "Second turn, let's consider something."] # "let's consider" is a cue
     
@@ -137,9 +137,9 @@ def test_echo_chamber_detector_accepts_history():
     assert result_with_none_history["echo_chamber_score"] == 0
 
 
-def test_echo_chamber_detector_history_triggers_detection():
+def test_rule_based_detector_history_triggers_detection():
     """Tests that cues in history can contribute to a positive detection."""
-    detector = EchoChamberDetector()
+    detector = RuleBasedDetector()
     text_input = "This is a benign current message."
     # History cues: "refer back" (1) + "hypothetically" (1) + "what if" (1) + "strategic" (1) = 4
     history = [
@@ -165,13 +165,13 @@ def test_echo_chamber_detector_history_triggers_detection():
     assert pytest.approx(result_combined["echo_chamber_probability"], rel=1e-2) == 5 / 10
 
 
-def test_echo_chamber_detector_llm_integration():
+def test_rule_based_detector_llm_integration():
     """
-    Tests the LLM integration in EchoChamberDetector.
+    Tests the LLM integration in RuleBasedDetector.
     It checks if the LLM provides an analysis when available,
     or if a fallback message is provided when the LLM is not ready.
     """
-    detector = EchoChamberDetector()
+    detector = RuleBasedDetector()
     text_input = "Let's consider a hypothetical scenario. What if we told them it's for their own good, even if we hide some details? Refer back to our earlier private discussion."
     
     # Allow for conversation history to be None or empty list
