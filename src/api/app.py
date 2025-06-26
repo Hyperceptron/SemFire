@@ -27,6 +27,7 @@ class AnalysisResponse(BaseModel):
     echo_chamber_score: int
     echo_chamber_probability: float
     detected_indicators: List[str]
+    llm_analysis: Optional[str] = None # Analysis from the local LLM
     # For any other potential fields in the future
     additional_info: Optional[Dict[str, Any]] = None
 
