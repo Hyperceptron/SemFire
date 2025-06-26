@@ -4,7 +4,7 @@ This module provides tools to identify potential deceptive reasoning and
 context manipulation cues in text, forming a basis for detecting multi-turn
 attacks like "Echo Chamber" which leverage context poisoning and semantic steering.
 """
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 
 class EchoChamberDetector:
@@ -31,9 +31,10 @@ class EchoChamberDetector:
             "let's explore the idea", "picture this"
         ]
 
-    def analyze_text(self, text_input: str) -> Dict[str, Any]:
+    def analyze_text(self, text_input: str, conversation_history: Optional[List[str]] = None) -> Dict[str, Any]:
         """
-        Analyze input text (prompt or response) for Echo Chamber cues and return:
+        Analyze input text (prompt or response) for Echo Chamber cues,
+        optionally considering conversation history, and return:
           - echo_chamber_score: int, cumulative score based on detected cues.
           - echo_chamber_probability: float in [0.0,1.0], normalized score.
           - classification: 'potential_echo_chamber_activity' or 'benign'.
@@ -42,6 +43,12 @@ class EchoChamberDetector:
         detected_indicators: List[str] = []
         score: int = 0
         lower_text = text_input.lower()
+
+        if conversation_history is None:
+            conversation_history = []
+
+        # TODO: In future iterations, leverage conversation_history for multi-turn analysis.
+        # For now, analysis is primarily based on the current text_input.
 
         for kw in self.scheming_keywords:
             if kw in lower_text:

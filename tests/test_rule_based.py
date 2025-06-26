@@ -111,3 +111,24 @@ def test_echo_chamber_threshold_just_missed():
     assert result["classification"] == "benign"
     assert result["echo_chamber_score"] == 2
     assert pytest.approx(result["echo_chamber_probability"], rel=1e-2) == 2/10
+
+
+def test_echo_chamber_detector_accepts_history():
+    """Tests that the detector's analyze_text method accepts conversation_history."""
+    detector = EchoChamberDetector()
+    text_input = "This is a test."
+    history = ["First turn.", "Second turn, let's consider something."]
+    # Test with history
+    result_with_history = detector.analyze_text(text_input, conversation_history=history)
+    assert result_with_history["classification"] == "benign" # Current logic doesn't use history yet
+    assert result_with_history["echo_chamber_score"] == 0
+
+    # Test with empty history
+    result_with_empty_history = detector.analyze_text(text_input, conversation_history=[])
+    assert result_with_empty_history["classification"] == "benign"
+    assert result_with_empty_history["echo_chamber_score"] == 0
+
+    # Test with None history (should use default empty list)
+    result_with_none_history = detector.analyze_text(text_input, conversation_history=None)
+    assert result_with_none_history["classification"] == "benign"
+    assert result_with_none_history["echo_chamber_score"] == 0
