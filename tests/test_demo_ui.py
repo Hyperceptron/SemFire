@@ -1,5 +1,5 @@
 import pytest
-from streamlit_testing_library import AppTest
+from pytest_streamlit import AppTest
 
 # Ensure the test can find the demo app and its dependencies
 # This assumes tests are run from the project root directory.
