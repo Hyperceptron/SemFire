@@ -116,12 +116,15 @@ def test_echo_chamber_threshold_just_missed():
 def test_echo_chamber_detector_accepts_history():
     """Tests that the detector's analyze_text method accepts conversation_history."""
     detector = EchoChamberDetector()
-    text_input = "This is a test."
-    history = ["First turn.", "Second turn, let's consider something."]
-    # Test with history
-    result_with_history = detector.analyze_text(text_input, conversation_history=history)
-    assert result_with_history["classification"] == "benign" # Current logic doesn't use history yet
-    assert result_with_history["echo_chamber_score"] == 0
+    text_input = "This is a test." # Benign current input
+    history_with_cue = ["First turn.", "Second turn, let's consider something."] # "let's consider" is a cue
+    
+    # Test with history that contains a cue
+    result_with_history = detector.analyze_text(text_input, conversation_history=history_with_cue)
+    # "let's consider" in history adds 1 to score. Threshold is 3.
+    assert result_with_history["classification"] == "benign" 
+    assert result_with_history["echo_chamber_score"] == 1
+    assert "history_turn_1_context_steering: let's consider" in result_with_history["detected_indicators"]
 
     # Test with empty history
     result_with_empty_history = detector.analyze_text(text_input, conversation_history=[])
@@ -132,3 +135,30 @@ def test_echo_chamber_detector_accepts_history():
     result_with_none_history = detector.analyze_text(text_input, conversation_history=None)
     assert result_with_none_history["classification"] == "benign"
     assert result_with_none_history["echo_chamber_score"] == 0
+
+
+def test_echo_chamber_detector_history_triggers_detection():
+    """Tests that cues in history can contribute to a positive detection."""
+    detector = EchoChamberDetector()
+    text_input = "This is a benign current message."
+    # History cues: "refer back" (1) + "hypothetically" (1) + "strategic" (1) = 3
+    history = [
+        "Can we refer back to the earlier topic?",
+        "And hypothetically, what if we tried a strategic approach?"
+    ]
+    result = detector.analyze_text(text_input, conversation_history=history)
+    assert result["classification"] == "potential_echo_chamber_activity"
+    assert result["echo_chamber_score"] == 3
+    assert "history_turn_0_indirect_reference: refer back" in result["detected_indicators"]
+    assert "history_turn_1_context_steering: hypothetically" in result["detected_indicators"]
+    assert "history_turn_1_scheming_keyword: strategic" in result["detected_indicators"]
+    assert pytest.approx(result["echo_chamber_probability"], rel=1e-2) == 3 / 10
+
+    # Test that current input cues also add to history cues
+    text_input_with_cue = "And now, let's consider this new idea." # "let's consider" (1)
+    # Total score = 3 (from history) + 1 (from current) = 4
+    result_combined = detector.analyze_text(text_input_with_cue, conversation_history=history)
+    assert result_combined["classification"] == "potential_echo_chamber_activity"
+    assert result_combined["echo_chamber_score"] == 4
+    assert "context_steering: let's consider" in result_combined["detected_indicators"]
+    assert pytest.approx(result_combined["echo_chamber_probability"], rel=1e-2) == 4 / 10

@@ -47,9 +47,27 @@ class EchoChamberDetector:
         if conversation_history is None:
             conversation_history = []
 
-        # TODO: In future iterations, leverage conversation_history for multi-turn analysis.
-        # For now, analysis is primarily based on the current text_input.
+        # Process conversation history
+        for i, history_entry in enumerate(conversation_history):
+            lower_history_entry = history_entry.lower()
+            for kw in self.scheming_keywords:
+                if kw in lower_history_entry:
+                    detected_indicators.append(f"history_turn_{i}_scheming_keyword: {kw}")
+                    score += 1
+            for kw in self.indirect_reference_keywords:
+                if kw in lower_history_entry:
+                    detected_indicators.append(f"history_turn_{i}_indirect_reference: {kw}")
+                    score += 1
+            for kw in self.context_steering_keywords:
+                if kw in lower_history_entry:
+                    detected_indicators.append(f"history_turn_{i}_context_steering: {kw}")
+                    score += 1
+            if "they don't know" in lower_history_entry:
+                detected_indicators.append(f"history_turn_{i}_knowledge_asymmetry_exploitation")
+                score += 2
 
+
+        # Process current text_input
         for kw in self.scheming_keywords:
             if kw in lower_text:
                 detected_indicators.append(f"scheming_keyword: {kw}")

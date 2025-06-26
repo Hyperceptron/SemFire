@@ -15,33 +15,36 @@ This document outlines the step-by-step plan to develop, test, and deploy the AI
 
 ## Phase 1: Literature Survey & Data Collection
  **Goal**
- - Curate datasets of prompts and transcripts labeled for:
-   - Evaluation awareness
-   - Alignment faking
+ - Curate datasets of prompts, responses, and conversational transcripts labeled for:
    - In-context scheming
+   - Context poisoning patterns (e.g., 'Echo Chamber' attack stages)
+   - Gradual escalation tactics (e.g., 'Crescendo' attack sequences)
+   - Other multi-turn manipulative dialogues and persuasion techniques.
 
  **Tasks**
- 1. Review key research papers and existing repos.
+ 1. Review key research papers (including 'Echo Chamber', 'Crescendo' methodologies) and existing repos.
  2. Collect public benchmarks and synthetic examples.
  3. Define annotation schema and format (JSONL).
 
   **Deliverables**
-  - `dataset/raw/evaluation.jsonl`, `dataset/raw/alignment_faking.jsonl`, `dataset/raw/scheming.jsonl`.
-  - Data specification document.
+  - `dataset/raw/in_context_scheming.jsonl` (including multi-turn examples).
+  - `dataset/raw/echo_chamber_attack_examples.jsonl`.
+  - `dataset/raw/crescendo_attack_examples.jsonl`.
+  - Data specification document for multi-turn deceptive dialogues.
 
 ## Phase 2: Prototype Rule-Based Detectors
  **Goal**
- - Implement baseline detectors to validate approach.
+ - Implement and enhance the `EchoChamberDetector` for identifying in-context scheming and multi-turn attack patterns.
 
  **Tasks**
- 1. Code `EvaluationAwarenessDetector`, `AlignmentFakingDetector`, `SchemingDetector`, and `EchoChamberDetector`. The `EchoChamberDetector` will be designed with an API to accept conversational history (e.g., `analyze_text(text_input, conversation_history)`), enabling future enhancements for multi-turn analysis. Initially, it will focus on identifying cues of context poisoning, semantic steering, and multi-step inference within the current input, while being architecturally ready for history-aware logic.
- 2. Write unit tests covering positive/negative cases for all detectors, including Echo Chamber scenarios and tests for the history-accepting API of `EchoChamberDetector`.
+ 1. Implement logic within `EchoChamberDetector` to process `conversation_history`. This involves iterating through past turns, applying keyword checks, and accumulating scores/indicators to detect patterns indicative of attacks like "Echo Chamber" and "Crescendo".
+ 2. Refine keyword lists and scoring logic in `EchoChamberDetector` based on initial testing and attack patterns.
+ 3. Write comprehensive unit tests for `EchoChamberDetector`, specifically covering its ability to detect cues from `conversation_history` and combinations of history and current input.
 
     **Deliverables**
-    - `src/detectors/rule_based.py` (updated with `EchoChamberDetector` capable of accepting conversational history).
-    - Initial implementation of `EchoChamberDetector` with an API capable of accepting conversational history. The initial rule-based logic will primarily analyze the current turn, with placeholders/comments for future history-based analysis.
-    - `tests/test_rule_based.py` (with tests for `EchoChamberDetector`, including its ability to handle `conversation_history` input).
-    - Documentation: Updated `README.md` with usage examples for each detector, including `EchoChamberDetector` and its multi-turn capabilities.
+    - `src/detectors/rule_based.py` (with an `EchoChamberDetector` that actively processes `conversation_history`).
+    - `tests/test_rule_based.py` (with robust tests for history-aware detection logic in `EchoChamberDetector`).
+    - Documentation: Updated `README.md` with usage examples for `EchoChamberDetector`, highlighting its multi-turn analysis capabilities.
 
 ## Phase 3: ML-Based Classifiers
  **Goal**
