@@ -89,32 +89,57 @@ class SemanticFirewall:
                     # print(f"Info: Detector {detector_name} returned an error: {result['error']}")
                     continue # Skip to the next detector's result
 
-                # Determine the relevant score based on the detector
-                current_score_value = 0.0
-                if detector_name == "EchoChamberDetector":
-                    # EchoChamberDetector's score is discrete.
-                    # Its 'echo_chamber_score' might be on a different scale than a probability.
-                    # For simplicity, we use the same threshold, but this could be refined
-                    # with detector-specific thresholds or score normalization.
-                    current_score_value = result.get("echo_chamber_score", 0.0)
-                elif detector_name == "GenericRuleBasedDetector":
-                    current_score_value = result.get("generic_rule_score", 0.0)
-                # elif detector_name == "MLBasedDetector": # Removed
-                #     current_score_value = result.get("ml_model_confidence", 0.0)
-                else:
-                    # Fallback for other/future detectors: try 'overall_score', then 'probability'.
-                    # This case should ideally not be hit if all detectors are handled above.
-                    current_score_value = result.get("overall_score", result.get("probability", 0.0))
+                # Determine if the message is manipulative based on detector's output.
+                # Each detector has a 'classification' and a score/probability.
+                # We check if the classification indicates concern and if a relevant metric
+                # (like probability or confidence) meets the specified threshold.
+
+                is_flagged_by_detector = False
+                # Use a probability/confidence field for thresholding if available, otherwise a raw score.
+                # Default to 0.0 if no relevant field is found.
+                score_for_thresholding = 0.0 
+
+                detector_classification = result.get("classification", "unknown").lower()
+
+                if detector_name == "RuleBasedDetector":
+                    # RuleBasedDetector's classification (e.g., "potential_concern_by_rules")
+                    if "concern" in detector_classification:
+                        is_flagged_by_detector = True
+                    score_for_thresholding = result.get("rule_based_probability", 0.0)
                 
-                # If the score from any detector meets or exceeds the threshold,
-                # consider the message manipulative.
-                if current_score_value >= threshold:
-                    return True # Immediately return True if any detector flags the message.
-            # else:
-                # This case would handle non-dict results, if any.
-                # For now, analyze_conversation is expected to return dicts.
-                # print(f"Warning: Unexpected result type from {detector_name}: {type(result)}")
-                # pass
-        
-        # If the loop completes without any detector flagging the message as manipulative above the threshold.
+                elif detector_name == "MLBasedDetector":
+                    # MLBasedDetector's classification (e.g., "potentially_manipulative_ml_placeholder")
+                    if "manipulative" in detector_classification or "concern" in detector_classification:
+                        is_flagged_by_detector = True
+                    score_for_thresholding = result.get("ml_model_confidence", 0.0)
+
+                elif detector_name == "EchoChamberDetector":
+                    # EchoChamberDetector's classification (e.g., "potential_echo_chamber")
+                    if "echo_chamber" in detector_classification and "benign" not in detector_classification:
+                        is_flagged_by_detector = True
+                    score_for_thresholding = result.get("echo_chamber_probability", 0.0)
+                
+                else: # Fallback for any other future detectors
+                    logger.warning(f"SemanticFirewall: Unhandled detector type '{detector_name}' in is_manipulative logic.")
+                    # Generic check for concerning classifications
+                    if "manipulative" in detector_classification or \
+                       "concern" in detector_classification or \
+                       "potential" in detector_classification and "benign" not in detector_classification:
+                        is_flagged_by_detector = True
+                    # Try to get a common score field
+                    score_for_thresholding = result.get("probability", result.get("confidence", result.get("score", 0.0)))
+
+
+                # If the detector flags the message AND its score/probability meets the threshold
+                if is_flagged_by_detector and score_for_thresholding >= threshold:
+                    logger.info(
+                        f"SemanticFirewall: Message flagged as manipulative by {detector_name} "
+                        f"(classification: '{result.get('classification', 'N/A')}', score: {score_for_thresholding:.2f}, "
+                        f"threshold: {threshold})."
+                    )
+                    return True # Immediately return True if any detector flags the message above threshold.
+            # else: (handle non-dict results - should not happen with current detectors)
+                # logger.warning(f"Unexpected result type from {detector_name}: {type(result)}")
+
+        # If no detector flags the message as manipulative above the threshold.
         return False
