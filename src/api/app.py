@@ -35,21 +35,19 @@ class AnalysisRequest(BaseModel):
     text_input: str
     conversation_history: Optional[List[str]] = None
 
-# This response model should align with the output structure of the refactored EchoChamberDetector
+# This response model aligns with the output structure of the refactored EchoChamberDetector
 class AnalysisResponse(BaseModel):
-    detector_name: str
+    detector_name: str # Should be "EchoChamberDetector"
     classification: str
-    echo_chamber_score: float # Scores can be floats
+    is_echo_chamber_detected: bool # Added from refactored EchoChamberDetector output
+    echo_chamber_score: float # Can be int or float, Pydantic handles conversion
     echo_chamber_probability: float
     detected_indicators: List[str]
     explanation: Optional[str] = None
-    llm_analysis: Optional[str] = None
-    llm_status: Optional[str] = None
-    # Include underlying analyses for more detailed response
+    llm_analysis: Optional[str] = None # From underlying RuleBasedDetector
+    llm_status: Optional[str] = None   # From underlying RuleBasedDetector
     underlying_rule_analysis: Optional[Dict[str, Any]] = None
     underlying_ml_analysis: Optional[Dict[str, Any]] = None
-    # additional_info: Optional[Dict[str, Any]] = None # Retain if needed for future expansion
-
 
 @app.post("/analyze/", response_model=AnalysisResponse)
 async def analyze_text_endpoint(request: AnalysisRequest):
