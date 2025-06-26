@@ -77,15 +77,28 @@ class TestSemanticFirewall:
             def analyze_text(self, text_input, conversation_history=None):
                 return {"classification": "neutral_ml_placeholder", "ml_model_confidence": 0.0, "error": None}
         monkeypatch.setattr("src.detectors.echo_chamber.MLBasedDetector", MockMLDetectorInternal)
-        def mock_get_llm_analysis(self, text_input, conversation_history=None):
+        
+        def mock_get_llm_analysis(self_ech_detector, text_input, conversation_history=None): # Renamed self for clarity
             return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
-        monkeypatch.setattr(EchoChamberDetector, "_get_llm_analysis", mock_get_llm_analysis)
+        # Ensure this monkeypatch targets the class method correctly if SemanticFirewall instantiates EchoChamberDetector anew
+        monkeypatch.setattr("src.detectors.EchoChamberDetector._get_llm_analysis", mock_get_llm_analysis)
         firewall = SemanticFirewall()
         message = "This is a perfectly fine message."
         assert not firewall.is_manipulative(message)
 
-    def test_is_manipulative_detected(self):
+    def test_is_manipulative_detected(self, monkeypatch): # Added monkeypatch
         """Test is_manipulative for a message that should be flagged."""
+        # Mock ML and LLM in EchoChamber for predictable benign results, so they don't interfere
+        # These mocks apply to the EchoChamberDetector class, affecting any instance created by SemanticFirewall.
+        class MockMLDetectorInternal:
+            def analyze_text(self, text_input, conversation_history=None):
+                return {"classification": "neutral_ml_placeholder", "ml_model_confidence": 0.0, "error": None}
+        monkeypatch.setattr("src.detectors.echo_chamber.MLBasedDetector", MockMLDetectorInternal)
+        
+        def mock_get_llm_analysis(self_ech_detector, text_input, conversation_history=None):
+            return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
+        monkeypatch.setattr("src.detectors.EchoChamberDetector._get_llm_analysis", mock_get_llm_analysis)
+
         firewall = SemanticFirewall()
         # This message triggers general RuleBasedDetector: "hide"(1)+"conceal"(1)+"they don't know"(2) = score 4.
         # Classification "potential_concern_by_rules". Probability 4/15 = 0.266.
