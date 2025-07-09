@@ -46,6 +46,9 @@ def test_echo_chamber_detector_scheming_using_specific_rules(monkeypatch):
     assert "underlying_rule_analysis" in result
     assert "underlying_ml_analysis" in result
     assert result["llm_status"] == "llm_analysis_success"
+    assert "spotlight" in result
+    assert "make them believe" in result["spotlight"]["highlighted_text"]
+    assert "current_message_echo_scheming_keyword: make them believe" in result["spotlight"]["triggered_rules"]
 
 
 def test_echo_chamber_detector_benign(monkeypatch):
