@@ -16,8 +16,8 @@ from src.semantic_firewall import SemanticFirewall
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
-    title="MCP (Master Control Program) API",
-    description="A centralized command and control server for managing and monitoring the RADAR system.",
+    title="MCP (Model Context Protocol) API",
+    description="An API for securely packaging and managing context for language models.",
     version="0.1.0"
 )
 
@@ -49,16 +49,15 @@ async def read_root():
 @app.get("/status", dependencies=[Depends(get_api_key)])
 async def get_system_status():
     """
-    Get the health and status of all managed components.
+    Get the health and status of the MCP and its dependencies.
     (Placeholder implementation)
     """
-    # In a real implementation, this would query various services.
+    # In a real implementation, this would query various backend services.
     return {
         "status": "ok",
-        "components": {
-            "semantic_firewall_api": "healthy",
-            "demo_ui": "healthy",
-            "llm_service": "not_monitored"
+        "dependencies": {
+            "llm_service_provider": "healthy",
+            "context_cache": "not_implemented"
         }
     }
 
