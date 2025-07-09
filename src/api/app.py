@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import sys
@@ -31,6 +31,13 @@ except Exception as e:
     detector = None # Set to None to indicate failure; endpoints should check this.
 
 
+class SpotlightDetail(BaseModel):
+    """Details for spotlighting specific triggers and text for explainability."""
+    highlighted_text: List[str] = []
+    triggered_rules: List[str] = []
+    explanation: Optional[str] = None
+
+
 class AnalysisRequest(BaseModel):
     text_input: str
     conversation_history: Optional[List[str]] = None
@@ -44,6 +51,7 @@ class AnalysisResponse(BaseModel):
     echo_chamber_probability: float
     detected_indicators: List[str]
     explanation: Optional[str] = None
+    spotlight: Optional[SpotlightDetail] = None
     llm_analysis: Optional[str] = None # From underlying RuleBasedDetector
     llm_status: Optional[str] = None   # From underlying RuleBasedDetector
     underlying_rule_analysis: Optional[Dict[str, Any]] = None
@@ -75,17 +83,6 @@ async def analyze_text_endpoint(request: AnalysisRequest):
         logger.error(f"API /analyze/ endpoint error: {e}", exc_info=True)
         # Handle unexpected errors during analysis
         raise HTTPException(status_code=500, detail=f"An error occurred during analysis: {str(e)}")
-    """
-    Analyzes a given text input for signs of deceptive reasoning or echo chamber characteristics.
-    Optionally, a conversation history can be provided for more context.
-    """
-    except Exception as e:
-        logger.error(f"API /analyze/ endpoint error: {e}", exc_info=True)
-        # Handle unexpected errors during analysis
-        raise HTTPException(status_code=500, detail=f"An error occurred during analysis: {str(e)}")
-
-# Need to import HTTPException for proper error handling
-from fastapi import FastAPI, HTTPException
 
 @app.get("/")
 async def read_root():

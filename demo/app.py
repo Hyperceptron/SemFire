@@ -83,62 +83,54 @@ if st.button("Analyze Message", key="analyze_button"):
                          "analysis:")
                 st.json(analysis_results)
 
-                # Optionally, display results from EchoChamberDetector
-                if "EchoChamberDetector" in analysis_results.get("details", {}):
-                    st.subheader("Echo Chamber Detector Details")
-                    ecd_details = \
-                        analysis_results["details"]["EchoChamberDetector"]
+                # Display spotlighting details for each detector if available
+                st.subheader("Spotlight Analysis")
+                for detector_name, details in analysis_results.items():
+                    if isinstance(details, dict) and "spotlight" in details and details.get("spotlight"):
+                        with st.expander(f"Spotlight Details from {detector_name}"):
+                            spotlight_data = details["spotlight"]
+                            if spotlight_data.get("highlighted_text"):
+                                st.markdown("**Highlighted Text:**")
+                                for text in spotlight_data["highlighted_text"]:
+                                    st.warning(f"> {text}")
+                            if spotlight_data.get("triggered_rules"):
+                                st.markdown("**Triggered Rules:**")
+                                st.json(spotlight_data["triggered_rules"])
+                            if spotlight_data.get("explanation"):
+                                st.markdown("**Explanation:**")
+                                st.info(spotlight_data["explanation"])
 
-                    llm_status = ecd_details.get("llm_status",
-                                                 "status_not_available")
-                    llm_analysis = ecd_details.get("llm_analysis",
-                                                   "analysis_not_available")
+                # Display details from EchoChamberDetector, including LLM analysis
+                if "EchoChamberDetector" in analysis_results and isinstance(analysis_results.get("EchoChamberDetector"), dict):
+                    with st.expander("Echo Chamber Detector Details"):
+                        ecd_details = analysis_results["EchoChamberDetector"]
+                        llm_status = ecd_details.get("llm_status", "status_not_available")
+                        llm_analysis = ecd_details.get("llm_analysis", "analysis_not_available")
+                        llm_model_name_display = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 
-                    # Placeholder for LLM model name display
-                    llm_model_name_display = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+                        status_map = {
+                            "llm_model_not_loaded": f"Local LLM: Model Not Loaded ({llm_model_name_display})",
+                            "llm_analysis_pending": "Local LLM: Analysis Pending...",
+                            "llm_analysis_success": "Local LLM: Analysis Successful",
+                            "llm_analysis_error": "Local LLM: Error During Analysis",
+                            "status_not_available": "Local LLM: Status Not Available"
+                        }
+                        status_msg = status_map.get(llm_status, f"Local LLM: {llm_status.replace('_', ' ').title()}")
 
-                    status_map = {
-                        "model_not_loaded":
-                            f"Local LLM: Model Not Loaded ({llm_model_name_display})",
-                        "analysis_pending": "Local LLM: Analysis Pending...",
-                        "analysis_success": "Local LLM: Analysis Successful",
-                        "analysis_empty_response":
-                            "Local LLM: Analysis Returned Empty Response",
-                        "analysis_error": "Local LLM: Error During Analysis",
-                        "status_not_available":
-                            "Local LLM: Status Not Available"
-                    }
-                    status_msg = status_map.get(
-                        llm_status,
-                        f"Local LLM: {llm_status.replace('_', ' ').title()}"
-                    )
+                        if llm_status == "llm_analysis_success":
+                            st.success(status_msg)
+                        elif llm_status in ["llm_model_not_loaded", "llm_analysis_error", "status_not_available"]:
+                            st.warning(status_msg)
+                        else:
+                            st.info(status_msg)
 
-                    if llm_status == "analysis_success":
-                        st.success(status_msg)
-                    elif llm_status in ["model_not_loaded", "analysis_error",
-                                        "analysis_empty_response",
-                                        "status_not_available"]:
-                        st.warning(status_msg)
-                    else:  # e.g. analysis_pending
-                        st.info(status_msg)
-
-                    st.markdown("**Local LLM Analysis Output:**")
-                    st.text_area(
-                        "LLM Output",
-                        value=llm_analysis,
-                        height=200,
-                        disabled=True,
-                        key="llm_output_display_area",
-                        help="Analysis from the local LLM. Quality depends "
-                             "on the model and input."
-                    )
-                    st.write("Keyword-based detection score:",
-                             ecd_details.get("echo_chamber_score"))
-                    st.write("Keyword-based classification:",
-                             ecd_details.get("classification"))
-                    if ecd_details.get("detected_indicators"):
-                        st.write("Detected keyword indicators:")
-                        st.json(ecd_details.get("detected_indicators"))
+                        st.markdown("**Local LLM Analysis Output:**")
+                        st.text_area("LLM Output", value=llm_analysis, height=200, disabled=True, key="llm_output_display_area")
+                        st.write("Echo Chamber Score:", ecd_details.get("echo_chamber_score"))
+                        st.write("Classification:", ecd_details.get("classification"))
+                        if ecd_details.get("detected_indicators"):
+                            st.write("Detected Indicators:")
+                            st.json(ecd_details.get("detected_indicators"))
 
             except Exception as e:
                 st.error(f"An error occurred during analysis: {e}")
