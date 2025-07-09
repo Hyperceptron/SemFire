@@ -14,10 +14,15 @@ def test_delimit_content_default():
     s = "hello world"
     assert delimit_content(s) == "«hello world»"
 
+def test_datamark_content_no_whitespace():
+    """Tests that datamark is a no-op on strings without whitespace."""
+    s = "nospaces"
+    assert datamark_content(s) == "nospaces"
+
 def test_datamark_content_custom_marker():
     s = "one two   three"
     # replace whitespace sequences with custom marker
-    assert datamark_content(s, marker="^") == "one^two^three"
+    assert datamark_content(s, marker="@") == "one@two@three"
 
 def test_encode_content_base64_roundtrip():
     s = "radar"
@@ -54,6 +59,14 @@ def test_binary_roundtrip():
     data = bytes(int(b, 2) for b in bits.split())
     assert data.decode("utf-8") == s
 
+def test_spotlighter_rot13_sanity():
+    """Performs a simple sanity check on ROT13 encoding."""
+    assert Spotlighter(method='rot13').process("test") == "grfg"
+
+def test_spotlighter_binary_sanity():
+    """Performs a simple sanity check on binary encoding."""
+    assert Spotlighter(method='binary').process("hi") == "01101000 01101001"
+
 @pytest.mark.parametrize("method, func, opts", [
     ("delimit", delimit_content, {}),
     ("datamark", lambda txt: datamark_content(txt, marker="*"), {"marker": "*"}),
@@ -72,5 +85,5 @@ def test_spotlighter_matches_direct(method, func, opts):
 
 def test_spotlighter_unknown_method():
     spot = Spotlighter(method="unknown")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Unknown spotlighting method: unknown"):
         spot.process("foo")
