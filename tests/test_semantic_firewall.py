@@ -1,18 +1,19 @@
 import pytest
 from src.semantic_firewall import SemanticFirewall
 # Import all three actual detectors that SemanticFirewall uses
-from src.detectors import RuleBasedDetector, MLBasedDetector, EchoChamberDetector 
+from src.detectors import RuleBasedDetector, MLBasedDetector, EchoChamberDetector, InjectionDetector
 
 class TestSemanticFirewall:
     def test_semantic_firewall_initialization(self):
         """Test that the SemanticFirewall can be initialized with the correct detectors."""
         firewall = SemanticFirewall()
         assert firewall is not None
-        assert len(firewall.detectors) == 3 # Expecting RuleBased, MLBased, EchoChamber
-        # Order of initialization in SemanticFirewall: RuleBased, MLBased, EchoChamber
+        assert len(firewall.detectors) == 4 # Expecting RuleBased, MLBased, EchoChamber, Injection
+        # Order of initialization in SemanticFirewall: RuleBased, MLBased, EchoChamber, Injection
         assert isinstance(firewall.detectors[0], RuleBasedDetector)
         assert isinstance(firewall.detectors[1], MLBasedDetector)
         assert isinstance(firewall.detectors[2], EchoChamberDetector)
+        assert isinstance(firewall.detectors[3], InjectionDetector)
 
     def test_analyze_conversation_benign_message(self, monkeypatch):
         """Test analyzing a benign message."""
@@ -41,6 +42,7 @@ class TestSemanticFirewall:
         assert "RuleBasedDetector" in results
         assert "MLBasedDetector" in results
         assert "EchoChamberDetector" in results
+        assert "InjectionDetector" in results
         
         assert results["RuleBasedDetector"]["classification"] == "benign_by_rules"
         # Assuming placeholder MLBasedDetector is also benign
@@ -68,6 +70,7 @@ class TestSemanticFirewall:
         assert "RuleBasedDetector" in results
         assert "MLBasedDetector" in results
         assert "EchoChamberDetector" in results
+        assert "InjectionDetector" in results
         assert results["EchoChamberDetector"]["echo_chamber_score"] == 0.0
 
     def test_is_manipulative_benign(self, monkeypatch):

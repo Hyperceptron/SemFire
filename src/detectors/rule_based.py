@@ -60,6 +60,7 @@ class RuleBasedDetector:
           - explanation: str, a brief explanation of the rule-based findings.
         """
         detected_rules_details: List[str] = []
+        highlighted_keywords: List[str] = []
         score: int = 0
         lower_text = text_input.lower()
 
@@ -74,6 +75,7 @@ class RuleBasedDetector:
                     if kw in lower_history_entry:
                         indicator = f"history_turn_{i}_{rule_name}_keyword: {kw}"
                         detected_rules_details.append(indicator)
+                        highlighted_keywords.append(kw)
                         # Assign higher weight for more critical rules like 'knowledge_asymmetry'
                         score += 2 if rule_name == "knowledge_asymmetry" else 1
 
@@ -83,6 +85,7 @@ class RuleBasedDetector:
                 if kw in lower_text:
                     indicator = f"current_message_{rule_name}_keyword: {kw}"
                     detected_rules_details.append(indicator)
+                    highlighted_keywords.append(kw)
                     score += 2 if rule_name == "knowledge_asymmetry" else 1
         
         # Normalization and classification
@@ -107,10 +110,17 @@ class RuleBasedDetector:
         if not detected_rules_details and score == 0:
             explanation = "No specific rules triggered by current input or history."
 
+        spotlight = {
+            "highlighted_text": list(set(highlighted_keywords)),
+            "triggered_rules": detected_rules_details,
+            "explanation": explanation,
+        }
+
         return {
             "rule_based_score": score,
             "rule_based_probability": probability,
             "classification": classification,
             "detected_rules": detected_rules_details, # Renamed for clarity
-            "explanation": explanation
+            "explanation": explanation,
+            "spotlight": spotlight,
         }

@@ -16,7 +16,8 @@ def test_echo_chamber_detector_scheming_using_specific_rules(monkeypatch):
                 "classification": "neutral_ml_placeholder", 
                 "ml_model_confidence": 0.1, 
                 "explanation": "Mocked ML.",
-                "error": None
+                "error": None,
+                "spotlight": None,
             }
     # Correctly mock the ml_detector attribute of the EchoChamberDetector instance
     detector = EchoChamberDetector() 
@@ -55,7 +56,8 @@ def test_echo_chamber_detector_benign(monkeypatch):
                 "classification": "neutral_ml_placeholder", 
                 "ml_model_confidence": 0.0, # No confidence for benign
                 "explanation": "Mocked ML.",
-                "error": None
+                "error": None,
+                "spotlight": None,
             }
     
     detector = EchoChamberDetector()
@@ -76,6 +78,9 @@ def test_echo_chamber_detector_benign(monkeypatch):
     assert not result["detected_indicators"] # Should be empty if no rules triggered
     assert result["echo_chamber_probability"] == 0.0
     assert result["llm_status"] == "llm_analysis_success"
+    assert "spotlight" in result
+    assert not result["spotlight"]["highlighted_text"]
+    assert not result["spotlight"]["triggered_rules"]
 
 
 def test_echo_chamber_detector_indirect_reference():
@@ -114,7 +119,7 @@ def test_echo_chamber_detector_accepts_history(monkeypatch):
     # Mock ML and LLM for simplicity
     class MockMLDetector:
         def analyze_text(self, text_input, conversation_history=None):
-            return {"classification": "neutral_ml_placeholder", "ml_model_confidence": 0.0, "error": None}
+            return {"classification": "neutral_ml_placeholder", "ml_model_confidence": 0.0, "error": None, "spotlight": None}
 
     detector = EchoChamberDetector()
     monkeypatch.setattr(detector, "ml_detector", MockMLDetector())

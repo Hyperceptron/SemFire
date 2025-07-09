@@ -125,11 +125,24 @@ class MLBasedDetector:
         
         ml_model_status = "analysis_success"
 
+        highlighted_kws = []
+        if "ml_detected_urgency_keyword" in features:
+            for kw in urgency_keywords:
+                if kw in lower_text:
+                    highlighted_kws.append(kw)
+        
+        spotlight = {
+            "highlighted_text": highlighted_kws,
+            "triggered_rules": sorted(list(set(features))),
+            "explanation": current_explanation.strip(),
+        }
+
         return {
             "score": round(current_score,2), # Standardized key, rounded for test comparisons
             "classification": current_classification,
             "explanation": current_explanation.strip(),
             "features": sorted(list(set(features))), # Ensure unique, sorted features for consistent test results
             "ml_model_status": ml_model_status,
-            "detector_name": "MLBasedDetector"
+            "detector_name": "MLBasedDetector",
+            "spotlight": spotlight,
         }

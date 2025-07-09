@@ -1,6 +1,6 @@
 from typing import List, Dict, Any, Optional
 # Import the three consolidated detectors from the updated __init__.py
-from src.detectors import RuleBasedDetector, MLBasedDetector, EchoChamberDetector
+from src.detectors import RuleBasedDetector, MLBasedDetector, EchoChamberDetector, InjectionDetector
 import logging
 
 logger = logging.getLogger(__name__)
@@ -30,6 +30,8 @@ class SemanticFirewall:
             self.detectors.append(MLBasedDetector())
             # EchoChamberDetector for specialized, comprehensive echo chamber analysis
             self.detectors.append(EchoChamberDetector())
+            # InjectionDetector for adversarial input analysis
+            self.detectors.append(InjectionDetector())
             
             logger.info(f"SemanticFirewall initialized successfully with detectors: {[d.__class__.__name__ for d in self.detectors]}")
         except Exception as e:
@@ -121,6 +123,13 @@ class SemanticFirewall:
                     if "echo_chamber" in detector_classification and "benign" not in detector_classification:
                         is_flagged_by_detector = True
                     score_for_thresholding = result.get("echo_chamber_probability", 0.0)
+
+                # Logic for InjectionDetector
+                elif detector_name == "InjectionDetector":
+                    # Placeholder check; will become more specific with implementation
+                    if "injection" in detector_classification and "benign" not in detector_classification:
+                        is_flagged_by_detector = True
+                    score_for_thresholding = result.get("score", 0.0)
                 
                 # Fallback for any other future detectors (if any are added without specific handling)
                 else: 

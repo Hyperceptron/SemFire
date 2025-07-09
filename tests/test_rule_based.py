@@ -27,6 +27,9 @@ def test_rule_based_detector_benign():
     assert result["rule_based_score"] == 0
     assert result["detected_rules"] == []
     assert result["rule_based_probability"] == 0.0
+    assert "spotlight" in result
+    assert result["spotlight"]["highlighted_text"] == []
+    assert result["spotlight"]["triggered_rules"] == []
 
 
 def test_rule_based_detector_indirect_reference():
@@ -96,6 +99,9 @@ def test_rule_based_detector_mixed_cues_strong():
     assert "current_message_scheming_keyword: make them believe" in \
         result["detected_rules"]
     assert pytest.approx(result["rule_based_probability"], rel=1e-2) == 6 / 15.0
+    assert "spotlight" in result
+    assert "hypothetically" in result["spotlight"]["highlighted_text"]
+    assert "refer back" in result["spotlight"]["highlighted_text"]
 
 
 def test_rule_based_detector_mixed_cues_weak_but_detected():

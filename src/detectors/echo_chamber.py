@@ -88,23 +88,30 @@ class EchoChamberDetector:
         combined_score = 0.0 # Use float for potentially weighted scores
         detected_indicators = []
         explanations = []
+        spotlight_highlighted_text: List[str] = []
+        spotlight_triggered_rules: List[str] = []
 
         # Process Rule-Based Results from the internal, echo-chamber-specific rule detector
         rb_score = rule_based_results.get("rule_based_score", 0)
         rb_prob = rule_based_results.get("rule_based_probability", 0.0) # Normalized score from rule detector
         rb_classification = rule_based_results.get("classification", "benign_by_rules")
         rb_rules_triggered = rule_based_results.get("detected_rules", [])
+        rb_spotlight = rule_based_results.get("spotlight")
 
         if rb_score > 0:
             # Weight rule-based score (e.g., echo chamber rules are highly indicative)
             combined_score += rb_score * 1.5 # Example weighting, tune as needed
             detected_indicators.extend(rb_rules_triggered)
             explanations.append(f"Echo-Rules: {rb_classification} (score: {rb_score}, prob: {rb_prob:.2f}).")
+            if rb_spotlight:
+                spotlight_highlighted_text.extend(rb_spotlight.get("highlighted_text", []))
+                spotlight_triggered_rules.extend(rb_spotlight.get("triggered_rules", []))
 
         # Process ML-Based Results
         ml_confidence = ml_results.get("ml_model_confidence", 0.0)
         ml_classification = ml_results.get("classification", "neutral_ml_placeholder")
         ml_explanation = ml_results.get("explanation", "ML analysis performed.")
+        ml_spotlight = ml_results.get("spotlight")
 
         if ml_results.get("error"):
             explanations.append(f"ML Detector Error: {ml_results.get('error')}")
@@ -113,6 +120,9 @@ class EchoChamberDetector:
             combined_score += ml_confidence * 10 # Example: ML confidence (0-1) scaled to score points
             detected_indicators.append(f"ml_flagged_{ml_classification}_conf_{ml_confidence:.2f}")
             explanations.append(f"ML-based: {ml_classification} (conf: {ml_confidence:.2f}). {ml_explanation}")
+            if ml_spotlight:
+                spotlight_highlighted_text.extend(ml_spotlight.get("highlighted_text", []))
+                spotlight_triggered_rules.extend(ml_spotlight.get("triggered_rules", []))
         else: # ML is neutral or low confidence
             explanations.append(f"ML-based: {ml_classification} (conf: {ml_confidence:.2f}, no strong echo signal). {ml_explanation}")
             # Potentially a small positive or negative contribution based on neutrality
@@ -136,12 +146,20 @@ class EchoChamberDetector:
         if not detected_indicators and combined_score == 0: # Check if score is truly zero
              explanations.append("No specific echo chamber indicators from combined rule/ML analysis.")
         
+        final_explanation = " | ".join(explanations)
+        spotlight = {
+            "highlighted_text": list(set(spotlight_highlighted_text)),
+            "triggered_rules": list(set(spotlight_triggered_rules)),
+            "explanation": final_explanation,
+        }
+
         return {
             "echo_chamber_score": combined_score, # This is the combined score
             "echo_chamber_probability": echo_chamber_probability, # Normalized combined score
             "classification": final_classification,
             "detected_indicators": detected_indicators,
-            "explanation_details": " | ".join(explanations)
+            "explanation_details": final_explanation,
+            "spotlight": spotlight,
         }
 
     def _get_llm_analysis(self, text_input: str, conversation_history: Optional[List[str]] = None) -> Dict[str, str]:
@@ -244,6 +262,7 @@ class EchoChamberDetector:
             "echo_chamber_probability": combined_analysis.get("echo_chamber_probability"),
             "detected_indicators": combined_analysis.get("detected_indicators"),
             "explanation": combined_analysis.get("explanation_details"), # Main explanation from combined logic
+            "spotlight": combined_analysis.get("spotlight"),
             "llm_analysis": llm_analysis_results.get("llm_analysis"),
             "llm_status": llm_analysis_results.get("llm_status"),
             # Optionally include raw outputs from underlying detectors for debugging or detailed API responses

@@ -115,3 +115,20 @@ def test_ml_based_detector_model_not_ready(monkeypatch):
     assert result["features"] == []
     assert result["explanation"] == "ML model is not loaded or failed to initialize."
     assert result["ml_model_status"] == "model_not_ready"
+
+def test_ml_based_detector_spotlight(detector: MLBasedDetector):
+    """Tests the spotlight feature of the MLBasedDetector."""
+    # Test case with urgency keyword
+    text_input = "This is urgent."
+    result = detector.analyze_text(text_input)
+    assert "spotlight" in result
+    assert result["spotlight"]["highlighted_text"] == ["urgent"]
+    assert "ml_detected_urgency_keyword" in result["spotlight"]["triggered_rules"]
+    assert "Input text is of medium length. ML model detected urgency keywords." in result["spotlight"]["explanation"]
+
+    # Test case with no special keywords
+    text_input_benign = "This is a medium text."
+    result_benign = detector.analyze_text(text_input_benign)
+    assert "spotlight" in result_benign
+    assert result_benign["spotlight"]["highlighted_text"] == []
+    assert "text_length_gt_10_chars_lte_50" in result_benign["spotlight"]["triggered_rules"]
