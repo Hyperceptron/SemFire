@@ -9,3 +9,13 @@ src/detectors/__pycache__/rule_based.cpython-311.pyc
 tests/__pycache__/test_rule_based.cpython-311-pytest-8.3.5.pyc
 *.pyc*
 *.pyc
+# Ignore environment variable files containing secrets
+.env
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+.aider*
+.DS_Store
+*.pyc
