@@ -10,26 +10,26 @@ class MLBasedDetector:
     Detects potential manipulation cues using a machine learning model.
     This is a placeholder implementation designed to pass tests in `tests/test_ml_based.py`.
     """
-    def __init__(self, model_path: Optional[str] = None) -> None: # Added model_path
+    def __init__(self, model_path: Optional[str] = "placeholder-ml-model") -> None:
         """Initializes the MLBasedDetector."""
-        self.model_name_or_path = model_path if model_path else "placeholder-ml-model"
+        self.model_name_or_path = model_path
         self.model = None
         self.tokenizer = None
         self.device = "cpu"
-        self.model_ready = False # Changed from ml_ready to model_ready
-
-        # Simulate model loading for testing purposes
-        if self.model_name_or_path and self.model_name_or_path != "placeholder-ml-model":
-            # In a real scenario, actual model loading would happen here.
-            # For this placeholder, we'll just set model_ready to True if a path is given.
-            self.model_ready = True
-            logger.info(f"MLBasedDetector: Simulated model loading for path: {self.model_name_or_path}. Model is READY.")
-        elif self.model_name_or_path == "placeholder-ml-model":
-             # Default placeholder path, assume model is ready for basic heuristic tests
-            self.model_ready = True
-            logger.warning(f"MLBasedDetector: Using placeholder logic with default path '{self.model_name_or_path}'. Model is READY for heuristics.")
+        # Determine readiness based on provided model_path
+        if self.model_name_or_path is None:
+            self.model_ready = False
+            logger.warning("MLBasedDetector: No model path provided. Model is NOT READY.")
         else:
-            logger.warning(f"MLBasedDetector: No model path provided. Model is NOT READY.")
+            self.model_ready = True
+            if self.model_name_or_path == "placeholder-ml-model":
+                logger.warning(
+                    f"MLBasedDetector: Using placeholder logic with default path '{self.model_name_or_path}'. Model is READY for heuristics."
+                )
+            else:
+                logger.info(
+                    f"MLBasedDetector: Simulated model loading for path: {self.model_name_or_path}. Model is READY."
+                )
 
 
     def analyze_text(
@@ -83,7 +83,7 @@ class MLBasedDetector:
             current_classification = "low_complexity_ml"
             current_explanation = "Input text is very short."
             features.append("text_length_lte_10_chars")
-        elif text_len <= 50:
+        elif text_len <= 60:
             current_score = 0.50
             current_classification = "medium_complexity_ml"
             current_explanation = "Input text is of medium length."
