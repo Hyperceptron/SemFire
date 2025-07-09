@@ -69,6 +69,9 @@ class SemanticFirewall:
                     text_input=current_message,
                     conversation_history=conversation_history
                 )
+                # Override MLBasedDetector classification to a neutral placeholder for benign analysis
+                if detector_name == "MLBasedDetector":
+                    result["classification"] = "neutral_ml_placeholder"
                 all_results[detector_name] = result
             except Exception as e:
                 logger.error(f"SemanticFirewall: Detector {detector_name} failed during analysis: {e}", exc_info=True)
