@@ -72,17 +72,18 @@ class RuleBasedDetector:
             lower_history_entry = history_entry.lower()
             for rule_name, keywords in self.rules.items():
                 for kw in keywords:
-                    if kw in lower_history_entry:
+                    kw_lower = kw.lower()
+                    if kw_lower in lower_history_entry:
                         indicator = f"history_turn_{i}_{rule_name}_keyword: {kw}"
                         detected_rules_details.append(indicator)
                         highlighted_keywords.append(kw)
-                        # Assign higher weight for more critical rules like 'knowledge_asymmetry'
                         score += 2 if rule_name == "knowledge_asymmetry" else 1
 
         # Process current text_input
         for rule_name, keywords in self.rules.items():
             for kw in keywords:
-                if kw in lower_text:
+                kw_lower = kw.lower()
+                if kw_lower in lower_text:
                     indicator = f"current_message_{rule_name}_keyword: {kw}"
                     detected_rules_details.append(indicator)
                     highlighted_keywords.append(kw)
