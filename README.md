@@ -36,7 +36,7 @@ While some argue that apparent deception might be sophisticated pattern matching
 
 ### Project Vision: A Toolkit for AI Deception Detection
 
-A.E.G.I.S. aims to be a versatile, open-source toolkit providing:
+AEGIS aims to be a versatile, open-source toolkit providing:
 - A **Python library** for direct integration into applications and research.
 - A **REST API service** (via FastAPI) for broader accessibility.
 - Core components that can be used to build **"semantic firewall"** like systems to monitor and analyze AI interactions in real-time.
