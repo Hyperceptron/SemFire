@@ -19,20 +19,20 @@ except Exception as e:
     st.error(f"Error initializing SemanticFirewall: {e}")
     firewall = None  # Prevent further errors if initialization fails
 
-st.set_page_config(page_title="A.E.G.I.S. Demo", layout="wide")
+st.set_page_config(page_title="AEGIS Demo", layout="wide")
 
-st.title("A.E.G.I.S: Active Encoding Guarding Injection Safety")
+st.title("AEGIS: Active Encoding Guarding Injection Safety")
 st.subheader("Interactive Semantic Firewall Demo")
 st.markdown("""
     This demo allows you to interact with the `SemanticFirewall` (a key
-    component of A.E.G.I.S) to detect potential manipulative dialogues or harmful
-    outputs. Enter a message and optionally provide conversation history to
+    component of AEGIS) to detect potential manipulative dialogues or harmful
+    outputs. Enter a message and. optionally provide conversation history to
     see the analysis.
 """)
 
-st.sidebar.header("About A.E.G.I.S")
+st.sidebar.header("About AEGIS")
 st.sidebar.info("""
-    **A.E.G.I.S (Active Encoding Guarding Injection Safety)** is a project
+    **AEGIS (Active Encoding Guarding Injection Safety)** is a project
     focused on identifying and mitigating risks associated with advanced AI
     systems.
 
@@ -43,7 +43,7 @@ st.sidebar.info("""
 st.sidebar.markdown("---")
 st.sidebar.header("Resources")
 st.sidebar.markdown("""
-    - [**Read the A.E.G.I.S. Article on Substack**]\
+    - [**Read the AEGIS Article on Substack**]\
 (https://aptnative.substack.com/p/radar)
     - [**View the Project on GitHub**]\
 (https://github.com/josephedward/AEGIS)

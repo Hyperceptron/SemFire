@@ -1,8 +1,8 @@
- # A.E.G.I.S.
+ # AEGIS
 
  ## AI Deception Detection Toolkit
 
- **A.E.G.I.S. (Active Encoding Guarding Injection Safety) is an open-source toolkit for detecting advanced AI deception, with a primary focus on "in-context scheming" and multi-turn manipulative attacks.** This project aims to develop tools to identify and mitigate vulnerabilities like the "Echo Chamber" and "Crescendo" attacks, where AI models are subtly guided towards undesirable behavior through conversational context.
+ **AEGIS (Active Encoding Guarding Injection Safety) is an open-source toolkit for detecting advanced AI deception, with a primary focus on "in-context scheming" and multi-turn manipulative attacks.** This project aims to develop tools to identify and mitigate vulnerabilities like the "Echo Chamber" and "Crescendo" attacks, where AI models are subtly guided towards undesirable behavior through conversational context.
 
 ## Addressing Sophisticated AI Deception: From Theory to Practice
 
@@ -14,7 +14,7 @@ The landscape of AI safety is rapidly evolving, with new research highlighting s
 
 These attack vectors underscore a critical challenge: LLMs can be steered towards harmful outcomes through subtle, contextual manipulation over a series of interactions, even if individual prompts appear benign.
 
-**A.E.G.I.S. is an early-stage research project dedicated to developing an open-source toolkit for detecting these advanced forms of AI deception.** Our core focus is on identifying "in-context scheming" and related multi-turn attacks. We aim to translate the understanding of vulnerabilities like the "Echo Chamber" and "Crescendo" attacks into practical, accessible tools for researchers and practitioners to evaluate and safeguard their own AI systems. We are actively seeking collaborators, feedback, and contributions from the AI safety community.
+**AEGIS is an early-stage research project dedicated to developing an open-source toolkit for detecting these advanced forms of AI deception.** Our core focus is on identifying "in-context scheming" and related multi-turn attacks. We aim to translate the understanding of vulnerabilities like the "Echo Chamber" and "Crescendo" attacks into practical, accessible tools for researchers and practitioners to evaluate and safeguard their own AI systems. We are actively seeking collaborators, feedback, and contributions from the AI safety community.
 
 ### Research Context and Motivation
 
