@@ -1,6 +1,6 @@
-# Project Roadmap
+# AEGIS Project Roadmap
 
-This document outlines the step-by-step plan to develop, test, and deploy the AI Deception Detection Toolkit.
+This document outlines the step-by-step plan to develop, test, and deploy AEGIS.
 
 ## Phase 0: Project Kickoff & Organization
  **Goal**
@@ -12,6 +12,7 @@ This document outlines the step-by-step plan to develop, test, and deploy the AI
  - Initialized repository with:
    - `src/`, `demo/`, `dataset/`, `notebooks/`, `tests/` directories.
  - CI workflow running pytest and linters.
+ - Open issue "Naming & Branding Audit" to track renaming of project references to "AEGIS" across code, documentation, configuration, CI pipelines, packaging metadata, and assets.
 
 ## Phase 1: Literature Survey & Data Collection
  **Goal**
