@@ -19,9 +19,9 @@ except Exception as e:
     st.error(f"Error initializing SemanticFirewall: {e}")
     firewall = None  # Prevent further errors if initialization fails
 
-st.set_page_config(page_title="R.A.D.A.R. Demo", layout="wide")
+st.set_page_config(page_title="A.E.G.I.S. Demo", layout="wide")
 
-st.title("RADAR: Recognizing Agentic Deception and Alignment Risk")
+st.title("A.E.G.I.S: Active Encoding Guarding Injection Safety")
 st.subheader("Interactive Semantic Firewall Demo")
 st.markdown("""
     This demo allows you to interact with the `SemanticFirewall` (a key
@@ -30,9 +30,9 @@ st.markdown("""
     see the analysis.
 """)
 
-st.sidebar.header("About R.A.D.A.R.")
+st.sidebar.header("About A.E.G.I.S")
 st.sidebar.info("""
-    **RADAR (Recognizing Agentic Deception and Alignment Risk)** is a project
+    **A.E.G.I.S (Active Encoding Guarding Injection Safety)** is a project
     focused on identifying and mitigating risks associated with advanced AI
     systems.
 
@@ -43,10 +43,10 @@ st.sidebar.info("""
 st.sidebar.markdown("---")
 st.sidebar.header("Resources")
 st.sidebar.markdown("""
-    - [**Read the R.A.D.A.R. Article on Substack**]\
+    - [**Read the A.E.G.I.S Article on Substack**]\
 (https://aptnative.substack.com/p/radar)
     - [**View the Project on GitHub**]\
-(https://github.com/josephedward/R.A.D.A.R.)
+(https://github.com/josephedward/A.E.G.I.S)
 """)
 
 st.header("Analyze Conversation")
