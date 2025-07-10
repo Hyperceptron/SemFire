@@ -43,7 +43,7 @@ st.sidebar.info("""
 st.sidebar.markdown("---")
 st.sidebar.header("Resources")
 st.sidebar.markdown("""
-    - [**Read the A.E.G.I.S Article on Substack**]\
+    - [**Read the A.E.G.I.S. Article on Substack**]\
 (https://aptnative.substack.com/p/radar)
     - [**View the Project on GitHub**]\
 (https://github.com/josephedward/A.E.G.I.S)
