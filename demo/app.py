@@ -46,7 +46,7 @@ st.sidebar.markdown("""
     - [**Read the A.E.G.I.S. Article on Substack**]\
 (https://aptnative.substack.com/p/radar)
     - [**View the Project on GitHub**]\
-(https://github.com/josephedward/A.E.G.I.S)
+(https://github.com/josephedward/AEGIS)
 """)
 
 st.header("Analyze Conversation")
