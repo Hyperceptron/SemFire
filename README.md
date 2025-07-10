@@ -1,8 +1,8 @@
- # RADAR
+ # A.E.G.I.S.
 
  ## AI Deception Detection Toolkit
 
- **RADAR (Research in AI Deception and Reasoning) is an open-source toolkit for detecting advanced AI deception, with a primary focus on "in-context scheming" and multi-turn manipulative attacks.** This project aims to develop tools to identify and mitigate vulnerabilities like the "Echo Chamber" and "Crescendo" attacks, where AI models are subtly guided towards undesirable behavior through conversational context.
+ **A.E.G.I.S. (Active Encoding Guarding Injection Safety) is an open-source toolkit for detecting advanced AI deception, with a primary focus on "in-context scheming" and multi-turn manipulative attacks.** This project aims to develop tools to identify and mitigate vulnerabilities like the "Echo Chamber" and "Crescendo" attacks, where AI models are subtly guided towards undesirable behavior through conversational context.
 
 ## Addressing Sophisticated AI Deception: From Theory to Practice
 
@@ -14,7 +14,7 @@ The landscape of AI safety is rapidly evolving, with new research highlighting s
 
 These attack vectors underscore a critical challenge: LLMs can be steered towards harmful outcomes through subtle, contextual manipulation over a series of interactions, even if individual prompts appear benign.
 
-**RADAR is an early-stage research project dedicated to developing an open-source toolkit for detecting these advanced forms of AI deception.** Our core focus is on identifying "in-context scheming" and related multi-turn attacks. We aim to translate the understanding of vulnerabilities like the "Echo Chamber" and "Crescendo" attacks into practical, accessible tools for researchers and practitioners to evaluate and safeguard their own AI systems. We are actively seeking collaborators, feedback, and contributions from the AI safety community.
+**A.E.G.I.S. is an early-stage research project dedicated to developing an open-source toolkit for detecting these advanced forms of AI deception.** Our core focus is on identifying "in-context scheming" and related multi-turn attacks. We aim to translate the understanding of vulnerabilities like the "Echo Chamber" and "Crescendo" attacks into practical, accessible tools for researchers and practitioners to evaluate and safeguard their own AI systems. We are actively seeking collaborators, feedback, and contributions from the AI safety community.
 
 ### Research Context and Motivation
 
@@ -36,7 +36,7 @@ While some argue that apparent deception might be sophisticated pattern matching
 
 ### Project Vision: A Toolkit for AI Deception Detection
 
-RADAR aims to be a versatile, open-source toolkit providing:
+A.E.G.I.S. aims to be a versatile, open-source toolkit providing:
 - A **Python library** for direct integration into applications and research.
 - A **REST API service** (via FastAPI) for broader accessibility.
 - Core components that can be used to build **"semantic firewall"** like systems to monitor and analyze AI interactions in real-time.
@@ -217,12 +217,12 @@ You can also deploy the API service using Docker.
 
 1.  **Build the Docker image:**
     ```bash
-    docker build -t radar-api .
+    docker build -t aegis-api .
     ```
 
 2.  **Run the Docker container:**
     ```bash
-    docker run -d -p 8000:8000 radar-api
+    docker run -d -p 8000:8000 aegis-api
     ```
     The API will then be accessible at `http://localhost:8000`.
 
@@ -283,14 +283,14 @@ Export it into your shell—or even just prefix the invocation—to temporarily 
 
 ```bash
 export GITHUB_TOKEN=github_pat_12o4n2o3rinoienwoifdnowienf0fd
-python3 scripts/delete_closed_issues.py josephedward R.A.D.A.R. --dry-run
+python3 scripts/delete_closed_issues.py josephedward AEGIS --dry-run
 ```
 
 Or in one line:
 
 ```bash
 export GITHUB_TOKEN=github_pat_12o4n2o3rinoienwoifdnowienf0fd \
-python3 scripts/delete_closed_issues.py josephedward R.A.D.A.R. --dry-run
+python3 scripts/delete_closed_issues.py josephedward AEGIS --dry-run
 ```
 
 
