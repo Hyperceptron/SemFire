@@ -20,8 +20,7 @@ def test_demo_app_basic_interaction():
     # at = AppTest.from_file("demo/app.py").run() # Path relative to project root
 
     # Check initial state (optional, but good practice)
-    # assert at.title[0].value == "RADAR: Recognizing Agentic Deception and " \
-    #                             "Alignment Risk"
+    # assert at.title[0].value == "A.E.G.I.S: Active Encoding Guarding Injection Safety"
     # assert at.subheader[0].value == "Interactive Semantic Firewall Demo"
     # assert len(at.text_area) == 2 # current_message and conversation_history
     # assert len(at.button) == 1 # analyze_button
