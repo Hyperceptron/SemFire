@@ -2,7 +2,7 @@
 
  ## AI Deception Detection Toolkit
 
- **AEGIS (Active Encoding Guarding Injection Safety) is an open-source toolkit for detecting advanced AI deception, with a primary focus on "in-context scheming" and multi-turn manipulative attacks.** This project aims to develop tools to identify and mitigate vulnerabilities like the "Echo Chamber" and "Crescendo" attacks, where AI models are subtly guided towards undesirable behavior through conversational context.
+ **AEGIS (Active Encoding Guarding for Injection Safety) is an open-source toolkit for detecting advanced AI deception, with a primary focus on "in-context scheming" and multi-turn manipulative attacks.** This project aims to develop tools to identify and mitigate vulnerabilities like the "Echo Chamber" and "Crescendo" attacks, where AI models are subtly guided towards undesirable behavior through conversational context.
 
 ## Addressing Sophisticated AI Deception: From Theory to Practice
 
