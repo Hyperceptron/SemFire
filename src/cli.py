@@ -29,7 +29,7 @@ def analyze_text_command(args):
 
 def main():
     """Main function for the CLI."""
-    parser = argparse.ArgumentParser(description="AI Deception Detection Toolkit CLI.")
+    parser = argparse.ArgumentParser(description="AEGIS: AI Deception Detection Toolkit CLI.")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
     subparsers.required = True # Ensure a command is always given
 
