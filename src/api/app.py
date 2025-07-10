@@ -14,7 +14,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
-    title="RADAR API - Echo Chamber Detection",
+    title="AEGIS API - Echo Chamber Detection",
     description="API for detecting echo chamber characteristics and manipulative dialogues using a combination of rule-based, ML, and LLM analysis.",
     version="0.2.0" # Version bump due to significant refactor
 )
@@ -23,9 +23,9 @@ app = FastAPI(
 # The EchoChamberDetector is comprehensive, using rule, ML, and LLM components.
 try:
     detector = EchoChamberDetector()
-    logger.info("RADAR API: EchoChamberDetector initialized successfully.")
+    logger.info("AEGIS API: EchoChamberDetector initialized successfully.")
 except Exception as e:
-    logger.critical(f"RADAR API: Failed to initialize EchoChamberDetector: {e}", exc_info=True)
+    logger.critical(f"AEGIS API: Failed to initialize EchoChamberDetector: {e}", exc_info=True)
     # In a real deployment, this might prevent the app from starting or switch to a degraded mode.
     # For now, we'll allow it to proceed, but endpoints might fail if detector is None.
     detector = None # Set to None to indicate failure; endpoints should check this.
@@ -86,7 +86,7 @@ async def analyze_text_endpoint(request: AnalysisRequest):
 
 @app.get("/")
 async def read_root():
-    return {"message": "Welcome to the RADAR API. Use the /analyze endpoint to submit text for analysis."}
+    return {"message": "Welcome to the AEGIS API. Use the /analyze endpoint to submit text for analysis."}
 
 # To run the app (from the project root directory):
 # uvicorn src.api.app:app --reload
