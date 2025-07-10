@@ -25,7 +25,7 @@ st.title("A.E.G.I.S: Active Encoding Guarding Injection Safety")
 st.subheader("Interactive Semantic Firewall Demo")
 st.markdown("""
     This demo allows you to interact with the `SemanticFirewall` (a key
-    component of RADAR) to detect potential manipulative dialogues or harmful
+    component of A.E.G.I.S) to detect potential manipulative dialogues or harmful
     outputs. Enter a message and optionally provide conversation history to
     see the analysis.
 """)
