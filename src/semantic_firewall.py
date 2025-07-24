@@ -1,6 +1,6 @@
 from typing import List, Dict, Any, Optional
 # Import the three consolidated detectors from the updated __init__.py
-from src.detectors import RuleBasedDetector, MLBasedDetector, EchoChamberDetector, InjectionDetector
+from src.detectors import RuleBasedDetector, HeuristicDetector, EchoChamberDetector, InjectionDetector
 import logging
 
 logger = logging.getLogger(__name__)
@@ -24,22 +24,15 @@ class SemanticFirewall:
         """
         self.detectors = []
         try:
-            # RuleBasedDetector with its default rule set for general analysis
-            self.detectors.append(RuleBasedDetector()) 
-            # MLBasedDetector for general ML analysis
-            self.detectors.append(MLBasedDetector())
-            # EchoChamberDetector for specialized, comprehensive echo chamber analysis
+            # Initialize detectors: rule-based, heuristic, echo chamber, and injection
+            self.detectors.append(RuleBasedDetector())
+            self.detectors.append(HeuristicDetector())
             self.detectors.append(EchoChamberDetector())
-            # InjectionDetector for adversarial input analysis
             self.detectors.append(InjectionDetector())
-            
             logger.info(f"SemanticFirewall initialized successfully with detectors: {[d.__class__.__name__ for d in self.detectors]}")
         except Exception as e:
             logger.error(f"SemanticFirewall failed to initialize detectors: {e}", exc_info=True)
-            # Depending on policy, either raise e, or operate with fewer detectors, or fail SemanticFirewall init.
-            # For now, if any detector fails, the list might be incomplete.
-            # A more robust approach would handle individual detector failures.
-            raise # Re-raise the exception to indicate SemanticFirewall couldn't start correctly.
+            raise
 
 
     def analyze_conversation(
@@ -114,11 +107,11 @@ class SemanticFirewall:
                         is_flagged_by_detector = True
                     score_for_thresholding = result.get("rule_based_probability", 0.0)
                 
-                # Logic for MLBasedDetector
-                elif detector_name == "MLBasedDetector":
-                    if "manipulative" in detector_classification or "concern" in detector_classification: # Broader check
+                # Logic for HeuristicDetector
+                elif detector_name == "HeuristicDetector":
+                    if "manipulative" in detector_classification or "concern" in detector_classification:
                         is_flagged_by_detector = True
-                    score_for_thresholding = result.get("ml_model_confidence", 0.0)
+                    score_for_thresholding = result.get("score", 0.0)
 
                 # Logic for EchoChamberDetector
                 elif detector_name == "EchoChamberDetector":
