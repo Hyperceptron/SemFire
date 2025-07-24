@@ -4,9 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aegis-semantic-firewall"
-version = "0.1.1"
+version = "0.2.0"
 authors = [
-  { name="Edward Joseph", email="author@example.com" },
+  { name = "Edward Joseph", email = "author@example.com" },
 ]
 description = "A toolkit for detecting advanced AI deception, including in-context scheming and multi-turn manipulative attacks."
 readme = "README.md"
