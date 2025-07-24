@@ -1,6 +1,6 @@
 import argparse
 import json
-from src.semantic_firewall import SemanticFirewall # Import SemanticFirewall
+from semantic_firewall import SemanticFirewall # Import SemanticFirewall
 
 # Removed: EchoChamberDetector and MLBasedDetector direct imports as SemanticFirewall handles them.
 # Removed: API_BASE_URL
