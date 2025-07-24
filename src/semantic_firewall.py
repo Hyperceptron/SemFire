@@ -1,5 +1,5 @@
 from typing import List, Dict, Any, Optional
-# Import the three consolidated detectors from the updated __init__.py
+# Import the consolidated detectors from the updated __init__.py
 from src.detectors import RuleBasedDetector, HeuristicDetector, EchoChamberDetector, InjectionDetector
 import logging
 
@@ -12,15 +12,14 @@ class SemanticFirewall:
     """
     def __init__(self):
         """
-        Initializes the SemanticFirewall with the core set of three detectors:
-        1. RuleBasedDetector: For general rule-based checks. Can be configured with
-           default or custom rules. Here, it uses default rules.
-        2. MLBasedDetector: For ML-powered analysis (currently placeholder).
-        3. EchoChamberDetector: A specialized detector for echo chamber patterns.
-           It internally uses its own instances of rule (with echo-specific rules)
-           and ML detectors, plus LLM analysis.
+        Initializes the SemanticFirewall with its core set of detectors:
+        1. RuleBasedDetector: For general rule-based checks.
+        2. HeuristicDetector: For heuristic-based analysis (text complexity, keywords).
+        3. EchoChamberDetector: A specialized detector for echo chamber patterns, which
+           internally uses its own rule-based and heuristic detectors.
+        4. InjectionDetector: For detecting prompt injection attacks.
         
-        These three detectors will run independently within the SemanticFirewall.
+        These detectors run independently within the SemanticFirewall.
         """
         self.detectors = []
         try:
@@ -55,16 +54,12 @@ class SemanticFirewall:
         for detector in self.detectors:
             detector_name = detector.__class__.__name__
             try:
-                # All current detectors (RuleBased, MLBased, EchoChamber) support conversation_history.
-                # If a future detector might not, a hasattr check for analyze_text and its signature
-                # would be more robust, but for now, this is direct.
+                # All current detectors support conversation_history.
+                # If a future detector might not, a hasattr check would be more robust.
                 result = detector.analyze_text(
                     text_input=current_message,
                     conversation_history=conversation_history
                 )
-                # Override MLBasedDetector classification to a neutral placeholder for benign analysis
-                if detector_name == "MLBasedDetector":
-                    result["classification"] = "neutral_ml_placeholder"
                 all_results[detector_name] = result
             except Exception as e:
                 logger.error(f"SemanticFirewall: Detector {detector_name} failed during analysis: {e}", exc_info=True)
