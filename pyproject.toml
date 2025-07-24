@@ -59,4 +59,5 @@ package-dir = {"" = "src"}
 py-modules = ["cli", "semantic_firewall"]
 
 [tool.setuptools.packages.find]
-namespaces = true
+where = ["src"]
+include = ["*"]
