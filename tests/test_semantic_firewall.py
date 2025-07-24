@@ -1,33 +1,33 @@
 import pytest
 from src.semantic_firewall import SemanticFirewall
 # Import all three actual detectors that SemanticFirewall uses
-from src.detectors import RuleBasedDetector, MLBasedDetector, EchoChamberDetector, InjectionDetector
+from src.detectors import RuleBasedDetector, HeuristicDetector, EchoChamberDetector, InjectionDetector
 
 class TestSemanticFirewall:
     def test_semantic_firewall_initialization(self):
         """Test that the SemanticFirewall can be initialized with the correct detectors."""
         firewall = SemanticFirewall()
         assert firewall is not None
-        assert len(firewall.detectors) == 4 # Expecting RuleBased, MLBased, EchoChamber, Injection
-        # Order of initialization in SemanticFirewall: RuleBased, MLBased, EchoChamber, Injection
+        assert len(firewall.detectors) == 4 # Expecting RuleBased, Heuristic, EchoChamber, Injection
+        # Order of initialization in SemanticFirewall: RuleBased, Heuristic, EchoChamber, Injection
         assert isinstance(firewall.detectors[0], RuleBasedDetector)
-        assert isinstance(firewall.detectors[1], MLBasedDetector)
+        assert isinstance(firewall.detectors[1], HeuristicDetector)
         assert isinstance(firewall.detectors[2], EchoChamberDetector)
         assert isinstance(firewall.detectors[3], InjectionDetector)
 
     def test_analyze_conversation_benign_message(self, monkeypatch):
         """Test analyzing a benign message."""
-        # Mock ML and LLM in EchoChamber for predictable benign results
+        # Mock Heuristic and LLM in EchoChamber for predictable benign results
         # We need to mock these on an *instance* of EchoChamberDetector,
         # or ensure that when SemanticFirewall creates its EchoChamberDetector,
         # that detector gets the mocked components.
         # For simplicity here, we'll mock at the class level before SemanticFirewall initializes.
-        class MockMLDetectorInternal: # For EchoChamber's internal ML
+        class MockHeuristicDetectorInternal: # For EchoChamber's internal heuristic detector
             def analyze_text(self, text_input, conversation_history=None):
-                return {"classification": "neutral_ml_placeholder", "ml_model_confidence": 0.0, "error": None}
+                return {"classification": "neutral_heuristic_placeholder", "score": 0.0, "error": None}
         
-        # This mocks the MLBasedDetector class that EchoChamberDetector imports and instantiates.
-        monkeypatch.setattr("src.detectors.echo_chamber.MLBasedDetector", MockMLDetectorInternal)
+        # This mocks the HeuristicDetector class that EchoChamberDetector imports and instantiates.
+        monkeypatch.setattr("src.detectors.echo_chamber.HeuristicDetector", MockHeuristicDetectorInternal)
         
         def mock_get_llm_analysis(self_ech_detector, text_input, conversation_history=None): # Renamed self for clarity
             return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
@@ -40,23 +40,23 @@ class TestSemanticFirewall:
         results = firewall.analyze_conversation(message)
         
         assert "RuleBasedDetector" in results
-        assert "MLBasedDetector" in results
+        assert "HeuristicDetector" in results
         assert "EchoChamberDetector" in results
         assert "InjectionDetector" in results
         
         assert results["RuleBasedDetector"]["classification"] == "benign_by_rules"
-        # Assuming placeholder MLBasedDetector is also benign
-        assert results["MLBasedDetector"]["classification"] == "neutral_ml_placeholder" # Or similar benign
+        # The HeuristicDetector will classify this as medium complexity.
+        assert results["HeuristicDetector"]["classification"] == "medium_complexity_heuristic"
         assert results["EchoChamberDetector"]["classification"] == "benign_echo_chamber_assessment"
         assert results["EchoChamberDetector"]["echo_chamber_score"] == 0.0
 
     def test_analyze_conversation_with_history(self, monkeypatch):
         """Test analyzing a message with conversation history."""
-        # Mock ML and LLM in EchoChamber for predictable benign results
-        class MockMLDetectorInternal:
+        # Mock Heuristic and LLM in EchoChamber for predictable benign results
+        class MockHeuristicDetectorInternal:
             def analyze_text(self, text_input, conversation_history=None):
-                return {"classification": "neutral_ml_placeholder", "ml_model_confidence": 0.0, "error": None}
-        monkeypatch.setattr("src.detectors.echo_chamber.MLBasedDetector", MockMLDetectorInternal)
+                return {"classification": "neutral_heuristic_placeholder", "score": 0.0, "error": None}
+        monkeypatch.setattr("src.detectors.echo_chamber.HeuristicDetector", MockHeuristicDetectorInternal)
         
         def mock_get_llm_analysis(self_ech_detector, text_input, conversation_history=None):
             return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
@@ -68,18 +68,18 @@ class TestSemanticFirewall:
         results = firewall.analyze_conversation(message, conversation_history=history)
         
         assert "RuleBasedDetector" in results
-        assert "MLBasedDetector" in results
+        assert "HeuristicDetector" in results
         assert "EchoChamberDetector" in results
         assert "InjectionDetector" in results
         assert results["EchoChamberDetector"]["echo_chamber_score"] == 0.0
 
     def test_is_manipulative_benign(self, monkeypatch):
         """Test is_manipulative for a benign message."""
-        # Mock ML and LLM in EchoChamber for predictable benign results
-        class MockMLDetectorInternal:
+        # Mock Heuristic and LLM in EchoChamber for predictable benign results
+        class MockHeuristicDetectorInternal:
             def analyze_text(self, text_input, conversation_history=None):
-                return {"classification": "neutral_ml_placeholder", "ml_model_confidence": 0.0, "error": None}
-        monkeypatch.setattr("src.detectors.echo_chamber.MLBasedDetector", MockMLDetectorInternal)
+                return {"classification": "neutral_heuristic_placeholder", "score": 0.0, "error": None}
+        monkeypatch.setattr("src.detectors.echo_chamber.HeuristicDetector", MockHeuristicDetectorInternal)
         
         def mock_get_llm_analysis(self_ech_detector, text_input, conversation_history=None): # Renamed self for clarity
             return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
@@ -91,12 +91,12 @@ class TestSemanticFirewall:
 
     def test_is_manipulative_detected(self, monkeypatch): # Added monkeypatch
         """Test is_manipulative for a message that should be flagged."""
-        # Mock ML and LLM in EchoChamber for predictable benign results, so they don't interfere
+        # Mock Heuristic and LLM in EchoChamber for predictable benign results, so they don't interfere
         # These mocks apply to the EchoChamberDetector class, affecting any instance created by SemanticFirewall.
-        class MockMLDetectorInternal:
+        class MockHeuristicDetectorInternal:
             def analyze_text(self, text_input, conversation_history=None):
-                return {"classification": "neutral_ml_placeholder", "ml_model_confidence": 0.0, "error": None}
-        monkeypatch.setattr("src.detectors.echo_chamber.MLBasedDetector", MockMLDetectorInternal)
+                return {"classification": "neutral_heuristic_placeholder", "score": 0.0, "error": None}
+        monkeypatch.setattr("src.detectors.echo_chamber.HeuristicDetector", MockHeuristicDetectorInternal)
         
         def mock_get_llm_analysis(self_ech_detector, text_input, conversation_history=None):
             return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
@@ -117,11 +117,11 @@ class TestSemanticFirewall:
 
     def test_is_manipulative_with_history_trigger(self, monkeypatch):
         """Test is_manipulative when history contributes to detection by RuleBasedDetector."""
-        # Mock ML and LLM in EchoChamber for predictable benign results
-        class MockMLDetectorInternal:
+        # Mock Heuristic and LLM in EchoChamber for predictable benign results
+        class MockHeuristicDetectorInternal:
             def analyze_text(self, text_input, conversation_history=None):
-                return {"classification": "neutral_ml_placeholder", "ml_model_confidence": 0.0, "error": None}
-        monkeypatch.setattr("src.detectors.echo_chamber.MLBasedDetector", MockMLDetectorInternal)
+                return {"classification": "neutral_heuristic_placeholder", "score": 0.0, "error": None}
+        monkeypatch.setattr("src.detectors.echo_chamber.HeuristicDetector", MockHeuristicDetectorInternal)
         def mock_get_llm_analysis(self, text_input, conversation_history=None):
             return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
         monkeypatch.setattr(EchoChamberDetector, "_get_llm_analysis", mock_get_llm_analysis)
@@ -143,13 +143,13 @@ class TestSemanticFirewall:
 
     def test_analyze_conversation_detector_failure(self, monkeypatch):
         """Test how SemanticFirewall handles a failing detector."""
-        # Mock ML and LLM in EchoChamber for predictable benign results
+        # Mock Heuristic and LLM in EchoChamber for predictable benign results
         # This ensures that if EchoChamberDetector is the one being replaced by FailingDetector,
         # its usual dependencies don't cause issues.
-        class MockMLDetectorInternal:
+        class MockHeuristicDetectorInternal:
             def analyze_text(self, text_input, conversation_history=None):
-                return {"classification": "neutral_ml_placeholder", "ml_model_confidence": 0.0, "error": None}
-        monkeypatch.setattr("src.detectors.echo_chamber.MLBasedDetector", MockMLDetectorInternal)
+                return {"classification": "neutral_heuristic_placeholder", "score": 0.0, "error": None}
+        monkeypatch.setattr("src.detectors.echo_chamber.HeuristicDetector", MockHeuristicDetectorInternal)
         
         def mock_get_llm_analysis(self_ech_detector, text_input, conversation_history=None):
             return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}

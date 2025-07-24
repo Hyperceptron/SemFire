@@ -3,25 +3,25 @@ from src.detectors import EchoChamberDetector # Use the __init__ for clarity
 from src.detectors.echo_chamber import logger # Import logger for test output
 
 # Adjustments for the existing complex EchoChamberDetector:
-# 1. Mocking for its internal RuleBasedDetector, MLBasedDetector, and LLM.
+# 1. Mocking for its internal RuleBasedDetector, HeuristicDetector, and LLM.
 # 2. Verification of "detected_indicators" which come from its *specific* rule set.
 # 3. Scores and classifications are now based on combined logic.
 
 def test_echo_chamber_detector_scheming_using_specific_rules(monkeypatch):
     """Tests scheming keywords using EchoChamberDetector's specific rules."""
-    # Mock ML detector to return benign results to isolate rule logic
-    class MockMLDetector:
+    # Mock Heuristic detector to return benign results to isolate rule logic
+    class MockHeuristicDetector:
         def analyze_text(self, text_input, conversation_history=None):
             return {
-                "classification": "neutral_ml_placeholder", 
-                "ml_model_confidence": 0.1, 
-                "explanation": "Mocked ML.",
+                "classification": "neutral_heuristic_placeholder", 
+                "score": 0.1, 
+                "explanation": "Mocked Heuristic.",
                 "error": None,
                 "spotlight": None,
             }
-    # Correctly mock the ml_detector attribute of the EchoChamberDetector instance
+    # Correctly mock the heuristic_detector attribute of the EchoChamberDetector instance
     detector = EchoChamberDetector() 
-    monkeypatch.setattr(detector, "ml_detector", MockMLDetector())
+    monkeypatch.setattr(detector, "heuristic_detector", MockHeuristicDetector())
     
     # Mock LLM to avoid loading and provide a neutral response
     def mock_get_llm_analysis(self, text_input, conversation_history=None):
@@ -33,7 +33,7 @@ def test_echo_chamber_detector_scheming_using_specific_rules(monkeypatch):
     result = detector.analyze_text(text_input)
 
     # "make them believe" (rule score 1) * 1.5 (weight) = 1.5
-    # ML contributes 0.1 (confidence) * 1 (weight) = 0.1. Total score = 1.6
+    # Heuristic contributes 0.1 (score) * 1 (weight) = 0.1. Total score = 1.6
     # This score (1.6) is below the classification_threshold (7.0) in _combine_analyses_and_score
     assert result["classification"] == "benign_echo_chamber_assessment"
     assert result["is_echo_chamber_detected"] is False
@@ -44,7 +44,7 @@ def test_echo_chamber_detector_scheming_using_specific_rules(monkeypatch):
     # Probability: 1.6 / 20.0 = 0.08
     assert result["echo_chamber_probability"] == pytest.approx(1.6 / 20.0)
     assert "underlying_rule_analysis" in result
-    assert "underlying_ml_analysis" in result
+    assert "underlying_heuristic_analysis" in result
     assert result["llm_status"] == "llm_analysis_success"
     assert "spotlight" in result
     assert "make them believe" in result["spotlight"]["highlighted_text"]
@@ -52,19 +52,19 @@ def test_echo_chamber_detector_scheming_using_specific_rules(monkeypatch):
 
 
 def test_echo_chamber_detector_benign(monkeypatch):
-    # Mock ML detector
-    class MockMLDetector:
+    # Mock Heuristic detector
+    class MockHeuristicDetector:
         def analyze_text(self, text_input, conversation_history=None):
             return {
-                "classification": "neutral_ml_placeholder", 
-                "ml_model_confidence": 0.0, # No confidence for benign
-                "explanation": "Mocked ML.",
+                "classification": "neutral_heuristic_placeholder", 
+                "score": 0.0, # No score for benign
+                "explanation": "Mocked Heuristic.",
                 "error": None,
                 "spotlight": None,
             }
     
     detector = EchoChamberDetector()
-    monkeypatch.setattr(detector, "ml_detector", MockMLDetector())
+    monkeypatch.setattr(detector, "heuristic_detector", MockHeuristicDetector())
 
     # Mock LLM
     def mock_get_llm_analysis(self, text_input, conversation_history=None):
@@ -76,7 +76,7 @@ def test_echo_chamber_detector_benign(monkeypatch):
 
     assert result["classification"] == "benign_echo_chamber_assessment"
     assert result["is_echo_chamber_detected"] is False
-    # Score from internal RuleBasedDetector is 0, ML confidence is 0.
+    # Score from internal RuleBasedDetector is 0, Heuristic score is 0.
     assert result["echo_chamber_score"] == 0.0 
     assert not result["detected_indicators"] # Should be empty if no rules triggered
     assert result["echo_chamber_probability"] == 0.0
@@ -119,13 +119,13 @@ def test_echo_chamber_threshold_just_missed():
 
 def test_echo_chamber_detector_accepts_history(monkeypatch):
     """Tests that the detector's analyze_text method accepts conversation_history."""
-    # Mock ML and LLM for simplicity
-    class MockMLDetector:
+    # Mock Heuristic and LLM for simplicity
+    class MockHeuristicDetector:
         def analyze_text(self, text_input, conversation_history=None):
-            return {"classification": "neutral_ml_placeholder", "ml_model_confidence": 0.0, "error": None, "spotlight": None}
+            return {"classification": "neutral_heuristic_placeholder", "score": 0.0, "error": None, "spotlight": None}
 
     detector = EchoChamberDetector()
-    monkeypatch.setattr(detector, "ml_detector", MockMLDetector())
+    monkeypatch.setattr(detector, "heuristic_detector", MockHeuristicDetector())
     def mock_get_llm_analysis(self, text_input, conversation_history=None):
         return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
     monkeypatch.setattr(detector, "_get_llm_analysis", mock_get_llm_analysis)
@@ -136,7 +136,7 @@ def test_echo_chamber_detector_accepts_history(monkeypatch):
     
     result_with_history = detector.analyze_text(text_input, conversation_history=history_with_cue)
     # "assuming X is the only truth" (1 from echo_context_steering) * 1.5 (weight) = 1.5
-    # ML is 0. Total score 1.5. Below threshold 7.0.
+    # Heuristic is 0. Total score 1.5. Below threshold 7.0.
     assert result_with_history["classification"] == "benign_echo_chamber_assessment" 
     assert result_with_history["echo_chamber_score"] == pytest.approx(1.5)
     assert "history_turn_1_echo_context_steering_keyword: assuming X is the only truth" in result_with_history["detected_indicators"]

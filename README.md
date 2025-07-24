@@ -46,7 +46,8 @@ AEGIS aims to be a versatile, open-source toolkit providing:
 
  - Rule-based detector (`EchoChamberDetector`) for identifying cues related to "in-context scheming," context poisoning, semantic steering, and other multi-turn manipulative attack patterns (e.g., "Echo Chamber", "Crescendo").
  - Analyzes both current text input and conversation history to detect evolving deceptive narratives.
- - ML-based classifiers (Future Work) to enhance detection of complex scheming behaviors over extended dialogues.
+ - Heuristic-based detector (`HeuristicDetector`) for signals like text complexity and keyword usage.
+ - ML-based classifiers to enhance detection of complex scheming behaviors over extended dialogues (Future Work).
  - Python API for programmatic access.
  - REST service (FastAPI) for network-based access.
  - Interactive demo (Streamlit) to showcase detection capabilities.

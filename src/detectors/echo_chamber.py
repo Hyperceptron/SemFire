@@ -6,9 +6,9 @@ This is the primary orchestrator for Echo Chamber detection.
 import logging
 from typing import Any, Dict, List, Optional
 
-# Import the consolidated RuleBasedDetector and the new MLBasedDetector
+# Import the RuleBasedDetector and the HeuristicDetector
 from .rule_based import RuleBasedDetector
-from .ml_based import MLBasedDetector
+from .heuristic_detector import HeuristicDetector
 
 logging.basicConfig(level=logging.INFO) # Ensure logger is configured
 logger = logging.getLogger(__name__)
@@ -44,8 +44,8 @@ class EchoChamberDetector:
         # Instantiate its own RuleBasedDetector, configured with echo-chamber-specific rules
         self.rule_detector = RuleBasedDetector(rule_sets=self.echo_chamber_specific_rules)
         
-        # Instantiate the MLBasedDetector
-        self.ml_detector = MLBasedDetector()
+        # Instantiate the HeuristicDetector
+        self.heuristic_detector = HeuristicDetector()
 
         # LLM Initialization (logic similar to the one previously in the complex echo_chamber_detector.py)
         # LLM components are not initialized to avoid heavy dependencies during testing
@@ -58,10 +58,10 @@ class EchoChamberDetector:
     def _combine_analyses_and_score(
         self,
         rule_based_results: Dict[str, Any],
-        ml_results: Dict[str, Any]
+        heuristic_results: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
-        Combines results from its internal rule-based and ML detectors to calculate
+        Combines results from its internal rule-based and heuristic detectors to calculate
         an echo chamber specific score and classification.
         """
         combined_score = 0.0 # Use float for potentially weighted scores
@@ -86,26 +86,25 @@ class EchoChamberDetector:
                 spotlight_highlighted_text.extend(rb_spotlight.get("highlighted_text", []))
                 spotlight_triggered_rules.extend(rb_spotlight.get("triggered_rules", []))
 
-        # Process ML-Based Results
-        ml_confidence = ml_results.get("ml_model_confidence", 0.0)
-        ml_classification = ml_results.get("classification", "neutral_ml_placeholder")
-        ml_explanation = ml_results.get("explanation", "ML analysis performed.")
-        ml_spotlight = ml_results.get("spotlight")
+        # Process Heuristic-Based Results
+        heuristic_score = heuristic_results.get("score", 0.0)
+        heuristic_classification = heuristic_results.get("classification", "neutral_heuristic_placeholder")
+        heuristic_explanation = heuristic_results.get("explanation", "Heuristic analysis performed.")
+        heuristic_spotlight = heuristic_results.get("spotlight")
 
-        if ml_results.get("error"):
-            explanations.append(f"ML Detector Error: {ml_results.get('error')}")
-            # Optionally, penalize score or handle error impact
-        elif "manipulative" in ml_classification.lower() and ml_confidence > 0.6: # If ML flags manipulation with good confidence
-            combined_score += ml_confidence * 10 # Example: ML confidence (0-1) scaled to score points
-            detected_indicators.append(f"ml_flagged_{ml_classification}_conf_{ml_confidence:.2f}")
-            explanations.append(f"ML-based: {ml_classification} (conf: {ml_confidence:.2f}). {ml_explanation}")
-            if ml_spotlight:
-                spotlight_highlighted_text.extend(ml_spotlight.get("highlighted_text", []))
-                spotlight_triggered_rules.extend(ml_spotlight.get("triggered_rules", []))
-        else: # ML is neutral or low confidence
-            explanations.append(f"ML-based: {ml_classification} (conf: {ml_confidence:.2f}, no strong echo signal). {ml_explanation}")
+        if heuristic_results.get("error"):
+            explanations.append(f"Heuristic Detector Error: {heuristic_results.get('error')}")
+        elif "manipulative" in heuristic_classification.lower() and heuristic_score > 0.6: # If heuristic flags manipulation with high score
+            combined_score += heuristic_score * 10 # Example: heuristic score (0-1) scaled to score points
+            detected_indicators.append(f"heuristic_flagged_{heuristic_classification}_score_{heuristic_score:.2f}")
+            explanations.append(f"Heuristic-based: {heuristic_classification} (score: {heuristic_score:.2f}). {heuristic_explanation}")
+            if heuristic_spotlight:
+                spotlight_highlighted_text.extend(heuristic_spotlight.get("highlighted_text", []))
+                spotlight_triggered_rules.extend(heuristic_spotlight.get("triggered_rules", []))
+        else: # Heuristic is neutral or low score
+            explanations.append(f"Heuristic-based: {heuristic_classification} (score: {heuristic_score:.2f}, no strong echo signal). {heuristic_explanation}")
             # Potentially a small positive or negative contribution based on neutrality
-            combined_score += ml_confidence * 1 # Small contribution for neutral/low confidence
+            combined_score += heuristic_score * 1 # Small contribution for neutral/low score
 
         # Normalization and classification for Echo Chamber
         # Max possible combined_score needs estimation.
@@ -123,7 +122,7 @@ class EchoChamberDetector:
             explanations.append(f"Overall Echo Chamber Assessment: No significant indicators (score: {combined_score:.2f}, prob: {echo_chamber_probability:.2f}).")
 
         if not detected_indicators and combined_score == 0: # Check if score is truly zero
-             explanations.append("No specific echo chamber indicators from combined rule/ML analysis.")
+             explanations.append("No specific echo chamber indicators from combined rule/heuristic analysis.")
         
         final_explanation = " | ".join(explanations)
         spotlight = {
@@ -210,7 +209,7 @@ class EchoChamberDetector:
 
     def analyze_text(self, text_input: str, conversation_history: Optional[List[str]] = None) -> Dict[str, Any]:
         """
-        Analyze input text for Echo Chamber cues using its internal rule-based, ML-based, and LLM analysis.
+        Analyze input text for Echo Chamber cues using its internal rule-based, heuristic, and LLM analysis.
         """
         if conversation_history is None:
             conversation_history = [] # Ensure it's a list for processing
@@ -218,12 +217,12 @@ class EchoChamberDetector:
         # 1. Get Rule-based analysis (using EchoChamber's configured RuleBasedDetector with specific rules)
         rule_based_results = self.rule_detector.analyze_text(text_input, conversation_history)
 
-        # 2. Get ML-based analysis
-        ml_results = self.ml_detector.analyze_text(text_input, conversation_history)
+        # 2. Get Heuristic-based analysis
+        heuristic_results = self.heuristic_detector.analyze_text(text_input, conversation_history)
         
-        # 3. Combine Rule-based and ML results for Echo Chamber specific scoring
+        # 3. Combine Rule-based and Heuristic results for Echo Chamber specific scoring
         combined_analysis = self._combine_analyses_and_score(
-            rule_based_results, ml_results
+            rule_based_results, heuristic_results
         )
 
         # 4. Get LLM analysis for additional insight on echo chamber characteristics
@@ -252,11 +251,11 @@ class EchoChamberDetector:
                 "rules_triggered": rule_based_results.get("detected_rules"),
                 "explanation": rule_based_results.get("explanation"),
             },
-            "underlying_ml_analysis": {
-                "classification": ml_results.get("classification"),
-                "confidence": ml_results.get("ml_model_confidence"),
-                "explanation": ml_results.get("explanation"),
-                "error": ml_results.get("error") # Include error from ML if any
+            "underlying_heuristic_analysis": {
+                "classification": heuristic_results.get("classification"),
+                "score": heuristic_results.get("score"),
+                "explanation": heuristic_results.get("explanation"),
+                "error": heuristic_results.get("error")
             },
         }
         
