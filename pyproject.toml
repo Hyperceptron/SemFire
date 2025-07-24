@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aegis-semantic-firewall"
-version = "0.2.0"
+version = "0.1.1"
 authors = [
   { name="Edward Joseph", email="author@example.com" },
 ]
