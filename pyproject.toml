@@ -8,11 +8,10 @@ version = "0.1.1"
 authors = [{ name = "Edward Joseph", email = "author@example.com" }]
 description = "A toolkit for detecting advanced AI deception, including in-context scheming and multi-turn manipulative attacks."
 readme = "README.md"
-license = { file = "LICENSE" }
+license = "MIT"
 requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -60,4 +59,4 @@ py-modules = ["cli", "semantic_firewall"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["*"]
+namespaces = true
