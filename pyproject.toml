@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aegis-semantic-firewall"
-version = "0.2.0"
+version = "0.1.1"
 authors = [
   { name = "Edward Joseph", email = "author@example.com" },
 ]
@@ -58,5 +58,5 @@ aegis = "cli:main"
 
 [tool.setuptools]
 package-dir = {"": "src"}
-packages = ["detectors", "api"]
+packages = find_namespace:
 py_modules = ["cli", "semantic_firewall"]
