@@ -66,16 +66,24 @@ AEGIS aims to be a versatile, open-source toolkit providing:
  ```
 
 ## Installation
-**Prerequisites:** Python 3.8+, python3, python3-venv
-
+The project can be installed from PyPI (once published):
 ```bash
-git clone <repo_url>
-cd <repo_directory>
-# Create and activate a virtual environment (recommended)
-python3 -m venv venv
-source venv/bin/activate
-# Install dependencies (PyGithub, OpenAI, etc.)
-pip install -r requirements.txt
+pip install aegis-semantic-firewall
+```
+
+To include optional dependencies for the API service or the Streamlit demo, install them as extras:
+```bash
+# To include API dependencies (FastAPI, Uvicorn)
+pip install "aegis-semantic-firewall[api]"
+
+# To include demo dependencies (Streamlit)
+pip install "aegis-semantic-firewall[demo]"
+```
+
+For local development, clone the repository and install in editable mode with all dependencies:
+```bash
+git clone https://github.com/josephedward/R.A.D.A.R. .
+pip install -e ".[api,demo,dev]"
 ```
 
 
@@ -84,7 +92,7 @@ pip install -r requirements.txt
 The primary way to use `SemanticFirewall` is as a Python library, as shown below. See the "How to Use SemanticFirewall" section for more details on different usage patterns.
 
  ```python
- from src.semantic_firewall import SemanticFirewall
+ from semantic_firewall import SemanticFirewall
 
  # Initialize the SemanticFirewall
  firewall = SemanticFirewall()
@@ -136,7 +144,7 @@ This is the most direct and versatile way to use the `SemanticFirewall`. You can
 As shown in the [Quickstart](#quickstart) section, you initialize an instance of `SemanticFirewall` and then use its methods like `analyze_conversation()` or `is_manipulative()` to process text.
 
 ```python
-from src.semantic_firewall import SemanticFirewall
+from semantic_firewall import SemanticFirewall
 
 # Initialize the firewall
 firewall = SemanticFirewall()
@@ -177,25 +185,25 @@ The API takes `text_input` and optional `conversation_history` and returns a JSO
 
 ### 3. Via the Command Line Interface (CLI)
 
-The project includes `src/cli.py`, which provides command-line access for analyzing text using the `SemanticFirewall`. This script can be used for quick tests or batch processing from the terminal.
+The package provides a command-line interface for analyzing text using the `SemanticFirewall`. This can be used for quick tests or batch processing from the terminal.
 
 **Implementation:**
 
-You would run the `src/cli.py` script with appropriate arguments. The `analyze` command takes a positional argument for the text to analyze and an optional `--history` argument.
+Once installed, you can use the `aegis` command. The `analyze` subcommand takes a positional argument for the text to analyze and an optional `--history` argument.
 
 Example:
 ```bash
-python src/cli.py analyze "This is a test message to analyze via CLI."
+aegis analyze "This is a test message to analyze via CLI."
 ```
 
 With conversation history:
 ```bash
-python src/cli.py analyze "This is the latest message." --history "First message in history." "Second message in history."
+aegis analyze "This is the latest message." --history "First message in history." "Second message in history."
 ```
 
 Refer to the script's help message for full details:
 ```bash
-python src/cli.py analyze --help
+aegis analyze --help
 ```
 This method is generally more suited for standalone analysis tasks rather than real-time monitoring.
 
@@ -203,11 +211,17 @@ This method is generally more suited for standalone analysis tasks rather than r
 
 *   For **embedding detection logic directly into Python applications**: Use it as a **Python Library**.
 *   For **providing detection capabilities to non-Python applications or as a microservice**: Use the **REST API**.
-*   For **one-off analyses or scripting from the terminal**: The `src/cli.py` script can be utilized.
+*   For **one-off analyses or scripting from the terminal**: The `aegis` command can be utilized.
 
 ## Running the API Service
+To run the API service, you must first install the `api` optional dependencies:
+```bash
+pip install "aegis-semantic-firewall[api]"
+```
+
+Then, run the service with Uvicorn:
  ```bash
- uvicorn src.api.app:app --reload
+ uvicorn api.app:app --reload
  ```
 
 The API will be available at `http://127.0.0.1:8000`. You can access the OpenAPI documentation (Swagger UI) at `http://127.0.0.1:8000/docs`.
@@ -302,7 +316,7 @@ All project planning details—including roadmap overview and project management
 
  ### Detecting Echo Chamber / In-Context Scheming Cues
  ```python
- from src.semantic_firewall import SemanticFirewall # Using SemanticFirewall
+ from semantic_firewall import SemanticFirewall # Using SemanticFirewall
 
  firewall = SemanticFirewall()
 

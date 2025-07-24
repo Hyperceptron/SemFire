@@ -1,6 +1,8 @@
+__version__ = "0.1.0"
+
 from typing import List, Dict, Any, Optional
-# Import the consolidated detectors from the updated __init__.py
-from src.detectors import RuleBasedDetector, HeuristicDetector, EchoChamberDetector, InjectionDetector
+# Import the consolidated detectors
+from detectors import RuleBasedDetector, HeuristicDetector, EchoChamberDetector, InjectionDetector
 import logging
 
 logger = logging.getLogger(__name__)

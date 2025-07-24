@@ -1,14 +1,10 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
-import sys
-import os
-
-# Add the project root to the Python path to allow importing from src
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-
-# The API will primarily use the consolidated EchoChamberDetector from src.detectors
-from src.detectors import EchoChamberDetector 
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import List, Optional, Dict, Any
+from detectors import EchoChamberDetector
 import logging
 
 logger = logging.getLogger(__name__)
@@ -88,5 +84,5 @@ async def analyze_text_endpoint(request: AnalysisRequest):
 async def read_root():
     return {"message": "Welcome to the AEGIS API. Use the /analyze endpoint to submit text for analysis."}
 
-# To run the app (from the project root directory):
-# uvicorn src.api.app:app --reload
+# To run the app (after installing with the 'api' extra):
+# uvicorn api.app:app --reload
