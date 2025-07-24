@@ -56,7 +56,7 @@ aegis = "cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-py_modules = ["cli", "semantic_firewall"]
+py-modules = ["cli", "semantic_firewall"]
 
 [tool.setuptools.packages.find]
 namespaces = true
