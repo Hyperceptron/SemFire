@@ -25,3 +25,4 @@ Archive.zip
 /src/aegis_semantic_firewall.egg-info
 /.venv
 /trace_cov
+/.hypothesis
