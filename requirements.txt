@@ -11,3 +11,4 @@ torch>=2.0.0
 transformers>=4.30.0
 accelerate>=0.20.0
 # Using a common version, adjust if a specific one is needed
+hypothesis>=6.0.0
