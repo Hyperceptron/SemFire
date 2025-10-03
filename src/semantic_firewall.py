@@ -1,8 +1,22 @@
 __version__ = "0.1.1"
 
 from typing import List, Dict, Any, Optional
-# Import the consolidated detectors
-from detectors import RuleBasedDetector, HeuristicDetector, EchoChamberDetector, InjectionDetector
+# Import the consolidated detectors. Prefer relative import for `src.*` tests,
+# but fall back to absolute when imported as top-level installed module.
+try:
+    from .detectors import (
+        RuleBasedDetector,
+        HeuristicDetector,
+        EchoChamberDetector,
+        InjectionDetector,
+    )
+except ImportError:  # pragma: no cover - fallback for runtime import as top-level module
+    from detectors import (
+        RuleBasedDetector,
+        HeuristicDetector,
+        EchoChamberDetector,
+        InjectionDetector,
+    )
 import logging
 
 logger = logging.getLogger(__name__)
