@@ -28,4 +28,4 @@ jobs:
           pip install pytest
 
       - name: Run test suite
-        run: pytest -q --disable-warnings --maxfail=1
+        run: PYTHONPATH=src pytest -q --disable-warnings --maxfail=1
