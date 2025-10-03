@@ -23,3 +23,6 @@ Archive.zip
 /dist
 *.pyc
 /src/aegis_semantic_firewall.egg-info
+/.hypothesis
+/.venv
+/trace_cov
