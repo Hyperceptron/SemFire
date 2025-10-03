@@ -1,4 +1,5 @@
 import argparse
+import sys
 import json
 from semantic_firewall import SemanticFirewall # Import SemanticFirewall
 
@@ -8,7 +9,6 @@ from semantic_firewall import SemanticFirewall # Import SemanticFirewall
 def analyze_text_command(args):
     """Handles the 'analyze' command using SemanticFirewall for combined analysis."""
     firewall = SemanticFirewall()
-    print("Using SemanticFirewall for combined analysis...")
     
     # Call analyze_conversation on the firewall instance
     # SemanticFirewall's analyze_conversation method will use all its configured detectors
@@ -16,7 +16,8 @@ def analyze_text_command(args):
         current_message=args.text,
         conversation_history=args.history if args.history else []
     )
-    print(json.dumps(results, indent=2))
+    # First line of output must be compact JSON (single line) for tests to parse
+    print(json.dumps(results))
 
     # Optionally, you could also call and print the result of is_manipulative
     is_manipulative_flag = firewall.is_manipulative(
@@ -31,7 +32,6 @@ def main():
     """Main function for the CLI."""
     parser = argparse.ArgumentParser(description="AEGIS: AI Deception Detection Toolkit CLI.")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
-    subparsers.required = True # Ensure a command is always given
 
     # Analyze command
     analyze_parser = subparsers.add_parser("analyze", help="Analyze text for deception cues using SemanticFirewall.")
@@ -49,13 +49,13 @@ def main():
 
     args = parser.parse_args()
 
-    if hasattr(args, 'func'):
-        args.func(args)
-    else:
-        # This case should ideally not be reached if subparsers.required = True
-        # and all subparsers have a default function.
-        # However, it's good practice for fallback or if a command is misconfigured.
-        parser.print_help()
+    if getattr(args, 'command', None) is None:
+        # No command provided: show full help on stderr and exit non-zero
+        parser.print_help(sys.stderr)
+        parser.exit(status=2)
+
+    # Dispatch to the selected subcommand function
+    args.func(args)
 
 
 if __name__ == "__main__":
