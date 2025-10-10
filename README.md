@@ -191,7 +191,7 @@ The package provides a command-line interface for analyzing text using the `Sema
 
 **Implementation:**
 
-Once installed, you can use the `semfire` command (alias: `aegis`). The `analyze` subcommand takes a positional argument for the text to analyze and an optional `--history` argument.
+Once installed, you can use the `semfire` command (legacy alias: `aegis`). The `analyze` subcommand takes a positional argument for the text to analyze and an optional `--history` argument.
 
 Example:
 ```bash
@@ -213,7 +213,7 @@ This method is generally more suited for standalone analysis tasks rather than r
 
 *   For **embedding detection logic directly into Python applications**: Use it as a **Python Library**.
 *   For **providing detection capabilities to non-Python applications or as a microservice**: Use the **REST API**.
-*   For **one-off analyses or scripting from the terminal**: The `aegis` command can be utilized.
+*   For **one-off analyses or scripting from the terminal**: Use the `semfire` command.
 
 Note: The `aegis` CLI remains available as a legacy alias and now prints a deprecation notice to stderr. Please switch to the `semfire` command.
 
@@ -236,12 +236,12 @@ You can also deploy the API service using Docker.
 
 1.  **Build the Docker image:**
     ```bash
-    docker build -t aegis-api .
+    docker build -t semfire-api .
     ```
 
 2.  **Run the Docker container:**
     ```bash
-    docker run -d -p 8000:8000 aegis-api
+    docker run -d -p 8000:8000 semfire-api
     ```
     The API will then be accessible at `http://localhost:8000`.
 
