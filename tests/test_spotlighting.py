@@ -83,6 +83,30 @@ def test_spotlighter_matches_direct(method, func, opts):
     direct = func(s)
     assert processed == direct
 
+def test_datamark_content_default_marker():
+    s = "one two   three"
+    # replace whitespace sequences with default marker
+    assert datamark_content(s) == "one^two^three"
+
+def test_spotlighter_delimit_custom():
+    s = "hello world"
+    spot = Spotlighter(method="delimit", start="[[", end="]]")
+    assert spot.process(s) == "[[hello world]]"
+
+def test_spotlighter_datamark_random_marker():
+    s = "one two"
+    spot = Spotlighter(method="datamark")
+    processed = spot.process(s)
+    # The marker is random, so we can't know what it is.
+    # But we can check that the whitespace is gone and replaced by something.
+    assert " " not in processed
+    assert len(processed) == len(s)
+
+def test_spotlighter_random_marker_is_private_use():
+    spot = Spotlighter(method="datamark")
+    marker = spot._random_marker()
+    assert 0xE000 <= ord(marker) <= 0xF8FF
+
 def test_spotlighter_unknown_method():
     spot = Spotlighter(method="unknown")
     with pytest.raises(ValueError, match="Unknown spotlighting method: unknown"):
