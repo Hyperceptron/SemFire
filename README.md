@@ -1,5 +1,7 @@
 # SemFire (formerly AEGIS)
 
+[![CI](https://github.com/josephedward/R.A.D.A.R./actions/workflows/ci.yml/badge.svg)](https://github.com/josephedward/R.A.D.A.R./actions/workflows/ci.yml)
+
  ## AI Deception Detection Toolkit
 
 **SemFire (Semantic Firewall) is an open-source toolkit for detecting advanced AI deception, with a primary focus on "in-context scheming" and multi-turn manipulative attacks.** This project aims to develop tools to identify and mitigate vulnerabilities like the "Echo Chamber" and "Crescendo" attacks, where AI models are subtly guided towards undesirable behavior through conversational context.
@@ -66,18 +68,18 @@ SemFire aims to be a versatile, open-source toolkit providing:
  ```
 
 ## Installation
-The project can be installed from PyPI (once published):
+The project can be installed from PyPI:
 ```bash
-pip install aegis-semantic-firewall
+pip install semfire
 ```
 
 To include optional dependencies for the API service or the Streamlit demo, install them as extras:
 ```bash
 # To include API dependencies (FastAPI, Uvicorn)
-pip install "aegis-semantic-firewall[api]"
+pip install "semfire[api]"
 
 # To include demo dependencies (Streamlit)
-pip install "aegis-semantic-firewall[demo]"
+pip install "semfire[demo]"
 ```
 
 For local development, clone the repository and install in editable mode with all dependencies:
@@ -213,10 +215,12 @@ This method is generally more suited for standalone analysis tasks rather than r
 *   For **providing detection capabilities to non-Python applications or as a microservice**: Use the **REST API**.
 *   For **one-off analyses or scripting from the terminal**: The `aegis` command can be utilized.
 
+Note: The `aegis` CLI remains available as a legacy alias and now prints a deprecation notice to stderr. Please switch to the `semfire` command.
+
 ## Running the API Service
 To run the API service, you must first install the `api` optional dependencies:
 ```bash
-pip install "aegis-semantic-firewall[api]"
+pip install "semfire[api]"
 ```
 
 Then, run the service with Uvicorn:

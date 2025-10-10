@@ -3,10 +3,10 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "aegis-semantic-firewall"
-version = "0.1.1"
+name = "semfire"
+version = "0.2.0"
 authors = [{ name = "Edward Joseph", email = "author@example.com" }]
-description = "A toolkit for detecting advanced AI deception, including in-context scheming and multi-turn manipulative attacks."
+description = "SemFire (Semantic Firewall): detect advanced AI deception, including in-context scheming and multi-turn manipulative attacks."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.9"
@@ -19,7 +19,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Text Processing :: Linguistic",
 ]
-keywords = ["llm", "security", "prompt injection", "semantic firewall", "ai safety", "deception detection"]
+keywords = ["semfire", "llm", "security", "prompt injection", "semantic firewall", "ai safety", "deception detection"]
 dependencies = [
     "torch>=2.0.0",
     "transformers>=4.30.0",
@@ -51,12 +51,12 @@ dev = [
 ]
 
 [project.scripts]
-aegis = "cli:main"
 semfire = "cli:main"
+aegis = "cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-py-modules = ["cli", "semantic_firewall"]
+py-modules = ["cli", "semantic_firewall", "semfire"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
