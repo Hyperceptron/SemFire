@@ -418,7 +418,7 @@ def test_echo_chamber_detector_llm_integration(monkeypatch):
     # Mock the LLM to be ready and return a specific analysis
     monkeypatch.setattr(detector, "llm_ready", True)
     monkeypatch.setattr(detector, "tokenizer", type("MockTokenizer", (), {
-        "apply_chat_template": lambda messages, tokenize, add_generation_prompt: "mocked prompt",
+        "apply_chat_template": lambda *args, **kwargs: "mocked prompt",
         "pad_token_id": 0,
         "eos_token_id": 0,
         "decode": lambda tokens, skip_special_tokens: "LLM_RESPONSE_MARKER: Mocked LLM analysis."
@@ -441,13 +441,10 @@ def test_echo_chamber_detector_llm_empty_response(monkeypatch):
 
     monkeypatch.setattr(detector, "llm_ready", True)
     monkeypatch.setattr(detector, "tokenizer", type("MockTokenizer", (), {
-        "apply_chat_template": lambda messages, tokenize, add_generation_prompt: "mocked prompt",
+        "apply_chat_template": lambda messages, **kwargs: "mocked prompt",
         "pad_token_id": 0,
         "eos_token_id": 0,
         "decode": lambda tokens, skip_special_tokens: ""
-    })())
-    monkeypatch.setattr(detector, "model", type("MockModel", (), {
-        "generate": lambda input_ids, attention_mask, max_new_tokens, pad_token_id: [[1, 2, 3, 4, 5]]
     })())
 
     text_input = "Test message for empty LLM response."
@@ -462,7 +459,7 @@ def test_echo_chamber_detector_llm_error(monkeypatch):
 
     monkeypatch.setattr(detector, "llm_ready", True)
     monkeypatch.setattr(detector, "tokenizer", type("MockTokenizer", (), {
-        "apply_chat_template": lambda messages, tokenize, add_generation_prompt: "mocked prompt",
+        "apply_chat_template": lambda *args, **kwargs: "mocked prompt",
         "pad_token_id": 0,
         "eos_token_id": 0,
         "decode": lambda tokens, skip_special_tokens: "LLM_RESPONSE_MARKER: Mocked LLM analysis."
