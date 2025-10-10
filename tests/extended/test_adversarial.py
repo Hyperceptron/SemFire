@@ -1,4 +1,7 @@
 import pytest
+
+# Hypothesis is optional for extended fuzzing tests; skip if unavailable
+pytest.importorskip("hypothesis", reason="Optional fuzzing tests (not required for core).")
 from hypothesis import given, strategies as st
 
 # Example adversarial input generator
