@@ -4,6 +4,9 @@ and enhanced with LLM analysis.
 This is the primary orchestrator for Echo Chamber detection.
 """
 import logging
+import os
+import json
+from functools import lru_cache
 from typing import Any, Dict, List, Optional
 
 # Import the RuleBasedDetector and the HeuristicDetector
@@ -12,6 +15,41 @@ from .heuristic_detector import HeuristicDetector
 
 logging.basicConfig(level=logging.INFO) # Ensure logger is configured
 logger = logging.getLogger(__name__)
+
+
+@lru_cache(maxsize=1)
+def _load_score_weights() -> Dict[str, float]:
+    """Load proprietary weights if available, otherwise return safe defaults.
+
+    Looks for a JSON file `weights/score_weights.json` inside the private
+    repository pointed to by `AEGIS_PRV_PATH` or defaults to `../aegis-prv`
+    (relative to the repo root). Returns a dict with numeric values.
+    """
+    try:
+        # Resolve repo root (two levels up from this file: src/detectors -> src -> repo)
+        repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        default_prv = os.path.abspath(os.path.join(repo_root, "..", "aegis-prv"))
+        base = os.environ.get("AEGIS_PRV_PATH", default_prv)
+        path = os.path.join(base, "weights", "score_weights.json")
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            # Return only expected keys if present; fall back per-key if missing
+            return {
+                "rule_weight": float(data.get("rule_weight", 1.5)),
+                "heuristic_strong_weight": float(data.get("heuristic_strong_weight", 10.0)),
+                "heuristic_neutral_weight": float(data.get("heuristic_neutral_weight", 1.0)),
+                "normalization_factor": float(data.get("normalization_factor", 20.0)),
+                "classification_threshold": float(data.get("classification_threshold", 7.0)),
+            }
+    except Exception:
+        # Neutral, test-friendly defaults matching prior behavior
+        return {
+            "rule_weight": 1.5,
+            "heuristic_strong_weight": 10.0,
+            "heuristic_neutral_weight": 1.0,
+            "normalization_factor": 20.0,
+            "classification_threshold": 7.0,
+        }
 
 
 class EchoChamberDetector:
@@ -79,7 +117,8 @@ class EchoChamberDetector:
 
         if rb_score > 0:
             # Weight rule-based score (e.g., echo chamber rules are highly indicative)
-            combined_score += rb_score * 1.5 # Example weighting, tune as needed
+            w = _load_score_weights()
+            combined_score += rb_score * w.get("rule_weight", 1.5)
             detected_indicators.extend(rb_rules_triggered)
             explanations.append(f"Echo-Rules: {rb_classification} (score: {rb_score}, prob: {rb_prob:.2f}).")
             if rb_spotlight:
@@ -95,7 +134,8 @@ class EchoChamberDetector:
         if heuristic_results.get("error"):
             explanations.append(f"Heuristic Detector Error: {heuristic_results.get('error')}")
         elif "manipulative" in heuristic_classification.lower() and heuristic_score > 0.6: # If heuristic flags manipulation with high score
-            combined_score += heuristic_score * 10 # Example: heuristic score (0-1) scaled to score points
+            w = _load_score_weights()
+            combined_score += heuristic_score * w.get("heuristic_strong_weight", 10.0)
             detected_indicators.append(f"heuristic_flagged_{heuristic_classification}_score_{heuristic_score:.2f}")
             explanations.append(f"Heuristic-based: {heuristic_classification} (score: {heuristic_score:.2f}). {heuristic_explanation}")
             if heuristic_spotlight:
@@ -104,16 +144,18 @@ class EchoChamberDetector:
         else: # Heuristic is neutral or low score
             explanations.append(f"Heuristic-based: {heuristic_classification} (score: {heuristic_score:.2f}, no strong echo signal). {heuristic_explanation}")
             # Potentially a small positive or negative contribution based on neutrality
-            combined_score += heuristic_score * 1 # Small contribution for neutral/low score
+            w = _load_score_weights()
+            combined_score += heuristic_score * w.get("heuristic_neutral_weight", 1.0) # Small contribution
 
         # Normalization and classification for Echo Chamber
         # Max possible combined_score needs estimation.
         # For now, use a pragmatic normalization factor (e.g., 20 for echo chamber).
-        normalization_factor = 20.0
+        w = _load_score_weights()
+        normalization_factor = float(w.get("normalization_factor", 20.0))
         echo_chamber_probability: float = min(combined_score / normalization_factor, 1.0) if combined_score > 0 else 0.0
         
         # Threshold for final classification
-        classification_threshold = 7.0 # Example: combined score of 7.0+ indicates potential echo chamber
+        classification_threshold = float(w.get("classification_threshold", 7.0))
         if combined_score >= classification_threshold:
             final_classification = "potential_echo_chamber"
             explanations.append(f"Overall Echo Chamber Assessment: Potential activity (score: {combined_score:.2f}, prob: {echo_chamber_probability:.2f}).")
