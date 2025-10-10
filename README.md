@@ -1,8 +1,8 @@
- # AEGIS
+# SemFire (formerly AEGIS)
 
  ## AI Deception Detection Toolkit
 
- **AEGIS (Active Encoding Guarding for Injection Safety) is an open-source toolkit for detecting advanced AI deception, with a primary focus on "in-context scheming" and multi-turn manipulative attacks.** This project aims to develop tools to identify and mitigate vulnerabilities like the "Echo Chamber" and "Crescendo" attacks, where AI models are subtly guided towards undesirable behavior through conversational context.
+**SemFire (Semantic Firewall) is an open-source toolkit for detecting advanced AI deception, with a primary focus on "in-context scheming" and multi-turn manipulative attacks.** This project aims to develop tools to identify and mitigate vulnerabilities like the "Echo Chamber" and "Crescendo" attacks, where AI models are subtly guided towards undesirable behavior through conversational context.
 
 ## Addressing Sophisticated AI Deception: From Theory to Practice
 
@@ -14,7 +14,7 @@ The landscape of AI safety is rapidly evolving, with new research highlighting s
 
 These attack vectors underscore a critical challenge: LLMs can be steered towards harmful outcomes through subtle, contextual manipulation over a series of interactions, even if individual prompts appear benign.
 
-**AEGIS is an early-stage research project dedicated to developing an open-source toolkit for detecting these advanced forms of AI deception.** Our core focus is on identifying "in-context scheming" and related multi-turn attacks. We aim to translate the understanding of vulnerabilities like the "Echo Chamber" and "Crescendo" attacks into practical, accessible tools for researchers and practitioners to evaluate and safeguard their own AI systems. We are actively seeking collaborators, feedback, and contributions from the AI safety community.
+**SemFire is an early-stage research project dedicated to developing an open-source toolkit for detecting these advanced forms of AI deception.** Our core focus is on identifying "in-context scheming" and related multi-turn attacks. We aim to translate the understanding of vulnerabilities like the "Echo Chamber" and "Crescendo" attacks into practical, accessible tools for researchers and practitioners to evaluate and safeguard their own AI systems. We are actively seeking collaborators, feedback, and contributions from the AI safety community.
 
 ### Research Context and Motivation
 
@@ -36,7 +36,7 @@ While some argue that apparent deception might be sophisticated pattern matching
 
 ### Project Vision: A Toolkit for AI Deception Detection
 
-AEGIS aims to be a versatile, open-source toolkit providing:
+SemFire aims to be a versatile, open-source toolkit providing:
 - A **Python library** for direct integration into applications and research.
 - A **REST API service** (via FastAPI) for broader accessibility.
 - Core components that can be used to build **"semantic firewall"** like systems to monitor and analyze AI interactions in real-time.
@@ -189,21 +189,21 @@ The package provides a command-line interface for analyzing text using the `Sema
 
 **Implementation:**
 
-Once installed, you can use the `aegis` command. The `analyze` subcommand takes a positional argument for the text to analyze and an optional `--history` argument.
+Once installed, you can use the `semfire` command (alias: `aegis`). The `analyze` subcommand takes a positional argument for the text to analyze and an optional `--history` argument.
 
 Example:
 ```bash
-aegis analyze "This is a test message to analyze via CLI."
+semfire analyze "This is a test message to analyze via CLI."
 ```
 
 With conversation history:
 ```bash
-aegis analyze "This is the latest message." --history "First message in history." "Second message in history."
+semfire analyze "This is the latest message." --history "First message in history." "Second message in history."
 ```
 
 Refer to the script's help message for full details:
 ```bash
-aegis analyze --help
+semfire analyze --help
 ```
 This method is generally more suited for standalone analysis tasks rather than real-time monitoring.
 
@@ -292,6 +292,22 @@ The `llm_analysis` field will contain the textual analysis from the local LLM (T
 ```bash
 pytest
 ```
+
+## Proprietary Score Weights
+
+The EchoChamberDetector uses proprietary combination weights loaded at runtime from a private sibling repo.
+
+- Weights file: `../aegis-prv/weights/score_weights.json` (override base with `AEGIS_PRV_PATH`).
+- Loader: falls back to neutral, test-friendly defaults if the file is missing/invalid.
+- Full documentation has moved to the private repo: see `${AEGIS_PRV_PATH:-../aegis-prv}/docs/weights.md`.
+
+Validate your weights file:
+
+```bash
+python scripts/validate_weights.py --path /absolute/path/to/aegis-prv
+```
+
+Do not commit weights to this repo. Keep all tuning, data, and training pipelines private.
 
 **Override on the command-line** (no need to touch `.env**)  
 Export it into your shell—or even just prefix the invocation—to temporarily “inject” the correct token:
@@ -401,4 +417,3 @@ All project planning details—including roadmap overview and project management
 
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request.
-
