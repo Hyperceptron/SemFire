@@ -6,8 +6,6 @@ context manipulation cues in text based on predefined rule sets.
 from typing import Any, Dict, List, Optional
 import logging
 
-# Configure logging
-logging.basicConfig(level=logging.INFO) # Ensure logger is configured if not already
 logger = logging.getLogger(__name__)
 
 
