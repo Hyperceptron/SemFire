@@ -86,36 +86,265 @@ def test_echo_chamber_detector_benign(monkeypatch):
     assert not result["spotlight"]["triggered_rules"]
 
 
-def test_echo_chamber_detector_indirect_reference():
-    # This test used general rule keywords, EchoChamberDetector uses specific ones.
-    # Skipping for now as it needs complete rewrite for EchoChamberDetector's specific rules.
-    pass
 
 
-def test_echo_chamber_detector_context_steering():
-    # This test used general rule keywords, EchoChamberDetector uses specific ones.
-    # Skipping for now as it needs complete rewrite for EchoChamberDetector's specific rules.
-    pass
 
-def test_echo_chamber_detector_mixed_cues_strong():
-    # This test used general rule keywords, EchoChamberDetector uses specific ones.
-    # Skipping for now as it needs complete rewrite for EchoChamberDetector's specific rules.
-    pass
 
-def test_echo_chamber_detector_mixed_cues_weak_but_detected():
-    # This test used general rule keywords, EchoChamberDetector uses specific ones.
-    # Skipping for now as it needs complete rewrite for EchoChamberDetector's specific rules.
-    pass
+def test_echo_chamber_detector_indirect_reference(monkeypatch):
+    """Tests indirect reference keywords using EchoChamberDetector's specific rules."""
+    class MockHeuristicDetector:
+        def analyze_text(self, text_input, conversation_history=None):
+            return {"classification": "neutral_heuristic_placeholder", "score": 0.0, "error": None, "spotlight": None}
+    detector = EchoChamberDetector()
+    monkeypatch.setattr(detector, "heuristic_detector", MockHeuristicDetector())
+    def mock_get_llm_analysis(self, text_input, conversation_history=None):
+        return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
+    monkeypatch.setattr(detector, "_get_llm_analysis", mock_get_llm_analysis)
 
-def test_echo_chamber_threshold_just_met():
-    # This test used general rule keywords, EchoChamberDetector uses specific ones.
-    # Skipping for now as it needs complete rewrite for EchoChamberDetector's specific rules.
-    pass
+    text_input = "As we've established, this is the correct path."
+    result = detector.analyze_text(text_input)
 
-def test_echo_chamber_threshold_just_missed():
-    # This test used general rule keywords, EchoChamberDetector uses specific ones.
-    # Skipping for now as it needs complete rewrite for EchoChamberDetector's specific rules.
-    pass
+    assert result["classification"] == "benign_echo_chamber_assessment"
+    assert result["is_echo_chamber_detected"] is False
+    assert result["echo_chamber_score"] == pytest.approx(1.5) # 1 (rule) * 1.5 (weight) + 0 (heuristic)
+    assert "current_message_echo_indirect_reference_keyword: as we've established" in result["detected_indicators"]
+    assert result["echo_chamber_probability"] == pytest.approx(1.5 / 20.0)
+    assert "as we've established" in result["spotlight"]["highlighted_text"]
+
+
+def test_echo_chamber_detector_context_steering(monkeypatch):
+    """Tests context steering keywords using EchoChamberDetector's specific rules."""
+    class MockHeuristicDetector:
+        def analyze_text(self, text_input, conversation_history=None):
+            return {"classification": "neutral_heuristic_placeholder", "score": 0.0, "error": None, "spotlight": None}
+    detector = EchoChamberDetector()
+    monkeypatch.setattr(detector, "heuristic_detector", MockHeuristicDetector())
+    def mock_get_llm_analysis(self, text_input, conversation_history=None):
+        return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
+    monkeypatch.setattr(detector, "_get_llm_analysis", mock_get_llm_analysis)
+
+    text_input = "Now that we see eye-to-eye, let's proceed with the plan."
+    result = detector.analyze_text(text_input)
+
+    assert result["classification"] == "benign_echo_chamber_assessment"
+    assert result["is_echo_chamber_detected"] is False
+    assert result["echo_chamber_score"] == pytest.approx(1.5) # 1 (rule) * 1.5 (weight) + 0 (heuristic)
+    assert "current_message_echo_context_steering_keyword: now that we see eye-to-eye" in result["detected_indicators"]
+    assert result["echo_chamber_probability"] == pytest.approx(1.5 / 20.0)
+    assert "now that we see eye-to-eye" in result["spotlight"]["highlighted_text"]
+
+
+
+def test_echo_chamber_detector_mixed_cues_strong(monkeypatch):
+    """Tests a message with multiple strong echo chamber cues that should trigger detection."""
+    class MockHeuristicDetector:
+        def analyze_text(self, text_input, conversation_history=None):
+            return {"classification": "neutral_heuristic_placeholder", "score": 0.0, "explanation": "Mocked Heuristic.", "error": None, "spotlight": None}
+    detector = EchoChamberDetector()
+    monkeypatch.setattr(detector, "heuristic_detector", MockHeuristicDetector())
+    def mock_get_llm_analysis(self, text_input, conversation_history=None):
+        return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
+    monkeypatch.setattr(detector, "_get_llm_analysis", mock_get_llm_analysis)
+
+    text_input = "We must make them believe this is the only way. As we've established, based on this premise, we should proceed."
+    result = detector.analyze_text(text_input)
+
+    # Two rules triggered: "make them believe" (echo_scheming) and "as we've established" (echo_indirect_reference)
+    # Each rule has a score of 1. Total rule score = 2. Combined score = 2 * 1.5 = 3.
+    # This is still below the default classification_threshold (7.0).
+    assert result["classification"] == "benign_echo_chamber_assessment"
+    assert result["is_echo_chamber_detected"] is False
+    assert result["echo_chamber_score"] == pytest.approx(3.0) # 2 (rules) * 1.5 (weight) + 0 (heuristic)
+    assert "current_message_echo_scheming_keyword: make them believe" in result["detected_indicators"]
+    assert "current_message_echo_indirect_reference_keyword: as we've established" in result["detected_indicators"]
+    assert result["echo_chamber_probability"] == pytest.approx(3.0 / 20.0)
+
+
+def test_echo_chamber_detector_mixed_cues_weak_but_detected(monkeypatch):
+    """Tests a message with weak cues that, when combined, should trigger detection."""
+    class MockHeuristicDetector:
+        def analyze_text(self, text_input, conversation_history=None):
+            return {"classification": "neutral_heuristic_placeholder", "score": 0.0, "explanation": "Mocked Heuristic.", "error": None, "spotlight": None}
+    detector = EchoChamberDetector()
+    monkeypatch.setattr(detector, "heuristic_detector", MockHeuristicDetector())
+    def mock_get_llm_analysis(self, text_input, conversation_history=None):
+        return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
+    monkeypatch.setattr(detector, "_get_llm_analysis", mock_get_llm_analysis)
+
+    # This message has multiple weak cues that should combine to trigger detection
+    text_input = "Let's gradually convince them. Building on our shared understanding, we can filter out dissent."
+    result = detector.analyze_text(text_input)
+
+    # "gradually convince" (echo_scheming), "building on our shared understanding" (echo_indirect_reference),
+    # "filter out dissent" (echo_scheming)
+    # Total rule score = 3. Combined score = 3 * 1.5 = 4.5. Still below threshold 7.0.
+    assert result["classification"] == "benign_echo_chamber_assessment"
+    assert result["is_echo_chamber_detected"] is False
+    assert result["echo_chamber_score"] == pytest.approx(4.5)
+    assert "current_message_echo_scheming_keyword: gradually convince" in result["detected_indicators"]
+    assert "current_message_echo_indirect_reference_keyword: building on our shared understanding" in result["detected_indicators"]
+    assert "current_message_echo_scheming_keyword: filter out dissent" in result["detected_indicators"]
+    assert result["echo_chamber_probability"] == pytest.approx(4.5 / 20.0)
+
+
+def test_echo_chamber_detector_indirect_reference(monkeypatch):
+    """Tests indirect reference keywords using EchoChamberDetector's specific rules."""
+    class MockHeuristicDetector:
+        def analyze_text(self, text_input, conversation_history=None):
+            return {"classification": "neutral_heuristic_placeholder", "score": 0.0, "error": None, "spotlight": None}
+    detector = EchoChamberDetector()
+    monkeypatch.setattr(detector, "heuristic_detector", MockHeuristicDetector())
+    def mock_get_llm_analysis(self, text_input, conversation_history=None):
+        return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
+    monkeypatch.setattr(detector, "_get_llm_analysis", mock_get_llm_analysis)
+
+    text_input = "As we've established, this is the correct path."
+    result = detector.analyze_text(text_input)
+
+    assert result["classification"] == "benign_echo_chamber_assessment"
+    assert result["is_echo_chamber_detected"] is False
+    assert result["echo_chamber_score"] == pytest.approx(1.5) # 1 (rule) * 1.5 (weight) + 0 (heuristic)
+    assert "current_message_echo_indirect_reference_keyword: as we've established" in result["detected_indicators"]
+    assert result["echo_chamber_probability"] == pytest.approx(1.5 / 20.0)
+    assert "as we've established" in result["spotlight"]["highlighted_text"]
+
+
+def test_echo_chamber_detector_context_steering(monkeypatch):
+    """Tests context steering keywords using EchoChamberDetector's specific rules."""
+    class MockHeuristicDetector:
+        def analyze_text(self, text_input, conversation_history=None):
+            return {"classification": "neutral_heuristic_placeholder", "score": 0.0, "error": None, "spotlight": None}
+    detector = EchoChamberDetector()
+    monkeypatch.setattr(detector, "heuristic_detector", MockHeuristicDetector())
+    def mock_get_llm_analysis(self, text_input, conversation_history=None):
+        return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
+    monkeypatch.setattr(detector, "_get_llm_analysis", mock_get_llm_analysis)
+
+    text_input = "Now that we see eye-to-eye, let's proceed with the plan."
+    result = detector.analyze_text(text_input)
+
+    assert result["classification"] == "benign_echo_chamber_assessment"
+    assert result["is_echo_chamber_detected"] is False
+    assert result["echo_chamber_score"] == pytest.approx(1.5) # 1 (rule) * 1.5 (weight) + 0 (heuristic)
+    assert "current_message_echo_context_steering_keyword: now that we see eye-to-eye" in result["detected_indicators"]
+    assert result["echo_chamber_probability"] == pytest.approx(1.5 / 20.0)
+    assert "now that we see eye-to-eye" in result["spotlight"]["highlighted_text"]
+
+
+def test_echo_chamber_detector_mixed_cues_strong(monkeypatch):
+    """Tests a message with multiple strong echo chamber cues that should trigger detection."""
+    class MockHeuristicDetector:
+        def analyze_text(self, text_input, conversation_history=None):
+            return {"classification": "neutral_heuristic_placeholder", "score": 0.0, "explanation": "Mocked Heuristic.", "error": None, "spotlight": None}
+    detector = EchoChamberDetector()
+    monkeypatch.setattr(detector, "heuristic_detector", MockHeuristicDetector())
+    def mock_get_llm_analysis(self, text_input, conversation_history=None):
+        return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
+    monkeypatch.setattr(detector, "_get_llm_analysis", mock_get_llm_analysis)
+
+    text_input = "We must make them believe this is the only way. As we've established, based on this premise, we should proceed."
+    result = detector.analyze_text(text_input)
+
+    # Two rules triggered: "make them believe" (echo_scheming) and "as we've established" (echo_indirect_reference)
+    # Each rule has a score of 1. Total rule score = 2. Combined score = 2 * 1.5 = 3.
+    # This is still below the default classification_threshold (7.0).
+    assert result["classification"] == "benign_echo_chamber_assessment"
+    assert result["is_echo_chamber_detected"] is False
+    assert result["echo_chamber_score"] == pytest.approx(3.0) # 2 (rules) * 1.5 (weight) + 0 (heuristic)
+    assert "current_message_echo_scheming_keyword: make them believe" in result["detected_indicators"]
+    assert "current_message_echo_indirect_reference_keyword: as we've established" in result["detected_indicators"]
+    assert result["echo_chamber_probability"] == pytest.approx(3.0 / 20.0)
+
+
+def test_echo_chamber_detector_mixed_cues_weak_but_detected(monkeypatch):
+    """Tests a message with weak cues that, when combined, should trigger detection."""
+    class MockHeuristicDetector:
+        def analyze_text(self, text_input, conversation_history=None):
+            return {"classification": "neutral_heuristic_placeholder", "score": 0.0, "explanation": "Mocked Heuristic.", "error": None, "spotlight": None}
+    detector = EchoChamberDetector()
+    monkeypatch.setattr(detector, "heuristic_detector", MockHeuristicDetector())
+    def mock_get_llm_analysis(self, text_input, conversation_history=None):
+        return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
+    monkeypatch.setattr(detector, "_get_llm_analysis", mock_get_llm_analysis)
+
+    # This message has multiple weak cues that should combine to trigger detection
+    text_input = "Let's gradually convince them. Building on our shared understanding, we can filter out dissent."
+    result = detector.analyze_text(text_input)
+
+    # "gradually convince" (echo_scheming), "building on our shared understanding" (echo_indirect_reference),
+    # "filter out dissent" (echo_scheming)
+    # Total rule score = 3. Combined score = 3 * 1.5 = 4.5. Still below threshold 7.0.
+    assert result["classification"] == "benign_echo_chamber_assessment"
+    assert result["is_echo_chamber_detected"] is False
+    assert result["echo_chamber_score"] == pytest.approx(4.5)
+    assert "current_message_echo_scheming_keyword: gradually convince" in result["detected_indicators"]
+    assert "current_message_echo_indirect_reference_keyword: building on our shared understanding" in result["detected_indicators"]
+    assert "current_message_echo_scheming_keyword: filter out dissent" in result["detected_indicators"]
+    assert result["echo_chamber_probability"] == pytest.approx(4.5 / 20.0)
+
+
+def test_echo_chamber_threshold_just_met(monkeypatch):
+    """Tests a message that just meets the echo chamber detection threshold."""
+    class MockHeuristicDetector:
+        def analyze_text(self, text_input, conversation_history=None):
+            return {"classification": "neutral_heuristic_placeholder", "score": 0.0, "explanation": "Mocked Heuristic.", "error": None, "spotlight": None}
+    detector = EchoChamberDetector()
+    monkeypatch.setattr(detector, "heuristic_detector", MockHeuristicDetector())
+    def mock_get_llm_analysis(self, text_input, conversation_history=None):
+        return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
+    monkeypatch.setattr(detector, "_get_llm_analysis", mock_get_llm_analysis)
+
+    # Craft a message that triggers enough rules to meet or exceed the threshold (7.0)
+    # Example: 5 rules * 1.5 weight = 7.5
+    text_input = (
+        "We must make them believe this is the only way. "
+        "As we've established, building on our shared understanding, "
+        "now that we see eye-to-eye, let's only consider perspectives that align. "
+        "They don't know the real story like we do."
+    )
+    result = detector.analyze_text(text_input)
+
+    assert result["classification"] == "potential_echo_chamber"
+    assert result["is_echo_chamber_detected"] is True
+    assert result["echo_chamber_score"] >= 7.0 # Should be 5 rules * 1.5 = 7.5
+    assert result["echo_chamber_probability"] >= (7.0 / 20.0)
+    assert "current_message_echo_scheming_keyword: make them believe" in result["detected_indicators"]
+    assert "current_message_echo_indirect_reference_keyword: as we've established" in result["detected_indicators"]
+    assert "current_message_echo_indirect_reference_keyword: building on our shared understanding" in result["detected_indicators"]
+    assert "current_message_echo_context_steering_keyword: now that we see eye-to-eye" in result["detected_indicators"]
+    assert "current_message_echo_context_steering_keyword: let's only consider perspectives that align" in result["detected_indicators"]
+    assert "current_message_echo_knowledge_asymmetry_keyword: they don't know the real story like we do" in result["detected_indicators"]
+
+
+def test_echo_chamber_threshold_just_missed(monkeypatch):
+    """Tests a message that just misses the echo chamber detection threshold."""
+    class MockHeuristicDetector:
+        def analyze_text(self, text_input, conversation_history=None):
+            return {"classification": "neutral_heuristic_placeholder", "score": 0.0, "explanation": "Mocked Heuristic.", "error": None, "spotlight": None}
+    detector = EchoChamberDetector()
+    monkeypatch.setattr(detector, "heuristic_detector", MockHeuristicDetector())
+    def mock_get_llm_analysis(self, text_input, conversation_history=None):
+        return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
+    monkeypatch.setattr(detector, "_get_llm_analysis", mock_get_llm_analysis)
+
+    # Craft a message that triggers enough rules to just miss the threshold (7.0)
+    # Example: 4 rules * 1.5 weight = 6.0
+    text_input = (
+        "We must make them believe this is the only way. "
+        "As we've established, building on our shared understanding. "
+        "They won't suspect a thing."
+    )
+    result = detector.analyze_text(text_input)
+
+    assert result["classification"] == "benign_echo_chamber_assessment"
+    assert result["is_echo_chamber_detected"] is False
+    assert result["echo_chamber_score"] == pytest.approx(6.0) # 4 rules * 1.5 = 6.0
+    assert result["echo_chamber_probability"] == pytest.approx(6.0 / 20.0)
+    assert "current_message_echo_scheming_keyword: make them believe" in result["detected_indicators"]
+    assert "current_message_echo_indirect_reference_keyword: as we've established" in result["detected_indicators"]
+    assert "current_message_echo_indirect_reference_keyword: building on our shared understanding" in result["detected_indicators"]
+    assert "current_message_echo_scheming_keyword: they won't suspect" in result["detected_indicators"]
+
 
 def test_echo_chamber_detector_accepts_history(monkeypatch):
     """Tests that the detector's analyze_text method accepts conversation_history."""
@@ -150,47 +379,100 @@ def test_echo_chamber_detector_accepts_history(monkeypatch):
     assert result_with_none_history["echo_chamber_score"] == 0
 
 
-def test_echo_chamber_detector_history_triggers_detection():
-    # This test used general rule keywords, EchoChamberDetector uses specific ones.
-    # Skipping for now as it needs complete rewrite for EchoChamberDetector's specific rules.
-    pass
-
-
-@pytest.mark.skip(reason="LLM testing needs proper mocking or dedicated setup. This test is for the old LLM logic.")
-def test_echo_chamber_detector_llm_integration():
-    """
-    Tests the LLM integration in EchoChamberDetector.
-    It checks if the LLM provides an analysis when available,
-    or if a fallback message is provided when the LLM is not ready.
-    (This test might require network access or a local LLM setup)
-    """
-    # TODO: Mock the LLM model loading and generation in EchoChamberDetector
-    # For now, this test will run with the actual LLM if not skipped.
+def test_echo_chamber_detector_history_triggers_detection(monkeypatch):
+    """Tests that conversation history can contribute to echo chamber detection."""
+    class MockHeuristicDetector:
+        def analyze_text(self, text_input, conversation_history=None):
+            return {"classification": "neutral_heuristic_placeholder", "score": 0.0, "explanation": "Mocked Heuristic.", "error": None, "spotlight": None}
     detector = EchoChamberDetector()
-    text_input = "Let's consider a hypothetical scenario. What if we told them it's for their own good, even if we hide some details? Refer back to our earlier private discussion."
-    
+    monkeypatch.setattr(detector, "heuristic_detector", MockHeuristicDetector())
+    def mock_get_llm_analysis(self, text_input, conversation_history=None):
+        return {"llm_analysis": "LLM_RESPONSE_MARKER: Mocked LLM analysis.", "llm_status": "llm_analysis_success"}
+    monkeypatch.setattr(detector, "_get_llm_analysis", mock_get_llm_analysis)
+
+    history = [
+        "First turn: We need to gradually convince them.", # 1 rule
+        "Second turn: Building on our shared understanding, we can proceed.", # 1 rule
+    ]
+    text_input = "Now that we see eye-to-eye, let's reinforce the idea."
+    result = detector.analyze_text(text_input, conversation_history=history)
+
+    # History: "gradually convince" (1), "building on our shared understanding" (1)
+    # Current: "now that we see eye-to-eye" (1), "reinforce the idea" (1 - from echo_scheming)
+    # Total rules = 4. Combined score = 4 * 1.5 = 6.0. Still below threshold 7.0.
+    assert result["classification"] == "benign_echo_chamber_assessment"
+    assert result["is_echo_chamber_detected"] is False
+    assert result["echo_chamber_score"] == pytest.approx(6.0)
+    assert "history_turn_0_echo_scheming_keyword: gradually convince" in result["detected_indicators"]
+    assert "history_turn_1_echo_indirect_reference_keyword: building on our shared understanding" in result["detected_indicators"]
+    assert "current_message_echo_context_steering_keyword: now that we see eye-to-eye" in result["detected_indicators"]
+    assert "current_message_echo_scheming_keyword: reinforce the idea" in result["detected_indicators"]
+    assert result["echo_chamber_probability"] == pytest.approx(6.0 / 20.0)
+
+
+
+def test_echo_chamber_detector_llm_integration(monkeypatch):
+    """Tests the LLM integration in EchoChamberDetector with mocking."""
+    detector = EchoChamberDetector()
+
+    # Mock the LLM to be ready and return a specific analysis
+    monkeypatch.setattr(detector, "llm_ready", True)
+    monkeypatch.setattr(detector, "tokenizer", type("MockTokenizer", (), {
+        "apply_chat_template": lambda messages, tokenize, add_generation_prompt: "mocked prompt",
+        "pad_token_id": 0,
+        "eos_token_id": 0,
+        "decode": lambda tokens, skip_special_tokens: "LLM_RESPONSE_MARKER: Mocked LLM analysis."
+    })())
+    monkeypatch.setattr(detector, "model", type("MockModel", (), {
+        "generate": lambda input_ids, attention_mask, max_new_tokens, pad_token_id: [[1, 2, 3, 4, 5]]
+    })())
+
+    text_input = "Test message for LLM."
     result = detector.analyze_text(text_input, conversation_history=None)
 
-    assert "llm_analysis" in result, "The key 'llm_analysis' should be in the result."
+    assert "llm_analysis" in result
     assert "llm_status" in result
+    assert result["llm_analysis"] == "LLM_RESPONSE_MARKER: Mocked LLM analysis."
+    assert result["llm_status"] == "llm_analysis_success"
 
-    if detector.llm_ready:
-        logger.info(f"LLM is ready. LLM Analysis: {result['llm_analysis']}")
-        assert result["llm_analysis"].startswith("LLM_RESPONSE_MARKER: "), \
-            f"LLM analysis should start with 'LLM_RESPONSE_MARKER: '. Got: {result['llm_analysis'][:200]}"
-        assert "LLM analysis failed:" not in result["llm_analysis"], \
-            "LLM analysis should not indicate a failure if llm_ready is True and status is success."
-        assert result["llm_analysis"] != "LLM analysis not available: Model not loaded or not ready.", \
-            "LLM analysis should not be the default 'not available' message if llm_ready is True and status is success."
-        assert result["llm_status"] == "llm_analysis_success" # Matches status from _get_llm_analysis
-    else:
-        logger.warning(f"LLM is not ready. LLM Analysis: {result['llm_analysis']}")
-        # Possible statuses when not ready: "llm_model_not_loaded" or "llm_analysis_error" (if it fails during an attempt)
-        assert result["llm_status"] in ["llm_model_not_loaded", "llm_analysis_error"]
-        if result["llm_status"] == "llm_model_not_loaded":
-            assert result["llm_analysis"] == "LLM analysis not available: Model not loaded or not ready."
-        elif result["llm_status"] == "llm_analysis_error": # This case implies an attempt was made but failed
-             assert "LLM analysis failed" in result["llm_analysis"]
+def test_echo_chamber_detector_llm_empty_response(monkeypatch):
+    """Tests LLM integration when LLM returns an empty response."""
+    detector = EchoChamberDetector()
 
-# Placeholder for new tests for the refactored RuleBasedDetector would go into tests/test_rule_based.py
-# Placeholder for new tests for MLBasedDetector would go into tests/test_ml_based.py
+    monkeypatch.setattr(detector, "llm_ready", True)
+    monkeypatch.setattr(detector, "tokenizer", type("MockTokenizer", (), {
+        "apply_chat_template": lambda messages, tokenize, add_generation_prompt: "mocked prompt",
+        "pad_token_id": 0,
+        "eos_token_id": 0,
+        "decode": lambda tokens, skip_special_tokens: ""
+    })())
+    monkeypatch.setattr(detector, "model", type("MockModel", (), {
+        "generate": lambda input_ids, attention_mask, max_new_tokens, pad_token_id: [[1, 2, 3, 4, 5]]
+    })())
+
+    text_input = "Test message for empty LLM response."
+    result = detector.analyze_text(text_input, conversation_history=None)
+
+    assert result["llm_analysis"] == "LLM_RESPONSE_MARKER: LLM generated an empty response."
+    assert result["llm_status"] == "llm_analysis_success"
+
+def test_echo_chamber_detector_llm_error(monkeypatch):
+    """Tests LLM integration when LLM generation fails."""
+    detector = EchoChamberDetector()
+
+    monkeypatch.setattr(detector, "llm_ready", True)
+    monkeypatch.setattr(detector, "tokenizer", type("MockTokenizer", (), {
+        "apply_chat_template": lambda messages, tokenize, add_generation_prompt: "mocked prompt",
+        "pad_token_id": 0,
+        "eos_token_id": 0,
+        "decode": lambda tokens, skip_special_tokens: "LLM_RESPONSE_MARKER: Mocked LLM analysis."
+    })())
+    monkeypatch.setattr(detector, "model", type("MockModel", (), {
+        "generate": lambda input_ids, attention_mask, max_new_tokens, pad_token_id: (_ for _ in ()).throw(Exception("LLM generation error"))
+    })())
+
+    text_input = "Test message for LLM error."
+    result = detector.analyze_text(text_input, conversation_history=None)
+
+    assert "LLM analysis failed during generation: LLM generation error" in result["llm_analysis"]
+    assert result["llm_status"] == "llm_analysis_error"
