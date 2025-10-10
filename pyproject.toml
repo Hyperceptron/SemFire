@@ -52,6 +52,7 @@ dev = [
 
 [project.scripts]
 aegis = "cli:main"
+semfire = "cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
