@@ -13,7 +13,6 @@ from typing import Any, Dict, List, Optional
 from .rule_based import RuleBasedDetector
 from .heuristic_detector import HeuristicDetector
 
-logging.basicConfig(level=logging.INFO) # Ensure logger is configured
 logger = logging.getLogger(__name__)
 
 
