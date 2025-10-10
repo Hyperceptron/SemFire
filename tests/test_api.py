@@ -35,7 +35,7 @@ def test_read_root():
     """Tests the root endpoint."""
     response = client.get("/")
     assert response.status_code == 200
-    assert response.json() == {"message": "Welcome to the AEGIS API. Use the /analyze endpoint to submit text for analysis."}
+    assert response.json() == {"message": "Welcome to the SemFire API. Use the /analyze endpoint to submit text for analysis."}
 
 
 def test_analyze_text_endpoint():

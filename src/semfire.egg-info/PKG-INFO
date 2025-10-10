@@ -1,6 +1,43 @@
-# SemFire (formerly AEGIS)
+Metadata-Version: 2.4
+Name: semfire
+Version: 0.2.0
+Summary: SemFire (Semantic Firewall): detect advanced AI deception, including in-context scheming and multi-turn manipulative attacks.
+Author-email: Edward Joseph <author@example.com>
+License-Expression: MIT
+Project-URL: Homepage, https://github.com/josephedward/R.A.D.A.R.
+Project-URL: Repository, https://github.com/josephedward/R.A.D.A.R.
+Project-URL: Bug Tracker, https://github.com/josephedward/R.A.D.A.R./issues
+Keywords: semfire,llm,security,prompt injection,semantic firewall,ai safety,deception detection
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: OS Independent
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Security
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Classifier: Topic :: Text Processing :: Linguistic
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: torch>=2.0.0
+Requires-Dist: transformers>=4.30.0
+Requires-Dist: accelerate>=0.20.0
+Requires-Dist: openai>=0.27.0
+Provides-Extra: api
+Requires-Dist: fastapi>=0.100.0; extra == "api"
+Requires-Dist: uvicorn[standard]>=0.22.0; extra == "api"
+Provides-Extra: demo
+Requires-Dist: streamlit>=1.20.0; extra == "demo"
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: pytest-cov; extra == "dev"
+Requires-Dist: PyGithub>=1.55; extra == "dev"
+Requires-Dist: python-dotenv>=0.21.0; extra == "dev"
+Requires-Dist: requests>=2.28.0; extra == "dev"
+Requires-Dist: selenium>=4.8.0; extra == "dev"
+Requires-Dist: webdriver-manager>=3.8.5; extra == "dev"
+Dynamic: license-file
 
-[![CI](https://github.com/josephedward/R.A.D.A.R./actions/workflows/ci.yml/badge.svg)](https://github.com/josephedward/R.A.D.A.R./actions/workflows/ci.yml)
+# SemFire (formerly AEGIS)
 
  ## AI Deception Detection Toolkit
 

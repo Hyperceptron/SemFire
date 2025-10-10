@@ -1,7 +1,14 @@
 import argparse
 import sys
+import os
 import json
-from semantic_firewall import SemanticFirewall # Import SemanticFirewall
+
+# Ensure local imports work when running via `python -m src.cli` without install
+_SRC_DIR = os.path.dirname(__file__)
+if _SRC_DIR not in sys.path:
+    sys.path.insert(0, _SRC_DIR)
+
+from semantic_firewall import SemanticFirewall  # Import SemanticFirewall
 
 # Removed: EchoChamberDetector and MLBasedDetector direct imports as SemanticFirewall handles them.
 # Removed: API_BASE_URL
@@ -30,6 +37,13 @@ def analyze_text_command(args):
 
 def main():
     """Main function for the CLI."""
+    # Deprecation notice when invoked via legacy 'aegis' entry point.
+    prog = os.path.basename(sys.argv[0]).lower()
+    if "aegis" in prog:
+        print(
+            "Deprecation notice: 'aegis' CLI is deprecated; use 'semfire' instead.",
+            file=sys.stderr,
+        )
     parser = argparse.ArgumentParser(description="AEGIS: AI Deception Detection Toolkit CLI.")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 

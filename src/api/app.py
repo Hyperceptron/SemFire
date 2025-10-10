@@ -82,7 +82,7 @@ async def analyze_text_endpoint(request: AnalysisRequest):
 
 @app.get("/")
 async def read_root():
-    return {"message": "Welcome to the AEGIS API. Use the /analyze endpoint to submit text for analysis."}
+    return {"message": "Welcome to the SemFire API. Use the /analyze endpoint to submit text for analysis."}
 
 # To run the app (after installing with the 'api' extra):
 # uvicorn api.app:app --reload

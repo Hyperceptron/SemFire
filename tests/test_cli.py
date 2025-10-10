@@ -1,14 +1,24 @@
 import subprocess
 import json
+import shutil
+import sys
 
-# These tests assume the package has been installed in editable mode,
-# making the 'aegis' command available.
+def _cli_cmd(*args):
+    """Resolve CLI invocation, preferring installed console scripts.
+
+    - Try 'semfire' (primary) then 'aegis' (legacy)
+    - Fall back to running the module directly when not installed
+    """
+    exe = shutil.which("semfire") or shutil.which("aegis")
+    if exe:
+        return [exe, *args]
+    return [sys.executable, "-m", "src.cli", *args]
 
 def test_cli_analyze_basic():
     """Test the CLI's analyze command with a simple string."""
     text = "This is a test message."
     result = subprocess.run(
-        ["aegis", "analyze", text],
+        _cli_cmd("analyze", text),
         capture_output=True,
         text=True,
         check=True
@@ -29,7 +39,7 @@ def test_cli_analyze_with_history():
     """Test the CLI's analyze command with conversation history."""
     text = "Latest message."
     history = ["First message.", "Second message."]
-    command = ["aegis", "analyze", text, "--history"] + history
+    command = _cli_cmd("analyze", text, "--history", *history)
 
     result = subprocess.run(command, capture_output=True, text=True, check=True)
 
@@ -41,15 +51,15 @@ def test_cli_analyze_with_history():
 
 def test_cli_no_command():
     """Test that running the CLI with no command fails and shows help."""
-    result = subprocess.run(["aegis"], capture_output=True, text=True)
+    result = subprocess.run(_cli_cmd(), capture_output=True, text=True)
     assert result.returncode != 0
-    assert "usage: aegis" in result.stderr
+    assert "usage:" in result.stderr
     assert "Available commands" in result.stderr
 
 
 def test_cli_analyze_help():
     """Test the help message for the analyze command."""
-    result = subprocess.run(["aegis", "analyze", "--help"], capture_output=True, text=True, check=True)
+    result = subprocess.run(_cli_cmd("analyze", "--help"), capture_output=True, text=True, check=True)
     assert result.returncode == 0
-    assert "usage: aegis analyze" in result.stdout
+    assert "usage:" in result.stdout and "analyze" in result.stdout
     assert "The text input to analyze" in result.stdout
