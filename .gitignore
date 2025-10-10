@@ -26,3 +26,7 @@ Archive.zip
 /.hypothesis
 /.venv
 /trace_cov
+weights/score_weights.json
+
+AGENTS.md
+GEMINI.md
