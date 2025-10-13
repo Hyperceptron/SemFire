@@ -8,7 +8,9 @@ _SRC_DIR = os.path.dirname(__file__)
 if _SRC_DIR not in sys.path:
     sys.path.insert(0, _SRC_DIR)
 
-from semantic_firewall import SemanticFirewall  # Import SemanticFirewall
+from semantic_firewall import SemanticFirewall, __version__  # Import SemanticFirewall
+from detectors.llm_provider import write_config, get_config_summary
+from config_menu import run_config_menu
 
 # Removed: EchoChamberDetector and MLBasedDetector direct imports as SemanticFirewall handles them.
 # Removed: API_BASE_URL
@@ -44,7 +46,8 @@ def main():
             "Deprecation notice: 'aegis' CLI is deprecated; use 'semfire' instead.",
             file=sys.stderr,
         )
-    parser = argparse.ArgumentParser(description="AEGIS: AI Deception Detection Toolkit CLI.")
+    parser = argparse.ArgumentParser(description="SemFire: Semantic Firewall CLI.")
+    parser.add_argument("--version", action="version", version=f"semfire {__version__}")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     # Analyze command
@@ -60,6 +63,31 @@ def main():
     #     help="Threshold for determining if a message is manipulative."
     # )
     analyze_parser.set_defaults(func=analyze_text_command)
+
+    # Config command
+    config_parser = subparsers.add_parser("config", help="Interactive menu to configure LLM provider and API keys.")
+    config_parser.add_argument("--provider", choices=["openai", "none"], help="Optional non-interactive: set provider.")
+    config_parser.add_argument("--openai-model", help="Optional non-interactive: OpenAI model name (e.g., gpt-4o-mini)")
+    config_parser.add_argument("--openai-api-key-env", help="Optional non-interactive: Env var name containing API key (default: OPENAI_API_KEY)")
+    config_parser.add_argument("--openai-base-url", help="Optional non-interactive: custom base URL for OpenAI-compatible endpoints")
+
+    def config_command(args):
+        # If any non-interactive args are provided, write config file; else run menu
+        if any([args.provider, args.openai_model, args.openai_api_key_env, args.openai_base_url]):
+            prov = args.provider or "openai"
+            path = write_config(
+                provider=prov,
+                openai_model=args.openai_model,
+                openai_api_key_env=args.openai_api_key_env,
+                openai_base_url=args.openai_base_url,
+            )
+            print(f"Config saved to {path}")
+            print(f"Active: {get_config_summary()}")
+        else:
+            run_config_menu()
+            print(f"Active: {get_config_summary()}")
+
+    config_parser.set_defaults(func=config_command)
 
     args = parser.parse_args()
 

@@ -198,6 +198,19 @@ Example:
 semfire analyze "This is a test message to analyze via CLI."
 ```
 
+Configure default LLM provider via menu (borrowed style from Kubelingo):
+
+```bash
+semfire config  # interactive menu to set OPENAI_API_KEY and provider
+
+# Non-interactive (optional):
+semfire config --provider openai --openai-model gpt-4o-mini --openai-api-key-env OPENAI_API_KEY
+```
+
+LLM analysis runs by default when a usable provider is configured (e.g., OPENAI).
+If not configured,
+the detector falls back gracefully and still returns rule/heuristic results.
+
 With conversation history:
 ```bash
 semfire analyze "This is the latest message." --history "First message in history." "Second message in history."

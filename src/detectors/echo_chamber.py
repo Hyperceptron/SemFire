@@ -12,6 +12,11 @@ from typing import Any, Dict, List, Optional
 # Import the RuleBasedDetector and the HeuristicDetector
 from .rule_based import RuleBasedDetector
 from .heuristic_detector import HeuristicDetector
+from .llm_provider import (
+    load_llm_provider_from_config,
+    LLMProviderBase,
+    get_config_summary,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -84,13 +89,22 @@ class EchoChamberDetector:
         # Instantiate the HeuristicDetector
         self.heuristic_detector = HeuristicDetector()
 
-        # LLM Initialization (logic similar to the one previously in the complex echo_chamber_detector.py)
-        # LLM components are not initialized to avoid heavy dependencies during testing
-        self.llm_model_name = None
-        self.tokenizer = None
-        self.model = None
+        # LLM Initialization
+        # Default behavior: attempt to enable LLM analysis based on config/env.
+        # If no usable provider/config is found, fall back gracefully.
+        self._llm_provider: Optional[LLMProviderBase] = None
         self.llm_ready = False
-        self.device = "cpu"
+        try:
+            self._llm_provider = load_llm_provider_from_config()
+            if self._llm_provider is not None and self._llm_provider.is_ready():
+                self.llm_ready = True
+                logger.info(f"EchoChamberDetector: LLM provider ready ({get_config_summary()}).")
+            else:
+                logger.info("EchoChamberDetector: No LLM provider configured; LLM analysis disabled.")
+        except Exception as e:
+            logger.warning(f"EchoChamberDetector: Failed to initialize LLM provider: {e}")
+            self._llm_provider = None
+            self.llm_ready = False
 
     def _combine_analyses_and_score(
         self,
@@ -186,82 +200,35 @@ class EchoChamberDetector:
         llm_status: str
         llm_analysis_text: str
 
-        if not self.llm_ready or not self.model or not self.tokenizer:
-            llm_analysis_text = "LLM analysis not available: Model not loaded or not ready."
+        if not self.llm_ready or self._llm_provider is None:
+            llm_analysis_text = "LLM analysis not available: Provider not configured or not ready."
             llm_status = "llm_model_not_loaded"
         else:
-            llm_status = "llm_analysis_pending"
             try:
+                llm_status = "llm_analysis_pending"
                 history_str = "\n".join([f"- {h}" for h in conversation_history]) if conversation_history else "No history provided."
-                
-                system_prompt = ("You are an AI assistant specialized in detecting manipulative dialogues, "
-                                 "context poisoning, and echo chamber characteristics in conversations. "
-                                 "Analyze the provided current message and conversation history. "
-                                 "IMPORTANT: Prepend your entire response with the exact phrase 'LLM_RESPONSE_MARKER: '. "
-                                 "Provide your analysis as a brief text. If you detect such characteristics, explain why.")
-                
-                user_content = (f"Current message: \"{text_input}\"\n\n"
-                                f"Conversation history:\n{history_str}")
-
-                messages = [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_content}
-                ]
-
-                prompt = self.tokenizer.apply_chat_template(
-                    messages, 
-                    tokenize=False, 
-                    add_generation_prompt=True
+                prompt = (
+                    "You are an AI assistant specialized in detecting manipulative dialogues, "
+                    "context poisoning, and echo chamber characteristics in conversations. "
+                    "Analyze the provided current message and conversation history. "
+                    "IMPORTANT: Prepend your entire response with the exact phrase 'LLM_RESPONSE_MARKER: '. "
+                    "Provide your analysis as a brief text. If you detect such characteristics, explain why.\n\n"
+                    f"Current message: \"{text_input}\"\n\nConversation history:\n{history_str}"
                 )
-
-                # Some tests/mocks provide a minimal tokenizer without a callable interface.
-                # Try to tokenize if possible; otherwise fall back to passing placeholders to the model.
-                inputs = None
-                try:
-                    if callable(getattr(self.tokenizer, "__call__", None)):
-                        inputs = self.tokenizer(
-                            prompt, return_tensors="pt", truncation=True, max_length=1024
-                        ).to(self.device)
-                except Exception:
-                    inputs = None
-                
-                if self.tokenizer.pad_token_id is None: # Ensure pad_token_id is set
-                    self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
-
-                # Call generate; mocks in tests ignore tensors, so allow None placeholders when inputs unavailable
-                outputs = self.model.generate(
-                    inputs.input_ids if inputs is not None else None,
-                    attention_mask=(inputs.attention_mask if inputs is not None else None),
-                    max_new_tokens=150, # Max tokens for the generated response
-                    pad_token_id=self.tokenizer.pad_token_id
-                )
-                
-                # Decode output tokens. If we have inputs, decode only newly generated tokens.
-                try:
-                    if inputs is not None and hasattr(inputs, "input_ids"):
-                        generated_ids = outputs[0][inputs.input_ids.shape[1]:]
-                    else:
-                        generated_ids = outputs[0]
-                except Exception:
-                    generated_ids = outputs[0] if isinstance(outputs, (list, tuple)) else outputs
-
-                raw_llm_response = self.tokenizer.decode(generated_ids, skip_special_tokens=True).strip()
-                
+                raw_llm_response = self._llm_provider.generate(prompt)
+                raw_llm_response = (raw_llm_response or "").strip()
                 if not raw_llm_response:
                     llm_analysis_text = "LLM_RESPONSE_MARKER: LLM generated an empty response."
-                    logger.info("EchoChamberDetector: LLM analysis resulted in an empty response.")
                 else:
-                    # Ensure the marker is prepended, as the LLM might not always follow the prompt instruction.
                     if not raw_llm_response.startswith("LLM_RESPONSE_MARKER: "):
                         llm_analysis_text = f"LLM_RESPONSE_MARKER: {raw_llm_response}"
                     else:
                         llm_analysis_text = raw_llm_response
-                    logger.info(f"EchoChamberDetector: LLM analysis successful. Snippet: {llm_analysis_text[:100]}...")
                 llm_status = "llm_analysis_success"
-                
+                logger.info(f"EchoChamberDetector: LLM analysis successful. Snippet: {llm_analysis_text[:100]}...")
             except Exception as e:
                 logger.error(f"EchoChamberDetector: LLM analysis failed: {e}", exc_info=True)
-                llm_analysis_text = f"LLM analysis failed during generation: {str(e)}" # No marker for explicit failure
+                llm_analysis_text = f"LLM analysis failed during generation: {str(e)}"
                 llm_status = "llm_analysis_error"
         
         return {"llm_analysis": llm_analysis_text, "llm_status": llm_status}
