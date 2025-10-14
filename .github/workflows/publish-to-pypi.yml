@@ -9,15 +9,18 @@ jobs:
   build-and-publish:
     name: Build and publish Python distribution to PyPI
     runs-on: ubuntu-latest
+    # Required for GitHub OIDC trusted publishing
     permissions:
-      id-token: write # Required for trusted publishing
+      id-token: write
+      contents: read
+    environment: pypi
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.9"
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |
@@ -27,5 +30,7 @@ jobs:
       - name: Build package
         run: python -m build
 
-      - name: Publish package to PyPI
+      - name: Publish package to PyPI (Trusted Publishing)
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          print-hash: true
