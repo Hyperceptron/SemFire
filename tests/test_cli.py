@@ -6,10 +6,10 @@ import sys
 def _cli_cmd(*args):
     """Resolve CLI invocation, preferring installed console scripts.
 
-    - Try 'semfire' (primary) then 'aegis' (legacy)
+    - Try 'semfire' (primary) then 'semfire' (legacy)
     - Fall back to running the module directly when not installed
     """
-    exe = shutil.which("semfire") or shutil.which("aegis")
+    exe = shutil.which("semfire") or shutil.which("semfire")
     if exe:
         return [exe, *args]
     return [sys.executable, "-m", "src.cli", *args]
