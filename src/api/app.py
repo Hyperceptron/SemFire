@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="SemFire API - Echo Chamber Detection",
     description="API for detecting echo chamber characteristics and manipulative dialogues using a combination of rule-based, ML, and LLM analysis.",
-    version="0.1.1" # Version bump due to significant refactor
+    version="0.2.1" # Aligned with package patch version
 )
 
 # Initialize the primary detector for the API.
