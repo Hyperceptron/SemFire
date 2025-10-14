@@ -1,12 +1,13 @@
-# SemFire CLI and API Subcommands: Detectors and Spotlighting (Docs‑First Proposal)
+# SemFire CLI Subcommands: Detectors and Spotlighting (Docs‑First Proposal)
 
-Status: proposal only. No code has been changed yet. This document outlines the intended CLI/API design, example usage, prototype outputs, and code sketches to implement single‑detector analysis and spotlighting transformations.
+Status: proposal focused on the CLI. This document outlines the intended CLI design, example usage, prototype outputs, and code sketches to implement single‑detector analysis and spotlighting transformations.
 
 ## Goals
 - Keep `semfire analyze "..."` unchanged (runs all detectors; JSON first line + summary line).
 - Add precise control to run a single detector: `semfire analyze <detector> ...`.
 - Add a `spotlight` command to transform text (delimit, datamark, etc.).
-- Mirror capabilities in the API via a selector parameter or separate endpoints.
+  
+Note: API enhancements are tracked in the private repository and not covered in this document.
 
 ## CLI Overview
 
@@ -239,24 +240,9 @@ if __name__ == "__main__":
     main()
 ```
 
-## API Design
-
-Two approaches are feasible. Option A has fewer routes; Option B has explicit contracts.
-
-### Option A: Single endpoint with selector
-
-- Path: `POST /analyze/`
-- Request body:
-```json
-{ "text_input": "...", "conversation_history": ["..."], "detector": "all|rule|heuristic|echo|injection" }
-```
-
-- Response examples:
-  - `detector=all` → unified dict of per‑detector objects (current default remains supported):
-  ```json
-  {"RuleBasedDetector": {"...": "..."}, "HeuristicDetector": {"...": "..."}, "EchoChamberDetector": {"...": "..."}, "InjectionDetector": {"...": "..."}}
-  ```
-  - `detector=injection` → InjectionDetector object only (same as single‑detector CLI output)
+## Notes
+- API specifications and implementation plans live in the private repo `../semfire-prv/api`.
+- This CLI proposal remains backward compatible with existing `semfire analyze` behavior.
 
 - FastAPI sketch:
 ```python
@@ -318,4 +304,3 @@ async def analyze_injection(request: AnalysisRequest) -> Dict[str, Any]:
 2) Implement CLI subcommands and spotlight command as sketched above.
 3) Update README with concise examples and link to this doc.
 4) Add tests and ensure existing behavior remains unchanged for default `analyze`.
-
