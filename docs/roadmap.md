@@ -1,6 +1,6 @@
-# AEGIS Project Roadmap
+# SemFire Project Roadmap
 
-This document outlines the step-by-step plan to develop, test, and deploy AEGIS.
+This document outlines the step-by-step plan to develop, test, and deploy SemFire.
 
 ## Phase 0: Project Kickoff & Organization
  **Goal**
@@ -12,7 +12,7 @@ This document outlines the step-by-step plan to develop, test, and deploy AEGIS.
  - Initialized repository with:
    - `src/`, `demo/`, `dataset/`, `notebooks/`, `tests/` directories.
  - CI workflow running pytest and linters.
- - Open issue "Naming & Branding Audit" to track renaming of project references to "AEGIS" across code, documentation, configuration, CI pipelines, packaging metadata, and assets.
+ - Open issue "Naming & Branding Audit" to track renaming of project references to "SemFire" across code, documentation, configuration, CI pipelines, packaging metadata, and assets.
 
 ## Phase 1: Literature Survey & Data Collection
  **Goal**
