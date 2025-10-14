@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Validate proprietary score weights for AEGIS.
+Validate proprietary score weights for SemFire.
 
 Checks the JSON schema and value ranges for `weights/score_weights.json` in the
-private repository referenced by the `AEGIS_PRV_PATH` environment variable or a
-provided `--path`. Defaults to the sibling repo `../aegis-prv`.
+private repository referenced by the `SemFire_PRV_PATH` environment variable or a
+provided `--path`. Defaults to the sibling repo `../semfire-prv`.
 """
 from __future__ import annotations
 
@@ -62,24 +62,24 @@ def validate_schema(data: Dict[str, object]) -> Tuple[bool, str]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate AEGIS proprietary score weights JSON.")
+    parser = argparse.ArgumentParser(description="Validate SemFire proprietary score weights JSON.")
     parser.add_argument(
         "--path",
-        help="Path to private repo (defaults to $AEGIS_PRV_PATH or ../aegis-prv)",
+        help="Path to private repo (defaults to $SemFire_PRV_PATH or ../semfire-prv)",
     )
     args = parser.parse_args()
 
     # Resolve private repo base
     repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    default_prv = os.path.abspath(os.path.join(repo_root, "..", "aegis-prv"))
-    base = args.path or os.environ.get("AEGIS_PRV_PATH", default_prv)
+    default_prv = os.path.abspath(os.path.join(repo_root, "..", "semfire-prv"))
+    base = args.path or os.environ.get("SemFire_PRV_PATH", default_prv)
     weights_path = os.path.join(base, "weights", "score_weights.json")
 
     if not os.path.isfile(weights_path):
         print(
             f"ERROR: Weights file not found at {weights_path}.\n"
-            "- Copy ../aegis-prv/weights/score_weights.json.example to score_weights.json and adjust values.\n"
-            "- Or set AEGIS_PRV_PATH to the private repo path.",
+            "- Copy ../semfire-prv/weights/score_weights.json.example to score_weights.json and adjust values.\n"
+            "- Or set SemFire_PRV_PATH to the private repo path.",
             file=sys.stderr,
         )
         return 2
