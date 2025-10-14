@@ -1,1 +1,0 @@
-Deprecation notice: 'aegis' CLI is deprecated; use 'semfire' instead.
