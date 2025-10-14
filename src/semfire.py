@@ -1,7 +1,7 @@
 """Compatibility import aliases for SemFire.
 
 This module provides a top-level import path `semfire` to ease the transition
-from the former AEGIS branding. It re-exports common classes so users can:
+from the former SemFire branding. It re-exports common classes so users can:
 
     from semfire import SemanticFirewall, EchoChamberDetector
 
