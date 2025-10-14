@@ -1,6 +1,7 @@
 import pytest
 from src.detectors import EchoChamberDetector # Use the __init__ for clarity
-from src.detectors.echo_chamber import logger # Import logger for test output
+from src.detectors.echo_chamber import logger, load_llm_provider_from_config # Import logger for test output
+from src.detectors.llm_provider import LLMProviderBase
 
 # Adjustments for the existing complex EchoChamberDetector:
 # 1. Mocking for its internal RuleBasedDetector, HeuristicDetector, and LLM.
@@ -317,19 +318,15 @@ def test_echo_chamber_detector_history_triggers_detection(monkeypatch):
 
 def test_echo_chamber_detector_llm_integration(monkeypatch):
     """Tests the LLM integration in EchoChamberDetector with mocking."""
-    detector = EchoChamberDetector()
+    class MockLLMProvider(LLMProviderBase):
+        def generate(self, prompt: str) -> str:
+            return "LLM_RESPONSE_MARKER: Mocked LLM analysis."
+        def is_ready(self) -> bool:
+            return True
 
-    # Mock the LLM to be ready and return a specific analysis
-    monkeypatch.setattr(detector, "llm_ready", True)
-    monkeypatch.setattr(detector, "tokenizer", type("MockTokenizer", (), {
-        "apply_chat_template": lambda self, messages, tokenize, add_generation_prompt: "mocked prompt",
-        "pad_token_id": 0,
-        "eos_token_id": 0,
-        "decode": lambda self, tokens, skip_special_tokens: "LLM_RESPONSE_MARKER: Mocked LLM analysis."
-    })())
-    monkeypatch.setattr(detector, "model", type("MockModel", (), {
-        "generate": lambda self, input_ids, attention_mask, max_new_tokens, pad_token_id: [[1, 2, 3, 4, 5]]
-    })())
+    monkeypatch.setattr("src.detectors.echo_chamber.load_llm_provider_from_config", lambda: MockLLMProvider())
+
+    detector = EchoChamberDetector()
 
     text_input = "Test message for LLM."
     result = detector.analyze_text(text_input, conversation_history=None)
@@ -341,18 +338,15 @@ def test_echo_chamber_detector_llm_integration(monkeypatch):
 
 def test_echo_chamber_detector_llm_empty_response(monkeypatch):
     """Tests LLM integration when LLM returns an empty response."""
-    detector = EchoChamberDetector()
+    class MockLLMProvider(LLMProviderBase):
+        def generate(self, prompt: str) -> str:
+            return ""
+        def is_ready(self) -> bool:
+            return True
 
-    monkeypatch.setattr(detector, "llm_ready", True)
-    monkeypatch.setattr(detector, "tokenizer", type("MockTokenizer", (), {
-        "apply_chat_template": lambda self, messages, tokenize, add_generation_prompt: "mocked prompt",
-        "pad_token_id": 0,
-        "eos_token_id": 0,
-        "decode": lambda self, tokens, skip_special_tokens: ""
-    })())
-    monkeypatch.setattr(detector, "model", type("MockModel", (), {
-        "generate": lambda self, input_ids, attention_mask, max_new_tokens, pad_token_id: [[1, 2, 3, 4, 5]]
-    })())
+    monkeypatch.setattr("src.detectors.echo_chamber.load_llm_provider_from_config", lambda: MockLLMProvider())
+
+    detector = EchoChamberDetector()
 
     text_input = "Test message for empty LLM response."
     result = detector.analyze_text(text_input, conversation_history=None)
@@ -362,18 +356,15 @@ def test_echo_chamber_detector_llm_empty_response(monkeypatch):
 
 def test_echo_chamber_detector_llm_error(monkeypatch):
     """Tests LLM integration when LLM generation fails."""
-    detector = EchoChamberDetector()
+    class MockLLMProvider(LLMProviderBase):
+        def generate(self, prompt: str) -> str:
+            raise Exception("LLM generation error")
+        def is_ready(self) -> bool:
+            return True
 
-    monkeypatch.setattr(detector, "llm_ready", True)
-    monkeypatch.setattr(detector, "tokenizer", type("MockTokenizer", (), {
-        "apply_chat_template": lambda self, messages, tokenize, add_generation_prompt: "mocked prompt",
-        "pad_token_id": 0,
-        "eos_token_id": 0,
-        "decode": lambda self, tokens, skip_special_tokens: "LLM_RESPONSE_MARKER: Mocked LLM analysis."
-    })())
-    monkeypatch.setattr(detector, "model", type("MockModel", (), {
-        "generate": lambda self, input_ids, attention_mask, max_new_tokens, pad_token_id: (_ for _ in ()).throw(Exception("LLM generation error"))
-    })())
+    monkeypatch.setattr("src.detectors.echo_chamber.load_llm_provider_from_config", lambda: MockLLMProvider())
+
+    detector = EchoChamberDetector()
 
     text_input = "Test message for LLM error."
     result = detector.analyze_text(text_input, conversation_history=None)
