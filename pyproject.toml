@@ -54,6 +54,7 @@ dev = [
 
 [project.scripts]
 semfire = "cli:main"
+## Backwards compatibility with old CLI name
 aegis = "cli:main"
 
 [tool.setuptools]
