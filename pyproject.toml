@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "semfire"
-version = "0.2.0"
-authors = [{ name = "Edward Joseph", email = "author@example.com" }]
+version = "0.2.1"
+authors = [{ name = "Edward Joseph", email = "hyperceptron@gmail.com" }]
 description = "SemFire (Semantic Firewall): detect advanced AI deception, including in-context scheming and multi-turn manipulative attacks."
 readme = "README.md"
 license = "MIT"
