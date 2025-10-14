@@ -73,10 +73,10 @@ def test_api_keys() -> Dict[str, bool]:
     ork = val("OPENROUTER_API_KEY")
     pk = val("PERPLEXITY_API_KEY")
     
-    gemini_ok = gk.startswith("AIza") and len(gk) >= 38 if gk else False
-    openai_ok = ok.startswith("sk-") and len(ok) >= 51 if ok else False
-    openrouter_ok = ork.startswith("sk-or-") and len(ork) >= 40 if ork else False
-    perplexity_ok = pk.startswith("pplx-") and len(pk) >= 30 if pk else False
+    gemini_ok = gk.startswith("AIza") and len(gk) >= 20 if gk else False
+    openai_ok = ok.startswith("sk-") and len(ok) >= 20 if ok else False
+    openrouter_ok = ork.startswith("sk-or-") and len(ork) >= 20 if ork else False
+    perplexity_ok = pk.startswith("pplx-") and len(pk) >= 15 if pk else False
     
     return {"gemini": gemini_ok, "openai": openai_ok, "openrouter": openrouter_ok, "perplexity": perplexity_ok}
 
