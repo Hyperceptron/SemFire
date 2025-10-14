@@ -1,8 +1,8 @@
 Metadata-Version: 2.4
 Name: semfire
-Version: 0.2.0
+Version: 0.2.1
 Summary: SemFire (Semantic Firewall): detect advanced AI deception, including in-context scheming and multi-turn manipulative attacks.
-Author-email: Edward Joseph <author@example.com>
+Author-email: Edward Joseph <hyperceptron@gmail.com>
 License-Expression: MIT
 Project-URL: Homepage, https://github.com/josephedward/R.A.D.A.R.
 Project-URL: Repository, https://github.com/josephedward/R.A.D.A.R.
@@ -22,6 +22,8 @@ Requires-Dist: torch>=2.0.0
 Requires-Dist: transformers>=4.30.0
 Requires-Dist: accelerate>=0.20.0
 Requires-Dist: openai>=0.27.0
+Requires-Dist: colorama>=0.4.6
+Requires-Dist: python-dotenv>=0.21.0
 Provides-Extra: api
 Requires-Dist: fastapi>=0.100.0; extra == "api"
 Requires-Dist: uvicorn[standard]>=0.22.0; extra == "api"
@@ -37,7 +39,9 @@ Requires-Dist: selenium>=4.8.0; extra == "dev"
 Requires-Dist: webdriver-manager>=3.8.5; extra == "dev"
 Dynamic: license-file
 
-# SemFire (formerly AEGIS)
+# SemFire (formerly SemFire)
+
+[![CI](https://github.com/josephedward/R.A.D.A.R./actions/workflows/ci.yml/badge.svg)](https://github.com/josephedward/R.A.D.A.R./actions/workflows/ci.yml)
 
  ## AI Deception Detection Toolkit
 
@@ -228,12 +232,25 @@ The package provides a command-line interface for analyzing text using the `Sema
 
 **Implementation:**
 
-Once installed, you can use the `semfire` command (alias: `aegis`). The `analyze` subcommand takes a positional argument for the text to analyze and an optional `--history` argument.
+Once installed, you can use the `semfire` command (legacy alias: `semfire`). The `analyze` subcommand takes a positional argument for the text to analyze and an optional `--history` argument.
 
 Example:
 ```bash
 semfire analyze "This is a test message to analyze via CLI."
 ```
+
+Configure default LLM provider via menu (borrowed style from Kubelingo):
+
+```bash
+semfire config  # interactive menu to set OPENAI_API_KEY and provider
+
+# Non-interactive (optional):
+semfire config --provider openai --openai-model gpt-4o-mini --openai-api-key-env OPENAI_API_KEY
+```
+
+LLM analysis runs by default when a usable provider is configured (e.g., OPENAI).
+If not configured,
+the detector falls back gracefully and still returns rule/heuristic results.
 
 With conversation history:
 ```bash
@@ -250,9 +267,9 @@ This method is generally more suited for standalone analysis tasks rather than r
 
 *   For **embedding detection logic directly into Python applications**: Use it as a **Python Library**.
 *   For **providing detection capabilities to non-Python applications or as a microservice**: Use the **REST API**.
-*   For **one-off analyses or scripting from the terminal**: The `aegis` command can be utilized.
+*   For **one-off analyses or scripting from the terminal**: Use the `semfire` command.
 
-Note: The `aegis` CLI remains available as a legacy alias and now prints a deprecation notice to stderr. Please switch to the `semfire` command.
+Note: The `semfire` CLI remains available as a legacy alias and now prints a deprecation notice to stderr. Please switch to the `semfire` command.
 
 ## Running the API Service
 To run the API service, you must first install the `api` optional dependencies:
@@ -273,12 +290,12 @@ You can also deploy the API service using Docker.
 
 1.  **Build the Docker image:**
     ```bash
-    docker build -t aegis-api .
+    docker build -t semfire-api .
     ```
 
 2.  **Run the Docker container:**
     ```bash
-    docker run -d -p 8000:8000 aegis-api
+    docker run -d -p 8000:8000 semfire-api
     ```
     The API will then be accessible at `http://localhost:8000`.
 
@@ -338,14 +355,14 @@ pytest
 
 The EchoChamberDetector uses proprietary combination weights loaded at runtime from a private sibling repo.
 
-- Weights file: `../aegis-prv/weights/score_weights.json` (override base with `AEGIS_PRV_PATH`).
+- Weights file: `../semfire-prv/weights/score_weights.json` (override base with `SemFire_PRV_PATH`).
 - Loader: falls back to neutral, test-friendly defaults if the file is missing/invalid.
-- Full documentation has moved to the private repo: see `${AEGIS_PRV_PATH:-../aegis-prv}/docs/weights.md`.
+- Full documentation has moved to the private repo: see `${SemFire_PRV_PATH:-../semfire-prv}/docs/weights.md`.
 
 Validate your weights file:
 
 ```bash
-python scripts/validate_weights.py --path /absolute/path/to/aegis-prv
+python scripts/validate_weights.py --path /absolute/path/to/semfire-prv
 ```
 
 Do not commit weights to this repo. Keep all tuning, data, and training pipelines private.
@@ -355,14 +372,14 @@ Export it into your shell—or even just prefix the invocation—to temporarily 
 
 ```bash
 export GITHUB_TOKEN=github_pat_12o4n2o3rinoienwoifdnowienf0fd
-python3 scripts/delete_closed_issues.py josephedward AEGIS --dry-run
+python3 scripts/delete_closed_issues.py josephedward SemFire --dry-run
 ```
 
 Or in one line:
 
 ```bash
 export GITHUB_TOKEN=github_pat_12o4n2o3rinoienwoifdnowienf0fd \
-python3 scripts/delete_closed_issues.py josephedward AEGIS --dry-run
+python3 scripts/delete_closed_issues.py josephedward SemFire --dry-run
 ```
 
 
