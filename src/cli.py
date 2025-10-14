@@ -3,10 +3,6 @@ import sys
 import os
 import json
 
-from rich.console import Console
-from rich.json import JSON
-from rich.panel import Panel
-
 # Ensure local imports work when running via `python -m src.cli` without install
 _SRC_DIR = os.path.dirname(__file__)
 if _SRC_DIR not in sys.path:
@@ -16,7 +12,7 @@ from semantic_firewall import SemanticFirewall, __version__
 from detectors.llm_provider import write_config, get_config_summary
 from config_menu import run_config_menu
 
-console = Console()
+ 
 
 def _read_text_from_args(args: argparse.Namespace) -> str:
     if getattr(args, "text", None):
@@ -56,9 +52,9 @@ def _handle_analyze(args: argparse.Namespace) -> None:
             "injection": "InjectionDetector",
         }
         sel = results.get(key_map[which], {})
-        console.print(JSON(json.dumps(sel)))
+        print(json.dumps(sel))
     else:
-        console.print(JSON(json.dumps(results)))
+        print(json.dumps(results))
 
     if not getattr(args, "json_only", False):
         is_manipulative_flag = firewall.is_manipulative(
@@ -66,7 +62,7 @@ def _handle_analyze(args: argparse.Namespace) -> None:
             conversation_history=history,
             threshold=getattr(args, "threshold", 0.75),
         )
-        console.print(f"\nOverall manipulative assessment (default threshold): {is_manipulative_flag}")
+        print(f"\nOverall manipulative assessment (default threshold): {is_manipulative_flag}")
 
 def _handle_spotlight(args: argparse.Namespace) -> None:
     try:
@@ -74,38 +70,70 @@ def _handle_spotlight(args: argparse.Namespace) -> None:
     except ImportError:
         from spotlighting.defenses import Spotlighter
 
-    text = _read_text_from_args(args)
+    # Build options and resolve optional positional parameter for datamark
     opts = {}
     if args.method == "delimit":
         opts = {"start": args.start, "end": args.end}
     elif args.method == "datamark":
-        if args.marker:
-            opts = {"marker": args.marker}
+        marker = args.marker or getattr(args, "param", None)
+        if marker:
+            opts = {"marker": marker}
+
+    # Determine text input with flexible positional handling
+    if getattr(args, "text", None):
+        text = args.text
+    elif args.method != "datamark" and getattr(args, "param", None):
+        text = args.param
+    else:
+        text = _read_text_from_args(args)
+
     spot = Spotlighter(method=args.method, **opts)
-    console.print(spot.process(text))
+    print(spot.process(text))
 
 def main():
     prog = os.path.basename(sys.argv[0]).lower()
     if "aegis" in prog:
-        console.print(Panel("[yellow]Deprecation notice:[/] 'aegis' CLI is deprecated; use 'semfire' instead.", 
-                              title="[bold red]Deprecation Warning[/bold red]", border_style="yellow"))
+        print(
+            "Deprecation notice: 'aegis' CLI is deprecated; use 'semfire' instead.",
+            file=sys.stderr,
+        )
 
     parser = argparse.ArgumentParser(description="SemFire: Semantic Firewall CLI.")
     parser.add_argument("--version", action="version", version=f"semfire {__version__}")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     analyze_parser = subparsers.add_parser("analyze", help="Analyze text for deception cues.")
-    analyze_parser.add_argument("text", nargs="?", help="The text to analyze.")
+    analyze_parser.add_argument("text", nargs="?", help="The text input to analyze (e.g., current message).")
     analyze_parser.add_argument("--file", help="Read input from a file.")
     analyze_parser.add_argument("--stdin", action="store_true", help="Read input from stdin.")
     analyze_parser.add_argument("--history", nargs="*", help="Conversation history.")
     analyze_parser.add_argument("--json-only", action="store_true", help="Only JSON output.")
     analyze_parser.add_argument("--threshold", type=float, default=0.75, help="Manipulation threshold.")
-    analyze_parser.add_argument("--detector", choices=["all", "rule", "heuristic", "echo", "injection"], help="Run a single detector.")
+    analyze_parser.add_argument(
+        "--detector",
+        choices=["all", "rule", "heuristic", "echo", "injection", "rule-based", "echo-chamber", "inj", "injectiondetector"],
+        help="Optional: run a single detector (default: all)",
+    )
     analyze_parser.set_defaults(func=_handle_analyze)
+
+    # Alias: analyse (UK spelling)
+    analyse_parser = subparsers.add_parser("analyse", help="Alias for 'analyze' (UK spelling).")
+    analyse_parser.add_argument("text", nargs="?", help="The text input to analyze (e.g., current message).")
+    analyse_parser.add_argument("--file", help="Read input text from file path.")
+    analyse_parser.add_argument("--stdin", action="store_true", help="Read input text from stdin.")
+    analyse_parser.add_argument("--history", nargs="*", help="Optional conversation history, ordered from oldest to newest.")
+    analyse_parser.add_argument("--json-only", action="store_true", help="Print only JSON output (suppress summary line).")
+    analyse_parser.add_argument("--threshold", type=float, default=0.75, help="Threshold for manipulative summary (default: 0.75).")
+    analyse_parser.add_argument(
+        "--detector",
+        choices=["all", "rule", "heuristic", "echo", "injection", "rule-based", "echo-chamber", "inj", "injectiondetector"],
+        help="Optional: run a single detector (default: all)",
+    )
+    analyse_parser.set_defaults(func=_handle_analyze)
 
     spotlight_parser = subparsers.add_parser("spotlight", help="Transform text with defenses.")
     spotlight_parser.add_argument("method", choices=["delimit", "datamark", "base64", "rot13", "binary", "layered"], help="Spotlighting method.")
+    spotlight_parser.add_argument("param", nargs="?", help="Optional method parameter (e.g., marker for datamark).")
     spotlight_parser.add_argument("text", nargs="?", help="The text to transform.")
     spotlight_parser.add_argument("--file", help="Read input from a file.")
     spotlight_parser.add_argument("--stdin", action="store_true", help="Read input from stdin.")
@@ -129,11 +157,11 @@ def main():
                 openai_api_key_env=args.openai_api_key_env,
                 openai_base_url=args.openai_base_url,
             )
-            console.print(f"Config saved to {path}")
-            console.print(f"Active: {get_config_summary()}")
+            print(f"Config saved to {path}")
+            print(f"Active: {get_config_summary()}")
         else:
             run_config_menu()
-            console.print(f"Active: {get_config_summary()}")
+            print(f"Active: {get_config_summary()}")
 
     config_parser.set_defaults(func=config_command)
 
