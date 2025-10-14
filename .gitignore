@@ -22,7 +22,7 @@ __pycache__/
 Archive.zip
 /dist
 *.pyc
-/src/aegis_semantic_firewall.egg-info
+/src/semfire_semantic_firewall.egg-info
 /.hypothesis
 /.venv
 /trace_cov
@@ -31,3 +31,7 @@ weights/score_weights.json
 AGENTS.md
 GEMINI.md
 /src/semfire.egg-info
+
+# Local run logs
+logs/*
+!logs/.gitkeep
