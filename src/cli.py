@@ -133,7 +133,50 @@ def main():
     parser = argparse.ArgumentParser(description="SemFire: Semantic Firewall CLI.")
     parser.add_argument("--version", action="version", version=f"semfire {__version__}")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
+    
+    config_parser = subparsers.add_parser("config", help="Configure LLM providers.")
+    config_parser.add_argument("--provider", choices=["openai", "none"], help="Set provider.")
+    config_parser.add_argument("--openai-model", help="OpenAI model name.")
+    config_parser.add_argument("--openai-api-key-env", help="Env var for API key.")
+    config_parser.add_argument("--openai-base-url", help="Custom base URL.")
+    config_parser.add_argument("--non-interactive", action="store_true", help="Do not launch the interactive menu.")
+    
 
+    spotlight_parser = subparsers.add_parser("spotlight", help="Transform text with defenses.")
+    spotlight_parser.add_argument("method", choices=["delimit", "datamark", "base64", "rot13", "binary", "layered"], help="Spotlighting method.")
+    spotlight_parser.add_argument("param", nargs="?", help="Optional method parameter (e.g., marker for datamark).")
+    spotlight_parser.add_argument("text", nargs="?", help="The text to transform.")
+    spotlight_parser.add_argument("--file", help="Read input from a file.")
+    spotlight_parser.add_argument("--stdin", action="store_true", help="Read input from stdin.")
+    spotlight_parser.add_argument("--start", default="«", help="Start delimiter.")
+    spotlight_parser.add_argument("--end", default="»", help="End delimiter.")
+    spotlight_parser.add_argument("--marker", help="Datamark marker.")
+    spotlight_parser.set_defaults(func=_handle_spotlight)
+
+    # detector
+    detector_parser = subparsers.add_parser(
+        "detector",
+        help="Run individual detectors.",
+        description="Detector-specific commands and flags.",
+    )
+    det_sub = detector_parser.add_subparsers(dest="detector_cmd", help="Detector subcommands")
+
+    # detector list
+    det_list = det_sub.add_parser("list", help="List available detectors.")
+    det_list.set_defaults(func=_handle_detector_list)
+
+    # detector <name>
+    for det in ("rule", "heuristic", "echo", "injection"):
+        d = det_sub.add_parser(det, help=f"Run the {det} detector.")
+        # input handling flags
+        d.add_argument("text", nargs="?", help="The text input to analyze.")
+        d.add_argument("--file", help="Read input from a file.")
+        d.add_argument("--stdin", action="store_true", help="Read input from stdin.")
+        d.add_argument("--history", nargs="*", help="Conversation history.")
+        d.set_defaults(func=_handle_detector_run, detector=det)
+
+
+    
     analyze_parser = subparsers.add_parser("analyze", help="Analyze text for deception cues.")
     analyze_parser.add_argument("text", nargs="?", help="The text input to analyze (e.g., current message).")
     analyze_parser.add_argument("--file", help="Read input from a file.")
@@ -148,26 +191,6 @@ def main():
     )
     analyze_parser.set_defaults(func=_handle_analyze)
 
-    
-
-    spotlight_parser = subparsers.add_parser("spotlight", help="Transform text with defenses.")
-    spotlight_parser.add_argument("method", choices=["delimit", "datamark", "base64", "rot13", "binary", "layered"], help="Spotlighting method.")
-    spotlight_parser.add_argument("param", nargs="?", help="Optional method parameter (e.g., marker for datamark).")
-    spotlight_parser.add_argument("text", nargs="?", help="The text to transform.")
-    spotlight_parser.add_argument("--file", help="Read input from a file.")
-    spotlight_parser.add_argument("--stdin", action="store_true", help="Read input from stdin.")
-    spotlight_parser.add_argument("--start", default="«", help="Start delimiter.")
-    spotlight_parser.add_argument("--end", default="»", help="End delimiter.")
-    spotlight_parser.add_argument("--marker", help="Datamark marker.")
-    spotlight_parser.set_defaults(func=_handle_spotlight)
-
-    config_parser = subparsers.add_parser("config", help="Configure LLM providers.")
-    config_parser.add_argument("--provider", choices=["openai", "none"], help="Set provider.")
-    config_parser.add_argument("--openai-model", help="OpenAI model name.")
-    config_parser.add_argument("--openai-api-key-env", help="Env var for API key.")
-    config_parser.add_argument("--openai-base-url", help="Custom base URL.")
-    config_parser.add_argument("--non-interactive", action="store_true", help="Do not launch the interactive menu.")
-    
     def config_command(args):
         if any([args.provider, args.openai_model, args.openai_api_key_env, args.openai_base_url]):
             prov = args.provider or "openai"
@@ -192,28 +215,6 @@ def main():
                 print(f"Active: {get_config_summary()}")
 
     config_parser.set_defaults(func=config_command)
-
-    # detector
-    detector_parser = subparsers.add_parser(
-        "detector",
-        help="Run individual detectors.",
-        description="Detector-specific commands and flags.",
-    )
-    det_sub = detector_parser.add_subparsers(dest="detector_cmd", help="Detector subcommands")
-
-    # detector list
-    det_list = det_sub.add_parser("list", help="List available detectors.")
-    det_list.set_defaults(func=_handle_detector_list)
-
-    # detector <name>
-    for det in ("rule", "heuristic", "echo", "injection"):
-        d = det_sub.add_parser(det, help=f"Run the {det} detector.")
-        # input handling flags
-        d.add_argument("text", nargs="?", help="The text input to analyze.")
-        d.add_argument("--file", help="Read input from a file.")
-        d.add_argument("--stdin", action="store_true", help="Read input from stdin.")
-        d.add_argument("--history", nargs="*", help="Conversation history.")
-        d.set_defaults(func=_handle_detector_run, detector=det)
 
     args = parser.parse_args()
 
