@@ -90,6 +90,35 @@ def _handle_spotlight(args: argparse.Namespace) -> None:
     spot = Spotlighter(method=args.method, **opts)
     print(spot.process(text))
 
+def _handle_detector_list(_: argparse.Namespace) -> None:
+    """List available detectors by shorthand name."""
+    print("\n".join(["rule", "heuristic", "echo", "injection"]))
+
+def _handle_detector_run(args: argparse.Namespace) -> None:
+    """Run a single detector via the same machinery as `analyze`.
+
+    This keeps output structure consistent with other CLI calls while
+    giving detectors their own subcommands/flags.
+    """
+    firewall = SemanticFirewall()
+    text = _read_text_from_args(args)
+    history = args.history if getattr(args, "history", None) else []
+
+    # Reuse the combined pipeline and slice the requested detector for consistency
+    results = firewall.analyze_conversation(
+        current_message=text,
+        conversation_history=history,
+    )
+
+    key_map = {
+        "rule": "RuleBasedDetector",
+        "heuristic": "HeuristicDetector",
+        "echo": "EchoChamberDetector",
+        "injection": "InjectionDetector",
+    }
+    sel = results.get(key_map[args.detector], {})
+    print(json.dumps(sel))
+
 def main():
     prog = os.path.basename(sys.argv[0]).lower()
     if "aegis" in prog:
@@ -116,20 +145,7 @@ def main():
     )
     analyze_parser.set_defaults(func=_handle_analyze)
 
-    # Alias: analyse (UK spelling)
-    analyse_parser = subparsers.add_parser("analyse", help="Alias for 'analyze' (UK spelling).")
-    analyse_parser.add_argument("text", nargs="?", help="The text input to analyze (e.g., current message).")
-    analyse_parser.add_argument("--file", help="Read input text from file path.")
-    analyse_parser.add_argument("--stdin", action="store_true", help="Read input text from stdin.")
-    analyse_parser.add_argument("--history", nargs="*", help="Optional conversation history, ordered from oldest to newest.")
-    analyse_parser.add_argument("--json-only", action="store_true", help="Print only JSON output (suppress summary line).")
-    analyse_parser.add_argument("--threshold", type=float, default=0.75, help="Threshold for manipulative summary (default: 0.75).")
-    analyse_parser.add_argument(
-        "--detector",
-        choices=["all", "rule", "heuristic", "echo", "injection", "rule-based", "echo-chamber", "inj", "injectiondetector"],
-        help="Optional: run a single detector (default: all)",
-    )
-    analyse_parser.set_defaults(func=_handle_analyze)
+    
 
     spotlight_parser = subparsers.add_parser("spotlight", help="Transform text with defenses.")
     spotlight_parser.add_argument("method", choices=["delimit", "datamark", "base64", "rot13", "binary", "layered"], help="Spotlighting method.")
@@ -164,6 +180,28 @@ def main():
             print(f"Active: {get_config_summary()}")
 
     config_parser.set_defaults(func=config_command)
+
+    # detector
+    detector_parser = subparsers.add_parser(
+        "detector",
+        help="Run individual detectors.",
+        description="Detector-specific commands and flags.",
+    )
+    det_sub = detector_parser.add_subparsers(dest="detector_cmd", help="Detector subcommands")
+
+    # detector list
+    det_list = det_sub.add_parser("list", help="List available detectors.")
+    det_list.set_defaults(func=_handle_detector_list)
+
+    # detector <name>
+    for det in ("rule", "heuristic", "echo", "injection"):
+        d = det_sub.add_parser(det, help=f"Run the {det} detector.")
+        # input handling flags
+        d.add_argument("text", nargs="?", help="The text input to analyze.")
+        d.add_argument("--file", help="Read input from a file.")
+        d.add_argument("--stdin", action="store_true", help="Read input from stdin.")
+        d.add_argument("--history", nargs="*", help="Conversation history.")
+        d.set_defaults(func=_handle_detector_run, detector=det)
 
     args = parser.parse_args()
 
