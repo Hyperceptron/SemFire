@@ -35,3 +35,4 @@ GEMINI.md
 # Local run logs
 logs/*
 !logs/.gitkeep
+/src/semfire.egg-info
