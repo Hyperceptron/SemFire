@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import getpass
 from typing import Dict
@@ -81,7 +82,17 @@ def test_api_keys() -> Dict[str, bool]:
     return {"gemini": gemini_ok, "openai": openai_ok, "openrouter": openrouter_ok, "perplexity": perplexity_ok}
 
 
-def run_config_menu() -> None:
+def run_config_menu(non_interactive: bool = False) -> None:
+    # In non-interactive environments, avoid prompting to prevent EOFError
+    if non_interactive or not console.is_interactive or not sys.stdin.isatty():
+        console.print(Panel(
+            "[yellow]Non-interactive environment detected.[/yellow]\n"
+            "Use CLI flags (e.g., 'semfire config --provider openai --openai-model gpt-4o-mini --openai-api-key-env OPENAI_API_KEY')\n"
+            "or set environment variables / .env values directly.",
+            title="[bold red]Config: Non-Interactive[/bold red]",
+            border_style="red",
+        ))
+        return
     statuses = test_api_keys()
     if not any(statuses.values()):
         console.print(Panel("[yellow]Warning:[/yellow] No valid API keys found. Without a valid API key, the application will fall back to simple string matching against a single suggested answer.",
@@ -125,7 +136,11 @@ def run_config_menu() -> None:
         console.print(f"  [bold]5.[/bold] Choose AI Provider (current: {provider_display})")
         console.print("  [bold]6.[/bold] Back")
 
-        choice = Prompt.ask("Enter your choice", choices=[str(i) for i in range(1, 7)], default="6")
+        try:
+            choice = Prompt.ask("Enter your choice", choices=[str(i) for i in range(1, 7)], default="6")
+        except EOFError:
+            console.print("\n[yellow]No input available; exiting config menu.[/yellow]")
+            break
 
         if choice == '6':
             break
@@ -139,7 +154,11 @@ def run_config_menu() -> None:
 
         if choice in service_map:
             service_name, key_name = service_map[choice]
-            key = Prompt.ask(f"Enter your {service_name} API Key", password=True)
+            try:
+                key = Prompt.ask(f"Enter your {service_name} API Key", password=True)
+            except EOFError:
+                console.print("\n[yellow]No input available; skipping key entry.[/yellow]")
+                key = ""
             if key:
                 with Live(Spinner("dots"), console=console, transient=True) as live:
                     live.start()
@@ -164,7 +183,11 @@ def run_config_menu() -> None:
                 provider_table.add_row(f"[bold]{i}[/bold]", p)
             console.print(provider_table)
             
-            sub_choice = Prompt.ask("Enter your choice", choices=[str(i) for i in range(1, 6)], default="5")
+            try:
+                sub_choice = Prompt.ask("Enter your choice", choices=[str(i) for i in range(1, 6)], default="5")
+            except EOFError:
+                console.print("\n[yellow]No input available; keeping current provider.[/yellow]")
+                sub_choice = "5"
             selected_provider = providers[int(sub_choice) - 1] if sub_choice else "none"
             
             set_key(".env", "SEMFIRE_LLM_PROVIDER", selected_provider if selected_provider != "none" else "")
