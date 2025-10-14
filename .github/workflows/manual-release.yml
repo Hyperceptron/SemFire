@@ -3,6 +3,11 @@ name: Manual PyPI Release
 
 on:
   workflow_dispatch:
+    inputs:
+      pypi_token:
+        description: 'PyPI API Token'
+        required: true
+        type: string
 
 jobs:
   bump-version-and-release:
@@ -42,4 +47,4 @@ jobs:
       - name: Build and publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          password: ${{ secrets.PYPI_TOKEN }}
+          password: ${{ github.event.inputs.pypi_token }}
