@@ -116,7 +116,10 @@ def _handle_detector_run(args: argparse.Namespace) -> None:
         "echo": "EchoChamberDetector",
         "injection": "InjectionDetector",
     }
-    sel = results.get(key_map[args.detector], {})
+    detector_class_name = key_map[args.detector]
+    sel = results.get(detector_class_name, {})
+    # Add the detector_name to the output
+    sel["detector_name"] = detector_class_name
     print(json.dumps(sel))
 
 def main():
@@ -163,6 +166,7 @@ def main():
     config_parser.add_argument("--openai-model", help="OpenAI model name.")
     config_parser.add_argument("--openai-api-key-env", help="Env var for API key.")
     config_parser.add_argument("--openai-base-url", help="Custom base URL.")
+    config_parser.add_argument("--non-interactive", action="store_true", help="Do not launch the interactive menu.")
     
     def config_command(args):
         if any([args.provider, args.openai_model, args.openai_api_key_env, args.openai_base_url]):
@@ -176,8 +180,16 @@ def main():
             print(f"Config saved to {path}")
             print(f"Active: {get_config_summary()}")
         else:
-            run_config_menu()
-            print(f"Active: {get_config_summary()}")
+            # Respect non-interactive environments or explicit flag
+            if getattr(args, "non_interactive", False):
+                print("Non-interactive mode: skipping menu.\n" + get_config_summary())
+            else:
+                try:
+                    run_config_menu(non_interactive=False)
+                except EOFError:
+                    # Graceful fallback when no input stream is available
+                    print("No input available; skipping interactive menu.")
+                print(f"Active: {get_config_summary()}")
 
     config_parser.set_defaults(func=config_command)
 
