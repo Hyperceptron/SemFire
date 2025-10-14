@@ -1,4 +1,4 @@
-# SemFire (formerly AEGIS)
+# SemFire (formerly SemFire)
 
 [![CI](https://github.com/josephedward/R.A.D.A.R./actions/workflows/ci.yml/badge.svg)](https://github.com/josephedward/R.A.D.A.R./actions/workflows/ci.yml)
 
@@ -191,7 +191,7 @@ The package provides a command-line interface for analyzing text using the `Sema
 
 **Implementation:**
 
-Once installed, you can use the `semfire` command (legacy alias: `aegis`). The `analyze` subcommand takes a positional argument for the text to analyze and an optional `--history` argument.
+Once installed, you can use the `semfire` command (legacy alias: `semfire`). The `analyze` subcommand takes a positional argument for the text to analyze and an optional `--history` argument.
 
 Example:
 ```bash
@@ -228,7 +228,7 @@ This method is generally more suited for standalone analysis tasks rather than r
 *   For **providing detection capabilities to non-Python applications or as a microservice**: Use the **REST API**.
 *   For **one-off analyses or scripting from the terminal**: Use the `semfire` command.
 
-Note: The `aegis` CLI remains available as a legacy alias and now prints a deprecation notice to stderr. Please switch to the `semfire` command.
+Note: The `semfire` CLI remains available as a legacy alias and now prints a deprecation notice to stderr. Please switch to the `semfire` command.
 
 ## Running the API Service
 To run the API service, you must first install the `api` optional dependencies:
@@ -314,14 +314,14 @@ pytest
 
 The EchoChamberDetector uses proprietary combination weights loaded at runtime from a private sibling repo.
 
-- Weights file: `../aegis-prv/weights/score_weights.json` (override base with `AEGIS_PRV_PATH`).
+- Weights file: `../semfire-prv/weights/score_weights.json` (override base with `SemFire_PRV_PATH`).
 - Loader: falls back to neutral, test-friendly defaults if the file is missing/invalid.
-- Full documentation has moved to the private repo: see `${AEGIS_PRV_PATH:-../aegis-prv}/docs/weights.md`.
+- Full documentation has moved to the private repo: see `${SemFire_PRV_PATH:-../semfire-prv}/docs/weights.md`.
 
 Validate your weights file:
 
 ```bash
-python scripts/validate_weights.py --path /absolute/path/to/aegis-prv
+python scripts/validate_weights.py --path /absolute/path/to/semfire-prv
 ```
 
 Do not commit weights to this repo. Keep all tuning, data, and training pipelines private.
@@ -331,14 +331,14 @@ Export it into your shell—or even just prefix the invocation—to temporarily 
 
 ```bash
 export GITHUB_TOKEN=github_pat_12o4n2o3rinoienwoifdnowienf0fd
-python3 scripts/delete_closed_issues.py josephedward AEGIS --dry-run
+python3 scripts/delete_closed_issues.py josephedward SemFire --dry-run
 ```
 
 Or in one line:
 
 ```bash
 export GITHUB_TOKEN=github_pat_12o4n2o3rinoienwoifdnowienf0fd \
-python3 scripts/delete_closed_issues.py josephedward AEGIS --dry-run
+python3 scripts/delete_closed_issues.py josephedward SemFire --dry-run
 ```
 
 
