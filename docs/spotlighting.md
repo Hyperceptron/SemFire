@@ -1,6 +1,6 @@
 # Spotlighting and Injection Detection
 
-This document describes the **spotlighting** defenses for prompt injection and provides an overview of the `InjectionDetector` in the AEGIS toolkit. Spotlighting applies transformations to untrusted input to both prevent indirect prompt injection and improve explainability of detector outputs.
+This document describes the **spotlighting** defenses for prompt injection and provides an overview of the `InjectionDetector` in the SemFire toolkit. Spotlighting applies transformations to untrusted input to both prevent indirect prompt injection and improve explainability of detector outputs.
 
 ## Spotlighting: Explainability and Hardened Pipelines
 
