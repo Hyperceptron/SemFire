@@ -19,9 +19,9 @@ app = FastAPI(
 # The EchoChamberDetector is comprehensive, using rule, ML, and LLM components.
 try:
     detector = EchoChamberDetector()
-    logger.info("AEGIS API: EchoChamberDetector initialized successfully.")
+    logger.info("SemFire API: EchoChamberDetector initialized successfully.")
 except Exception as e:
-    logger.critical(f"AEGIS API: Failed to initialize EchoChamberDetector: {e}", exc_info=True)
+    logger.critical(f"SemFire API: Failed to initialize EchoChamberDetector: {e}", exc_info=True)
     # In a real deployment, this might prevent the app from starting or switch to a degraded mode.
     # For now, we'll allow it to proceed, but endpoints might fail if detector is None.
     detector = None # Set to None to indicate failure; endpoints should check this.

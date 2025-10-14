@@ -26,14 +26,14 @@ def _load_score_weights() -> Dict[str, float]:
     """Load proprietary weights if available, otherwise return safe defaults.
 
     Looks for a JSON file `weights/score_weights.json` inside the private
-    repository pointed to by `AEGIS_PRV_PATH` or defaults to `../aegis-prv`
+    repository pointed to by `SemFire_PRV_PATH` or defaults to `../semfire-prv`
     (relative to the repo root). Returns a dict with numeric values.
     """
     try:
         # Resolve repo root (two levels up from this file: src/detectors -> src -> repo)
         repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-        default_prv = os.path.abspath(os.path.join(repo_root, "..", "aegis-prv"))
-        base = os.environ.get("AEGIS_PRV_PATH", default_prv)
+        default_prv = os.path.abspath(os.path.join(repo_root, "..", "semfire-prv"))
+        base = os.environ.get("SemFire_PRV_PATH", default_prv)
         path = os.path.join(base, "weights", "score_weights.json")
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
