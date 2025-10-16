@@ -1,4 +1,4 @@
-# SemFire (formerly SemFire)
+# SemFire 
 
 [![CI](https://github.com/josephedward/R.A.D.A.R./actions/workflows/ci.yml/badge.svg)](https://github.com/josephedward/R.A.D.A.R./actions/workflows/ci.yml)
 
@@ -323,9 +323,9 @@ The `llm_analysis` field will contain the textual analysis from the local LLM (T
 pytest
 ```
 
-## Proprietary Score Weights
+## Score Weights
 
-The EchoChamberDetector uses proprietary combination weights loaded at runtime from a private sibling repo.
+The EchoChamberDetector uses combination weights loaded at runtime from a private sibling repo.
 
 - Weights file: `../semfire-prv/weights/score_weights.json` (override base with `SemFire_PRV_PATH`).
 - Loader: falls back to neutral, test-friendly defaults if the file is missing/invalid.
