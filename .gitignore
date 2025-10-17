@@ -31,6 +31,7 @@ weights/score_weights.json
 AGENTS.md
 GEMINI.md
 /src/semfire.egg-info
+src/_version.py
 
 # Local run logs
 logs/*
