@@ -42,8 +42,8 @@ jobs:
         uses: apricote/releaser-pleaser@v0.7.1
         id: releaser_real
         with:
-          # Use the built-in GitHub token for tagging and releases
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Use a PAT if your repo requires elevated permissions for tagging/releases
+          token: ${{ secrets.GH_TOKEN }}
           branch: main
           # Optional: Commit message prefix for version bumps (default: 'chore(release):')
           # commit_message_prefix: 'chore: release'
