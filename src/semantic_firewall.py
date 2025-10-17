@@ -1,4 +1,4 @@
-__version__ = "0.2.2"
+__version__ = "0.2.4"
 
 from typing import List, Dict, Any, Optional
 # Import the consolidated detectors. Prefer relative import for `src.*` tests,
