@@ -6,6 +6,7 @@ on:
     tags:
       # Use glob patterns (not regex). This matches vMAJOR.MINOR.PATCH and pre-releases.
       - 'v*.*.*'
+      - '*.*.*'
 
 jobs:
   build-and-publish:
