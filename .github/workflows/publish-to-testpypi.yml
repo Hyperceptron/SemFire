@@ -1,0 +1,64 @@
+name: Publish to TestPyPI
+
+on:
+  # Manual trigger for dry runs and explicit tests
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to checkout (optional)
+        required: false
+  # Optional: pre-release tags or test tags can also trigger this
+  push:
+    tags:
+      - 'v*.*.*-rc*'
+      - 'v*.*.*-test*'
+
+jobs:
+  build-and-publish:
+    name: Build and publish to TestPyPI
+    runs-on: ubuntu-latest
+    # OIDC + read permissions; for token publishing, only contents: read is needed
+    permissions:
+      id-token: write
+      contents: read
+    environment: testpypi
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install build tooling
+        run: |
+          python -m pip install --upgrade pip
+          pip install build
+
+      - name: Build package
+        run: python -m build
+
+      - name: Skip publish in local act runs
+        if: ${{ env.ACT }}
+        run: echo "ACT detected; skipping TestPyPI publish."
+
+      # Prefer token if provided (common for TestPyPI); must set TEST_PYPI_API_TOKEN in repo secrets
+      - name: Publish to TestPyPI via token
+        if: ${{ !env.ACT && secrets.TEST_PYPI_API_TOKEN != '' }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          print-hash: true
+
+      # Fallback to OIDC Trusted Publishing if configured for TestPyPI project
+      - name: Publish to TestPyPI (Trusted Publishing)
+        if: ${{ !env.ACT && secrets.TEST_PYPI_API_TOKEN == '' }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          print-hash: true
+
