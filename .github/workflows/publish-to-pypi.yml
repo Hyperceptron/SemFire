@@ -2,11 +2,8 @@
 name: Publish Python distribution to PyPI
 
 on:
-  push:
-    tags:
-      # Use glob patterns (not regex). This matches vMAJOR.MINOR.PATCH and pre-releases.
-      - 'v*.*.*'
-      - '*.*.*'
+  release:
+    types: [published]
 
 jobs:
   build-and-publish:
@@ -16,8 +13,7 @@ jobs:
     # permissions:
     #   id-token: write
     #   contents: read
-    environment:
-      name: pypi
+    # No environment gating to ensure fully automatic publish
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,13 +32,8 @@ jobs:
       - name: Build package
         run: python -m build
 
-      - name: Skip publish in local act runs
-        if: ${{ env.ACT }}
-        run: echo "ACT detected; skipping real PyPI publish."
-
       # Token-based publish (use repo secret PYPI_API_TOKEN). OIDC is commented out above.
       - name: Publish package to PyPI (API token)
-        if: ${{ !env.ACT }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
