@@ -38,21 +38,32 @@ pip install semfire
 - **Quickstart :**[/docs/quickstart.md](./docs/quickstart.md)
 - **Usage :** [/docs/usage.md](./docs/usage.md)
 
-# Demo
+## Terminal Demos (GIFs)
 
 *see* [Examples](./docs/examples.md)
 
-**Quick Start**  
-[![Quick Start](https://asciinema.org/a/vyMQ9gpnEgyBEDF5q8ifmZ1Mz.svg)](https://asciinema.org/a/vyMQ9gpnEgyBEDF5q8ifmZ1Mz)
+The following terminal demo GIFs are available under `assets/demos/asciinema/`:
 
-**Individual Detectors**  
-[![Individual Detectors](https://asciinema.org/a/pNPjV3rJJ4kH1L3A4R6Pytm1O.svg)](https://asciinema.org/a/pNPjV3rJJ4kH1L3A4R6Pytm1O)
+**Quick Start**
 
-**Python API**  
-[![Python API](https://asciinema.org/a/RhrolgA23FxQbcjLtB6RhE9Ww.svg)](https://asciinema.org/a/RhrolgA23FxQbcjLtB6RhE9Ww)
+![demo](assets/demos/asciinema/demo_01.small.gif)
 
-**Complete Workflow**  
-[![Complete Workflow](https://asciinema.org/a/lJPq57UMvBQ5RX2UWS2B6dl19.svg)](https://asciinema.org/a/lJPq57UMvBQ5RX2UWS2B6dl19)
+**Individual Detectors**
+
+![demo](assets/demos/asciinema/demo_02.small.gif)
+
+**Python API**
+
+![demo](assets/demos/asciinema/demo_03.small.gif)
+
+**Complete Workflow**
+
+![demo](assets/demos/asciinema/demo_04.small.gif)
+
+**API: Health/Ready/Zip Analyze**
+
+![demo](assets/demos/asciinema/api_health_ready_zip.small.gif)
+
 
 <!-- **Library — Basic Usage**  
 [![Library — Basic Usage](https://asciinema.org/a/Mtk3RcSxwF66REU6ymdPKlFrd.svg)](https://asciinema.org/a/Mtk3RcSxwF66REU6ymdPKlFrd)
@@ -67,7 +78,14 @@ pip install semfire
 [![Transformers — Programmatic Config](https://asciinema.org/a/8uGbIpHrnU4cKuJm8hSPyYepf.svg)](https://asciinema.org/a/8uGbIpHrnU4cKuJm8hSPyYepf)
 
  -->
+<!-- - API: Analyze (DistilBERT Image Route)
+  
+  ![demo](assets/demos/asciinema/api_analyze_img.small.gif) -->
 
+<!-- End Terminal Demos (GIFs) -->
 
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request.Library — Basic Usage
+
+
+
