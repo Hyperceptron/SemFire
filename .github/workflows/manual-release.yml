@@ -1,4 +1,4 @@
-name: Publish to PyPI
+name: Manual Publish PyPI
 
 on:
   workflow_dispatch:
