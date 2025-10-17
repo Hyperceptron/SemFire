@@ -1,0 +1,55 @@
+
+name: Release
+
+on:
+  push:
+    branches:
+      - main # Trigger on pushes to the main branch
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Required for releaser-pleaser to analyze commit history
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11' # Or your preferred Python version
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+
+      - name: Run Releaser Pleaser
+        uses: apricote/releaser-pleaser@v1
+        id: releaser
+        with:
+          # Required: GitHub Token for creating releases and tags
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Optional: PyPI API Token for publishing to PyPI
+          pypi_token: ${{ secrets.PYPI_API_TOKEN }}
+          # Optional: Base branch to analyze for changes (default: main)
+          base_branch: main
+          # Optional: Commit message prefix for version bumps (default: 'chore(release):')
+          # commit_message_prefix: 'chore: release'
+          # Optional: Whether to publish to PyPI (default: true)
+          # publish_to_pypi: true
+          # Optional: Path to pyproject.toml or package.json (default: pyproject.toml)
+          # config_file: 'pyproject.toml'
+
+      - name: Upload release assets (if any)
+        if: steps.releaser.outputs.release_created == 'true'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.releaser.outputs.upload_url }}
+          asset_path: ./dist/*.whl # Example: upload your built wheel files
+          asset_name: your-package-name-${{ steps.releaser.outputs.new_version }}.whl
+          asset_content_type: application/zip # Adjust content type as needed
