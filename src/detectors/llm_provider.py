@@ -4,6 +4,9 @@ Lightweight LLM provider abstraction for SemFire detectors.
 Default behavior attempts to use provider settings from environment variables
 and an optional config file. Providers supported:
  - OpenAI (via `openai` library)
+ - Gemini (via Google Generative Language REST API)
+ - OpenRouter (via HTTPS REST API)
+ - Perplexity (via HTTPS REST API)
 
 Configuration resolution order:
 1) Environment variable `SEMFIRE_CONFIG` pointing to a JSON config file.
@@ -11,8 +14,11 @@ Configuration resolution order:
 
 Config schema (JSON):
 {
-  "provider": "openai" | "transformers" | "none",
+  "provider": "openai" | "gemini" | "openrouter" | "perplexity" | "transformers" | "none",
   "openai": { "api_key_env": "OPENAI_API_KEY", "base_url": null, "model": "gpt-4o-mini" },
+  "gemini": { "api_key_env": "GEMINI_API_KEY", "model": "gemini-1.5-flash-latest" },
+  "openrouter": { "api_key_env": "OPENROUTER_API_KEY", "model": "deepseek/deepseek-chat" },
+  "perplexity": { "api_key_env": "PERPLEXITY_API_KEY", "model": "sonar-medium-online" },
   "transformers": { "model_path": "/absolute/or/relative/path", "device": "cpu" }
 }
 
@@ -27,6 +33,7 @@ import json
 import os
 from dataclasses import dataclass
 from typing import Optional, Any, Dict
+import requests
 
 
 CONFIG_ENV = "SEMFIRE_CONFIG"
@@ -76,6 +83,15 @@ def get_config_summary() -> str:
     if provider == "openai":
         oc = cfg.get("openai", {})
         return f"provider=openai model={oc.get('model','?')} base_url={oc.get('base_url','default')} api_key_env={oc.get('api_key_env','OPENAI_API_KEY')}"
+    if provider == "gemini":
+        gc = cfg.get("gemini", {})
+        return f"provider=gemini model={gc.get('model','?')} api_key_env={gc.get('api_key_env','GEMINI_API_KEY')}"
+    if provider == "openrouter":
+        oc = cfg.get("openrouter", {})
+        return f"provider=openrouter model={oc.get('model','?')} api_key_env={oc.get('api_key_env','OPENROUTER_API_KEY')}"
+    if provider == "perplexity":
+        pc = cfg.get("perplexity", {})
+        return f"provider=perplexity model={pc.get('model','?')} api_key_env={pc.get('api_key_env','PERPLEXITY_API_KEY')}"
     if provider == "transformers":
         tc = cfg.get("transformers", {})
         return f"provider=transformers path={tc.get('model_path','?')} device={tc.get('device','cpu')}"
@@ -133,6 +149,106 @@ class OpenAIProvider(LLMProviderBase):
             raise RuntimeError(f"OpenAI generate failed: {e}")
 
 
+@dataclass
+class GeminiProvider(LLMProviderBase):
+    model: str
+    api_key: str
+
+    def is_ready(self) -> bool:
+        return bool(self.api_key and self.model)
+
+    def generate(self, prompt: str) -> str:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
+            payload = {
+                "contents": [
+                    {"role": "user", "parts": [{"text": prompt}]}
+                ],
+                "generationConfig": {"temperature": 0.2, "maxOutputTokens": 256},
+            }
+            resp = requests.post(url, json=payload, timeout=20)
+            resp.raise_for_status()
+            data = resp.json()
+            candidates = data.get("candidates") or []
+            if candidates:
+                parts = (candidates[0].get("content") or {}).get("parts") or []
+                if parts and isinstance(parts[0], dict):
+                    return parts[0].get("text", "")
+            return data.get("text", "") or ""
+        except Exception as e:
+            raise RuntimeError(f"Gemini generate failed: {e}")
+
+
+@dataclass
+class OpenRouterProvider(LLMProviderBase):
+    model: str
+    api_key: str
+
+    def is_ready(self) -> bool:
+        return bool(self.api_key and self.model)
+
+    def generate(self, prompt: str) -> str:
+        try:
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+            }
+            payload = {
+                "model": self.model,
+                "messages": [
+                    {"role": "system", "content": "You are a helpful analysis model."},
+                    {"role": "user", "content": prompt},
+                ],
+                "temperature": 0.2,
+                "max_tokens": 256,
+            }
+            r = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload, timeout=20)
+            r.raise_for_status()
+            data = r.json()
+            choices = data.get("choices") or []
+            if choices:
+                msg = (choices[0].get("message") or {}).get("content")
+                return msg or ""
+            return ""
+        except Exception as e:
+            raise RuntimeError(f"OpenRouter generate failed: {e}")
+
+
+@dataclass
+class PerplexityProvider(LLMProviderBase):
+    model: str
+    api_key: str
+
+    def is_ready(self) -> bool:
+        return bool(self.api_key and self.model)
+
+    def generate(self, prompt: str) -> str:
+        try:
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+            }
+            payload = {
+                "model": self.model,
+                "messages": [
+                    {"role": "system", "content": "You are a helpful analysis model."},
+                    {"role": "user", "content": prompt},
+                ],
+                "temperature": 0.2,
+                "max_tokens": 256,
+            }
+            r = requests.post("https://api.perplexity.ai/chat/completions", headers=headers, json=payload, timeout=20)
+            r.raise_for_status()
+            data = r.json()
+            choices = data.get("choices") or []
+            if choices:
+                msg = (choices[0].get("message") or {}).get("content")
+                return msg or ""
+            return ""
+        except Exception as e:
+            raise RuntimeError(f"Perplexity generate failed: {e}")
+
+
 
 
 def load_llm_provider_from_config() -> Optional[LLMProviderBase]:
@@ -142,9 +258,15 @@ def load_llm_provider_from_config() -> Optional[LLMProviderBase]:
     # Priority: explicit env var provider → config file provider → auto-detect from keys
     provider = (os.environ.get("SEMFIRE_LLM_PROVIDER") or cfg.get("provider") or "").lower()
     if not provider:
-        # Auto-detect provider from present API keys
+        # Auto-detect provider from present API keys (priority order)
         if os.environ.get("OPENAI_API_KEY"):
             provider = "openai"
+        elif os.environ.get("GEMINI_API_KEY"):
+            provider = "gemini"
+        elif os.environ.get("OPENROUTER_API_KEY"):
+            provider = "openrouter"
+        elif os.environ.get("PERPLEXITY_API_KEY"):
+            provider = "perplexity"
         else:
             provider = "none"
     if provider == "openai":
@@ -156,13 +278,43 @@ def load_llm_provider_from_config() -> Optional[LLMProviderBase]:
         if api_key and model:
             return OpenAIProvider(model=model, api_key=api_key, base_url=base_url)
         return None
+    if provider == "gemini":
+        gc = cfg.get("gemini", {})
+        api_key_env = gc.get("api_key_env") or "GEMINI_API_KEY"
+        api_key = os.environ.get(api_key_env)
+        model = gc.get("model") or os.environ.get("SEMFIRE_GEMINI_MODEL") or "gemini-1.5-flash-latest"
+        if api_key and model:
+            return GeminiProvider(model=model, api_key=api_key)
+        return None
+    if provider == "openrouter":
+        oc = cfg.get("openrouter", {})
+        api_key_env = oc.get("api_key_env") or "OPENROUTER_API_KEY"
+        api_key = os.environ.get(api_key_env)
+        model = oc.get("model") or os.environ.get("SEMFIRE_OPENROUTER_MODEL") or "deepseek/deepseek-chat"
+        if api_key and model:
+            return OpenRouterProvider(model=model, api_key=api_key)
+        return None
+    if provider == "perplexity":
+        pc = cfg.get("perplexity", {})
+        api_key_env = pc.get("api_key_env") or "PERPLEXITY_API_KEY"
+        api_key = os.environ.get(api_key_env)
+        model = pc.get("model") or os.environ.get("SEMFIRE_PERPLEXITY_MODEL") or "sonar-medium-online"
+        if api_key and model:
+            return PerplexityProvider(model=model, api_key=api_key)
+        return None
     return None
 
 
 def write_config(provider: str,
                  openai_model: Optional[str] = None,
                  openai_api_key_env: Optional[str] = None,
-                 openai_base_url: Optional[str] = None) -> str:
+                 openai_base_url: Optional[str] = None,
+                 gemini_model: Optional[str] = None,
+                 gemini_api_key_env: Optional[str] = None,
+                 openrouter_model: Optional[str] = None,
+                 openrouter_api_key_env: Optional[str] = None,
+                 perplexity_model: Optional[str] = None,
+                 perplexity_api_key_env: Optional[str] = None) -> str:
     """Write configuration to the resolved config path.
 
     Returns the path used.
@@ -173,6 +325,21 @@ def write_config(provider: str,
             "model": openai_model or "gpt-4o-mini",
             "api_key_env": openai_api_key_env or "OPENAI_API_KEY",
             "base_url": openai_base_url,
+        }
+    elif provider == "gemini":
+        cfg["gemini"] = {
+            "model": gemini_model or "gemini-1.5-flash-latest",
+            "api_key_env": gemini_api_key_env or "GEMINI_API_KEY",
+        }
+    elif provider == "openrouter":
+        cfg["openrouter"] = {
+            "model": openrouter_model or "deepseek/deepseek-chat",
+            "api_key_env": openrouter_api_key_env or "OPENROUTER_API_KEY",
+        }
+    elif provider == "perplexity":
+        cfg["perplexity"] = {
+            "model": perplexity_model or "sonar-medium-online",
+            "api_key_env": perplexity_api_key_env or "PERPLEXITY_API_KEY",
         }
     path = os.environ.get(CONFIG_ENV, DEFAULT_CONFIG_PATH)
     os.makedirs(os.path.dirname(path), exist_ok=True)
