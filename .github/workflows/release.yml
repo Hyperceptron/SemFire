@@ -10,6 +10,8 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # allow creating tags/releases with GITHUB_TOKEN
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -26,27 +28,38 @@ jobs:
           python -m pip install --upgrade pip
           pip install build twine
 
+      - name: Releaser Pleaser (act stub)
+        if: ${{ env.ACT }}
+        id: releaser
+        run: |
+          echo "Simulating releaser outputs for act runs"
+          echo "release_created=true" >> $GITHUB_OUTPUT
+          echo "upload_url=https://example.invalid/upload" >> $GITHUB_OUTPUT
+          echo "new_version=0.0.0-act" >> $GITHUB_OUTPUT
+
       - name: Run Releaser Pleaser
+        if: ${{ !env.ACT }}
         uses: apricote/releaser-pleaser@v0.7.1
         id: releaser
         with:
-          # Required: GitHub Token for creating releases and tags
-          token: ${{ secrets.GH_TOKEN }}
+          # Use the built-in GitHub token for tagging and releases
+          token: ${{ secrets.GITHUB_TOKEN }}
           branch: main
           # Optional: Commit message prefix for version bumps (default: 'chore(release):')
           # commit_message_prefix: 'chore: release'
-          # Optional: Whether to publish to PyPI (default: true)
-          # publish_to_pypi: true
+          # Let the dedicated publish workflow handle PyPI publish on tag push
+          publish_to_pypi: false
           # Optional: Path to pyproject.toml or package.json (default: pyproject.toml)
           # config_file: 'pyproject.toml'
 
-      - name: Upload release assets (if any)
+      - name: Build distributions
         if: steps.releaser.outputs.release_created == 'true'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          python -m build
+
+      - name: Upload release assets
+        if: steps.releaser.outputs.release_created == 'true'
+        uses: softprops/action-gh-release@v1
         with:
-          upload_url: ${{ steps.releaser.outputs.upload_url }}
-          asset_path: ./dist/*.whl
-          asset_name: semfire-${{ steps.releaser.outputs.new_version }}.whl
-          asset_content_type: application/zip
+          files: |
+            dist/*
