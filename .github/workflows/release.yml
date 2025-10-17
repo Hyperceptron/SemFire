@@ -30,23 +30,5 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
           branch: main
 
-      - name: Log and verify created tag
-        if: ${{ steps.releaser.outputs.release_created == 'true' }}
-        env:
-          REPO: ${{ github.repository }}
-          TOKEN: ${{ secrets.GH_TOKEN }}
-          VERSION: ${{ steps.releaser.outputs.new_version }}
-        run: |
-          set -e
-          echo "Release created with version: ${VERSION}"
-          TAG="v${VERSION}"
-          echo "Expecting tag: ${TAG}"
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            -H "Authorization: Bearer ${TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${REPO}/git/refs/tags/${TAG}")
-          if [ "$STATUS" != "200" ]; then
-            echo "Tag not found via API (status $STATUS)." >&2
-            exit 1
-          fi
-          echo "Verified: tag ${TAG} exists on GitHub."
+      # Keep it simple: rely entirely on releaser-pleaser to create the
+      # version bump, tag, and GitHub Release. No fallback logic here.
