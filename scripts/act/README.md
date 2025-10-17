@@ -18,8 +18,8 @@ Underlying commands (for reference)
 - Push to main (Release workflow):
   act push -W .github/workflows/release.yml -e scripts/act/events/push_main.json -P ubuntu-latest=catthehacker/ubuntu:act-22.04 -s GITHUB_TOKEN=ghs_dummy
 
-- Tag push (Publish to PyPI):
-  act push -W .github/workflows/publish-to-pypi.yml -e scripts/act/events/push_tag.json -P ubuntu-latest=catthehacker/ubuntu:act-22.04
+- Release published (Publish to PyPI):
+  act release -W .github/workflows/publish-to-pypi.yml -e scripts/act/events/release_published.json -P ubuntu-latest=catthehacker/ubuntu:act-22.04
   Note: The publish step is skipped locally when `ACT` is set by act.
 
 - Manual dispatch / pre-release tags (Publish to TestPyPI):

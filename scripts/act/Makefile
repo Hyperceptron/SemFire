@@ -8,8 +8,8 @@ act-release:
 	act push -W .github/workflows/release.yml -e scripts/act/events/push_main.json -P $(ACT_PLATFORM) -s GITHUB_TOKEN=ghs_dummy
 
 act-pypi:
-	@echo "Simulating tag push (PyPI publish workflow)"
-	act push -W .github/workflows/publish-to-pypi.yml -e scripts/act/events/push_tag.json -P $(ACT_PLATFORM)
+	@echo "Simulating release published (PyPI publish workflow)"
+	act release -W .github/workflows/publish-to-pypi.yml -e scripts/act/events/release_published.json -P $(ACT_PLATFORM)
 
 act-testpypi:
 	@echo "Simulating manual dispatch (TestPyPI publish workflow)"

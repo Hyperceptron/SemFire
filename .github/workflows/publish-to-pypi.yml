@@ -2,10 +2,8 @@
 name: Publish Python distribution to PyPI
 
 on:
-  push:
-    tags:
-      # Use glob patterns (not regex). This matches vMAJOR.MINOR.PATCH and pre-releases.
-      - 'v*.*.*'
+  release:
+    types: [published]
 
 jobs:
   build-and-publish:
@@ -19,6 +17,8 @@ jobs:
       name: pypi
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
