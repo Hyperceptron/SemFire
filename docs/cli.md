@@ -11,6 +11,99 @@ Status: proposal focused on the CLI. This document outlines the intended CLI des
 
 ## CLI Overview
 
+## LLM Provider Configuration
+
+The SemFire CLI can utilize various Large Language Model (LLM) providers for its detectors. The configuration is managed through a JSON file, typically located at `~/.semfire/config.json`, or specified via the `SEMFIRE_CONFIG` environment variable. Additionally, API keys are loaded from environment variables, which can be defined in `~/.semfire/.env` or a local `.env` file.
+
+The `provider` field in the configuration determines which LLM service is used.
+
+### Supported Providers and Configuration
+
+Here's an overview of supported providers and their configuration options:
+
+*   **OpenAI**:
+    ```json
+    {
+      "provider": "openai",
+      "openai": {
+        "api_key_env": "OPENAI_API_KEY",
+        "base_url": null,
+        "model": "gpt-4o-mini"
+      }
+    }
+    ```
+    -   `api_key_env`: Environment variable holding your OpenAI API key (default: `OPENAI_API_KEY`).
+    -   `base_url`: Optional base URL for custom OpenAI-compatible endpoints.
+    -   `model`: The OpenAI model to use (default: `gpt-4o-mini`).
+
+*   **Gemini**:
+    ```json
+    {
+      "provider": "gemini",
+      "gemini": {
+        "api_key_env": "GEMINI_API_KEY",
+        "model": "gemini-1.5-flash-latest"
+      }
+    }
+    ```
+    -   `api_key_env`: Environment variable holding your Gemini API key (default: `GEMINI_API_KEY`).
+    -   `model`: The Gemini model to use (default: `gemini-1.5-flash-latest`).
+
+*   **OpenRouter**:
+    ```json
+    {
+      "provider": "openrouter",
+      "openrouter": {
+        "api_key_env": "OPENROUTER_API_KEY",
+        "model": "deepseek/deepseek-chat"
+      }
+    }
+    ```
+    -   `api_key_env`: Environment variable holding your OpenRouter API key (default: `OPENROUTER_API_KEY`).
+    -   `model`: The OpenRouter model to use (default: `deepseek/deepseek-chat`).
+
+*   **Perplexity**:
+    ```json
+    {
+      "provider": "perplexity",
+      "perplexity": {
+        "api_key_env": "PERPLEXITY_API_KEY",
+        "model": "sonar-medium-online"
+      }
+    }
+    ```
+    -   `api_key_env`: Environment variable holding your Perplexity API key (default: `PERPLEXITY_API_KEY`).
+    -   `model`: The Perplexity model to use (default: `sonar-medium-online`).
+
+*   **Transformers (Placeholder)**:
+    ```json
+    {
+      "provider": "transformers",
+      "transformers": {
+        "model_path": "/absolute/or/relative/path/to/your/model",
+        "device": "cpu"
+      }
+    }
+    ```
+    The `transformers` LLM provider is currently a placeholder. While it is listed as a configurable option, the actual implementation for loading and interacting with models from the Hugging Face `transformers` library is not yet present.
+
+    To fully implement the `transformers` provider, the following steps are required:
+    1.  **Create a `TransformersProvider` class:** This class should inherit from `LLMProviderBase` and encapsulate the logic for loading a `transformers` model and tokenizer (e.g., using `AutoModelForCausalLM` and `AutoTokenizer`) based on the `model_path` and `device` specified in the configuration.
+    2.  **Implement `is_ready()` and `generate()` methods:**
+        *   `is_ready()`: Should verify that the model and tokenizer have been successfully loaded.
+        *   `generate(prompt: str)`: Should take a prompt string, tokenize it, pass it to the loaded `transformers` model for inference, and return the generated text.
+    3.  **Integrate into `load_llm_provider_from_config()`:** Add a conditional branch within the `load_llm_provider_from_config()` function to detect when `provider == "transformers"` and then instantiate and return an instance of the `TransformersProvider` class, passing in the `model_path` and `device` from the configuration.
+
+### Configuration Resolution Order
+
+1.  **Environment variable `SEMFIRE_CONFIG`**: Points to a JSON config file.
+2.  **Default user path**: `~/.semfire/config.json`.
+3.  **Environment variables**: API keys and model names can also be set directly via environment variables (e.g., `OPENAI_API_KEY`, `SEMFIRE_OPENAI_MODEL`).
+
+If no provider is configured or environment variables are missing, the LLM provider will return `None`, and detectors that rely on an LLM will fall back gracefully or indicate that LLM analysis is not available.
+
+## CLI Overview
+
 - Commands
   - `semfire analyze` (existing): run all detectors.
   - `semfire analyze <detector>`: run one detector: `rule | heuristic | echo | injection`.

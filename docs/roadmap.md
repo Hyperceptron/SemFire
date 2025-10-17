@@ -12,7 +12,7 @@ This document outlines the step-by-step plan to develop, test, and deploy SemFir
  - Initialized repository with:
    - `src/`, `demo/`, `dataset/`, `notebooks/`, `tests/` directories.
  - CI workflow running pytest and linters.
- - Open issue "Naming & Branding Audit" to track renaming of project references to "SemFire" across code, documentation, configuration, CI pipelines, packaging metadata, and assets.
+ 
 
 ## Phase 1: Literature Survey & Data Collection
  **Goal**
@@ -43,7 +43,8 @@ This document outlines the step-by-step plan to develop, test, and deploy SemFir
  3. Write comprehensive unit tests for `EchoChamberDetector`, specifically covering its ability to detect cues from `conversation_history` and combinations of history and current input.
 
     **Deliverables**
-    - `src/detectors/rule_based.py` (with an `EchoChamberDetector` that actively processes `conversation_history`).
+    - `src/detectors/echo_chamber.py` (implementing `EchoChamberDetector` that actively processes `conversation_history` and utilizes `RuleBasedDetector`).
+    - `src/detectors/rule_based.py` (providing the `RuleBasedDetector` used by `EchoChamberDetector`).
     - `tests/test_rule_based.py` (with robust tests for history-aware detection logic in `EchoChamberDetector`).
     - Documentation: Updated `README.md` with usage examples for `EchoChamberDetector`, highlighting its multi-turn analysis capabilities.
 
@@ -69,12 +70,12 @@ This document outlines the step-by-step plan to develop, test, and deploy SemFir
 
  **Tasks**
  1. Implement `SemanticFirewall` as the primary coordinator for various detection modules.
- 2. Develop FastAPI service with `/analyze` endpoint (see `src/api/app.py`).
- 3. Write integration tests for API.
+ 2. Develop a service with an `/analyze` endpoint.
+ 3. Write integration tests for the service API.
 
  **Deliverables**
- - `src/api/app.py`
- - `tests/test_api.py`
+ - Service implementation for API endpoint
+ - `tests/test_api.py` (or equivalent for service integration tests)
  - Auto-generated OpenAPI spec.
 
 ## Phase 5: Integration of Advanced Detectors (Injection Defense & Spotlighting)
@@ -86,7 +87,7 @@ This document outlines the step-by-step plan to develop, test, and deploy SemFir
  1. **Injection Detector Module**: Create a new `InjectionDetector` class in `src/detectors/injection_detector.py` to encapsulate logic for detecting prompt injection and other adversarial inputs.
  2. **Semantic Firewall Integration**: Integrate the `InjectionDetector` into the `SemanticFirewall` alongside existing detectors.
  3. **Spotlighting Feature**: Enhance the analysis results from all detectors to include a `spotlight` key, providing highlighted text snippets and triggered rules for better explainability.
- 4. **API and Data Model Updates**: Update the `AnalysisResponse` model in `src/api/app.py` and the `demo/app.py` UI to include the `spotlight` information.
+ 4. **API and Data Model Updates**: Update the `AnalysisResponse` model for the API and the UI to include the `spotlight` information.
  5. **Unit and Integration Testing**: Write comprehensive tests for the `InjectionDetector` and verify that `spotlight` data is correctly passed through the API and displayed in the demo.
  6. **Documentation**: Create a new document explaining the Injection Detector and Spotlighting features.
 
@@ -95,7 +96,7 @@ This document outlines the step-by-step plan to develop, test, and deploy SemFir
  - `tests/test_injection_detector.py`
  - `docs/injection_and_spotlighting.md`
  - Updated `SemanticFirewall` with the new detector.
- - Updated API response models and Demo UI with `spotlight` details.
+ - Updated API response models and UI with `spotlight` details.
 
 ## Phase 6: End-to-End Demo Application
  **Goal**
@@ -107,9 +108,9 @@ This document outlines the step-by-step plan to develop, test, and deploy SemFir
  3. Containerize demo with Docker.
 
  **Deliverables**
- - `demo/app.py` (or front-end code)
- - `demo/Dockerfile`
- - `README_demo.md` with launch instructions.
+ - Interactive demo application (e.g., Streamlit or other front-end code)
+ - Demo application Dockerfile
+ - Demo launch instructions.
 
 ## Phase 7: Testing, Evaluation & Robustness
  **Goal**
@@ -138,5 +139,11 @@ This document outlines the step-by-step plan to develop, test, and deploy SemFir
  - CI runs linting (black, flake8), type checks (mypy), pytest.
  - PR templates link to relevant roadmap items.
 
- ---
+ ## Future Enhancements
+
+*   **Model Loading Tips Documentation:** Create a dedicated document providing guidance on VRAM/RAM usage and notes on 4-bit/8-bit quantization (e.g., using `bitsandbytes`) for efficient model loading.
+*   **Configurable Transformers Settings:** Integrate `max_new_tokens` and `temperature` settings for the Transformers provider into the configuration (JSON/environment variables) to allow end-user tuning.
+*   **Standardized Provider Settings:** Develop a unified approach for configuring all LLM provider-specific settings.
+
+---
 *For any questions or adjustments, please open an issue in this repository.*
