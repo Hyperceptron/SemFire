@@ -437,18 +437,16 @@ All project planning details—including roadmap overview and project management
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request.
 
-## 📺 Demo Videos
+# Demo
 
-Please replace `YOUR-CAST-ID` with the actual IDs from your asciinema profile.
+**Quick Start**  
+[![Quick Start](https://asciinema.org/a/vyMQ9gpnEgyBEDF5q8ifmZ1Mz.svg)](https://asciinema.org/a/vyMQ9gpnEgyBEDF5q8ifmZ1Mz)
 
-### 1. Quick Start
-[![asciicast](https://asciinema.org/a/SemFire Demo 01.svg)](https://asciinema.org/a/SemFire Demo 01)
+**Individual Detectors**  
+[![Individual Detectors](https://asciinema.org/a/pNPjV3rJJ4kH1L3A4R6Pytm1O.svg)](https://asciinema.org/a/pNPjV3rJJ4kH1L3A4R6Pytm1O)
 
-### 2. Individual Detectors
-[![asciicast](https://asciinema.org/a/SemFire Demo 02.svg)](https://asciinema.org/a/SemFire Demo 02)
+**Python API**  
+[![Python API](https://asciinema.org/a/RhrolgA23FxQbcjLtB6RhE9Ww.svg)](https://asciinema.org/a/RhrolgA23FxQbcjLtB6RhE9Ww)
 
-### 3. Python API
-[![asciicast](https://asciinema.org/a/SemFire Demo 03.svg)](https://asciinema.org/a/SemFire Demo 03)
-
-### 4. Complete Workflow
-[![asciicast](https://asciinema.org/a/SemFire Demo 04.svg)](https://asciinema.org/a/SemFire Demo 04)
+**Complete Workflow**  
+[![Complete Workflow](https://asciinema.org/a/lJPq57UMvBQ5RX2UWS2B6dl19.svg)](https://asciinema.org/a/lJPq57UMvBQ5RX2UWS2B6dl19)
