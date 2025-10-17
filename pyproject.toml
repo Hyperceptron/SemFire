@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "semfire"
-version = "0.2.4"
+version = "0.2.3"
 description = "SemFire (Semantic Firewall): detect advanced AI deception, including in-context scheming and multi-turn manipulative attacks."
 readme = "README.md"
 license = "MIT"
