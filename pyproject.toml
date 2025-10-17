@@ -11,7 +11,15 @@ license = "MIT"
 requires-python = ">=3.9"
 classifiers = [ "Programming Language :: Python :: 3", "Operating System :: OS Independent", "Development Status :: 3 - Alpha", "Intended Audience :: Developers", "Topic :: Security", "Topic :: Scientific/Engineering :: Artificial Intelligence", "Topic :: Text Processing :: Linguistic",]
 keywords = [ "semfire", "llm", "security", "prompt injection", "semantic firewall", "ai safety", "deception detection",]
-dependencies = [ "torch>=2.0.0", "transformers>=4.30.0", "accelerate>=0.20.0", "openai>=0.27.0", "colorama>=0.4.6", "python-dotenv>=0.21.0",]
+dependencies = [
+  "torch>=2.0.0",
+  "transformers>=4.30.0",
+  "accelerate>=0.20.0",
+  "openai>=0.27.0",
+  "colorama>=0.4.6",
+  "python-dotenv>=0.21.0",
+  "rich>=13.0",
+]
 [[project.authors]]
 name = "Edward Joseph"
 email = "hyperceptron@gmail.com"
