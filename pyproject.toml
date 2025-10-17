@@ -30,18 +30,11 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/josephedward/R.A.D.A.R."
-"Repository" = "https://github.com/josephedward/R.A.D.A.R."
-"Bug Tracker" = "https://github.com/josephedward/R.A.D.A.R./issues"
+"Homepage" = "https://github.com/josephedward/SemFire"
+"Repository" = "https://github.com/josephedward/SemFire"
+"Bug Tracker" = "https://github.com/josephedward/SemFire/issues"
 
 [project.optional-dependencies]
-api = [
-    "fastapi>=0.100.0",
-    "uvicorn[standard]>=0.22.0"
-]
-demo = [
-    "streamlit>=1.20.0"
-]
 dev = [
     "pytest",
     "pytest-cov",
