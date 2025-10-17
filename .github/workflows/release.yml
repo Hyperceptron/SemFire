@@ -5,6 +5,22 @@ on:
   push:
     tags:
       - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (e.g., v0.2.6 or 0.2.6)"
+        required: true
+        type: string
+      push_tag:
+        description: "Push the tag to origin (on manual run)"
+        required: false
+        default: true
+        type: boolean
+      create_github_release:
+        description: "Create GitHub Release (on manual run)"
+        required: false
+        default: true
+        type: boolean
 
 permissions:
   contents: write
@@ -53,6 +69,30 @@ jobs:
           python -m pip install --upgrade pip
           pip install build setuptools-scm
 
+      - name: Determine tag name (manual vs tag event)
+        id: tagmeta
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            IN="${{ inputs.version }}"
+            if [[ "$IN" == v* ]]; then TAG_NAME="$IN"; else TAG_NAME="v$IN"; fi
+          else
+            TAG_NAME="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "tag_name=$TAG_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Create local tag for build (manual only)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@users.noreply.github.com
+          git tag -f "${{ steps.tagmeta.outputs.tag_name }}"
+
+      - name: Push tag to origin (manual + opted-in)
+        if: github.event_name == 'workflow_dispatch' && inputs.push_tag == true
+        run: |
+          git push origin "${{ steps.tagmeta.outputs.tag_name }}"
+
       - name: Build distribution packages
         run: python -m build
 
@@ -87,6 +127,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    # Allow skipping GH Release on manual runs if desired
+    if: github.event_name != 'workflow_dispatch' || inputs.create_github_release == true
 
     steps:
       - name: Checkout code
@@ -103,7 +145,12 @@ jobs:
       - name: Extract release notes
         id: extract-release-notes
         run: |
-          TAG_NAME=${GITHUB_REF#refs/tags/}
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            IN="${{ inputs.version }}"
+            if [[ "$IN" == v* ]]; then TAG_NAME="$IN"; else TAG_NAME="v$IN"; fi
+          else
+            TAG_NAME=${GITHUB_REF#refs/tags/}
+          fi
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
           VERSION=${TAG_NAME#v}
           echo "version=$VERSION" >> $GITHUB_OUTPUT
