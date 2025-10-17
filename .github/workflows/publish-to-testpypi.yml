@@ -17,10 +17,10 @@ jobs:
   build-and-publish:
     name: Build and publish to TestPyPI
     runs-on: ubuntu-latest
-    # OIDC + read permissions; for token publishing, only contents: read is needed
-    permissions:
-      id-token: write
-      contents: read
+    # OIDC disabled for now; publish via token only.
+    # permissions:
+    #   id-token: write
+    #   contents: read
     environment: testpypi
     steps:
       - name: Checkout repository
@@ -45,20 +45,11 @@ jobs:
         if: ${{ env.ACT }}
         run: echo "ACT detected; skipping TestPyPI publish."
 
-      # Prefer token if provided (common for TestPyPI); must set TEST_PYPI_API_TOKEN in repo secrets
+      # Publish using TestPyPI token only; set TEST_PYPI_API_TOKEN in repo secrets.
       - name: Publish to TestPyPI via token
-        if: ${{ !env.ACT && secrets.TEST_PYPI_API_TOKEN != '' }}
+        if: ${{ !env.ACT }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
           print-hash: true
-
-      # Fallback to OIDC Trusted Publishing if configured for TestPyPI project
-      - name: Publish to TestPyPI (Trusted Publishing)
-        if: ${{ !env.ACT && secrets.TEST_PYPI_API_TOKEN == '' }}
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://test.pypi.org/legacy/
-          print-hash: true
-
