@@ -1,6 +1,6 @@
 # SemFire 
 
-[![CI](https://github.com/josephedward/SemFire/actions/workflows/ci.yml/badge.svg)](https://github.com/josephedward/SemFire/actions/workflows/ci.yml)
+[![CI](https://github.com/josephedward/SemFire/actions/workflows/test.yml/badge.svg)](https://github.com/josephedward/SemFire/actions/workflows/test.yml)
 
  ## AI Deception Detection Toolkit
 
