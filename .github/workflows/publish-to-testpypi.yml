@@ -21,7 +21,8 @@ jobs:
     # permissions:
     #   id-token: write
     #   contents: read
-    environment: testpypi
+    environment:
+      name: testpypi
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
