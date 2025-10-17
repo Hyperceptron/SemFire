@@ -7,6 +7,7 @@ and an optional config file. Providers supported:
  - Gemini (via Google Generative Language REST API)
  - OpenRouter (via HTTPS REST API)
  - Perplexity (via HTTPS REST API)
+ - Transformers (local/HF models via `transformers`)
 
 Configuration resolution order:
 1) Environment variable `SEMFIRE_CONFIG` pointing to a JSON config file.
@@ -250,6 +251,109 @@ class PerplexityProvider(LLMProviderBase):
 
 
 
+@dataclass
+class TransformersProvider(LLMProviderBase):
+    """Local/Hugging Face transformers provider.
+
+    Loads a causal LM and tokenizer using `transformers` and generates text locally.
+
+    Configuration
+    - model_path: HF model ID (e.g., "TinyLlama/TinyLlama-1.1B-Chat-v1.0") or local path
+    - device: "cpu" or "cuda" (defaults to cpu; falls back if unavailable)
+
+    Notes
+    - No API key is required for local paths. A HF token may be needed if
+      downloading from the Hub, using private models, or gated weights.
+    - Models are loaded lazily on first `generate()` to avoid import overhead.
+    """
+    model_path: str
+    device: str = "cpu"
+
+    def __post_init__(self) -> None:
+        self._transformers = None  # type: ignore
+        self._torch = None  # type: ignore
+        self._tokenizer = None  # type: ignore
+        self._model = None  # type: ignore
+        # Defer heavy imports to runtime
+        try:
+            import transformers  # type: ignore
+            import torch  # type: ignore
+            self._transformers = transformers
+            self._torch = torch
+        except Exception:
+            # Leave libs as None; is_ready() will reflect this
+            pass
+
+    def _resolve_device(self) -> str:
+        if not self._torch:
+            return "cpu"
+        if self.device.startswith("cuda") and self._torch.cuda.is_available():
+            return "cuda"
+        return "cpu"
+
+    def _ensure_loaded(self) -> None:
+        if self._model is not None and self._tokenizer is not None:
+            return
+        if not self._transformers or not self._torch:
+            raise RuntimeError("transformers/torch not available; install dependencies.")
+        AutoTokenizer = self._transformers.AutoTokenizer
+        AutoModelForCausalLM = self._transformers.AutoModelForCausalLM
+
+        local_files_only = False
+        # If the path exists locally, avoid network fetches
+        try:
+            if os.path.exists(self.model_path):
+                local_files_only = True
+        except Exception:
+            pass
+
+        try:
+            self._tokenizer = AutoTokenizer.from_pretrained(
+                self.model_path,
+                local_files_only=local_files_only,
+            )
+            self._model = AutoModelForCausalLM.from_pretrained(
+                self.model_path,
+                local_files_only=local_files_only,
+            )
+            target = self._resolve_device()
+            self._model.to(target)
+            self._model.eval()
+        except Exception as e:
+            raise RuntimeError(f"Failed to load transformers model/tokenizer: {e}")
+
+    def is_ready(self) -> bool:
+        # Ready if deps importable and a model identifier/path is provided.
+        return bool(self._transformers and self._torch and self.model_path)
+
+    def generate(self, prompt: str) -> str:
+        try:
+            self._ensure_loaded()
+            torch = self._torch
+            tok = self._tokenizer
+            mdl = self._model
+            inputs = tok(prompt, return_tensors="pt")
+            # Move inputs to model device
+            device = next(mdl.parameters()).device
+            for k in inputs:
+                if hasattr(inputs[k], "to"):
+                    inputs[k] = inputs[k].to(device)
+            with torch.no_grad():
+                output_ids = mdl.generate(
+                    **inputs,
+                    max_new_tokens=256,
+                    do_sample=True,
+                    temperature=0.2,
+                    top_k=50,
+                    pad_token_id=getattr(tok, "pad_token_id", None) or getattr(tok, "eos_token_id", None),
+                )
+            # Return only the generated continuation
+            text = tok.decode(output_ids[0], skip_special_tokens=True)
+            return text or ""
+        except Exception as e:
+            raise RuntimeError(f"Transformers generate failed: {e}")
+
+
 
 def load_llm_provider_from_config() -> Optional[LLMProviderBase]:
     # Load ~/.semfire/.env into process first
@@ -302,6 +406,13 @@ def load_llm_provider_from_config() -> Optional[LLMProviderBase]:
         if api_key and model:
             return PerplexityProvider(model=model, api_key=api_key)
         return None
+    if provider == "transformers":
+        tc = cfg.get("transformers", {})
+        model_path = tc.get("model_path") or os.environ.get("SEMFIRE_TRANSFORMERS_MODEL_PATH")
+        device = tc.get("device") or os.environ.get("SEMFIRE_TRANSFORMERS_DEVICE") or "cpu"
+        if model_path:
+            return TransformersProvider(model_path=model_path, device=device)
+        return None
     return None
 
 
@@ -314,7 +425,9 @@ def write_config(provider: str,
                  openrouter_model: Optional[str] = None,
                  openrouter_api_key_env: Optional[str] = None,
                  perplexity_model: Optional[str] = None,
-                 perplexity_api_key_env: Optional[str] = None) -> str:
+                 perplexity_api_key_env: Optional[str] = None,
+                 transformers_model_path: Optional[str] = None,
+                 transformers_device: Optional[str] = None) -> str:
     """Write configuration to the resolved config path.
 
     Returns the path used.
@@ -341,8 +454,23 @@ def write_config(provider: str,
             "model": perplexity_model or "sonar-medium-online",
             "api_key_env": perplexity_api_key_env or "PERPLEXITY_API_KEY",
         }
+    elif provider == "transformers":
+        cfg["transformers"] = {
+            "model_path": transformers_model_path or "",
+            "device": transformers_device or "cpu",
+        }
     path = os.environ.get(CONFIG_ENV, DEFAULT_CONFIG_PATH)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(cfg, f, indent=2)
-    return path
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(cfg, f, indent=2)
+        return path
+    except Exception:
+        # Fallback to a workspace-local config if home directory is not writable (e.g., sandboxed tests)
+        fallback = os.path.join(os.getcwd(), ".semfire", "config.json")
+        os.makedirs(os.path.dirname(fallback), exist_ok=True)
+        with open(fallback, "w", encoding="utf-8") as f:
+            json.dump(cfg, f, indent=2)
+        # Ensure subsequent reads use the fallback path
+        os.environ[CONFIG_ENV] = fallback
+        return fallback
