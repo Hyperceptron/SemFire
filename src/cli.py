@@ -135,10 +135,24 @@ def main():
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
     
     config_parser = subparsers.add_parser("config", help="Configure LLM providers.")
-    config_parser.add_argument("--provider", choices=["openai", "none"], help="Set provider.")
+    config_parser.add_argument("--provider", choices=["openai", "gemini", "openrouter", "perplexity", "transformers", "none"], help="Set provider.")
+    # OpenAI
     config_parser.add_argument("--openai-model", help="OpenAI model name.")
-    config_parser.add_argument("--openai-api-key-env", help="Env var for API key.")
-    config_parser.add_argument("--openai-base-url", help="Custom base URL.")
+    config_parser.add_argument("--openai-api-key-env", help="Env var holding OpenAI API key (default: OPENAI_API_KEY).")
+    config_parser.add_argument("--openai-base-url", help="Custom OpenAI-compatible base URL.")
+    # Gemini
+    config_parser.add_argument("--gemini-model", help="Gemini model name.")
+    config_parser.add_argument("--gemini-api-key-env", help="Env var holding Gemini API key (default: GEMINI_API_KEY).")
+    # OpenRouter
+    config_parser.add_argument("--openrouter-model", help="OpenRouter model name.")
+    config_parser.add_argument("--openrouter-api-key-env", help="Env var holding OpenRouter API key (default: OPENROUTER_API_KEY).")
+    # Perplexity
+    config_parser.add_argument("--perplexity-model", help="Perplexity model name.")
+    config_parser.add_argument("--perplexity-api-key-env", help="Env var holding Perplexity API key (default: PERPLEXITY_API_KEY).")
+    # Transformers-specific
+    config_parser.add_argument("--transformers-model-path", help="HF model ID or local path for transformers provider.")
+    config_parser.add_argument("--transformers-device", help="Device for transformers provider (cpu/cuda).", default=None)
+    # General
     config_parser.add_argument("--non-interactive", action="store_true", help="Do not launch the interactive menu.")
     
 
@@ -192,13 +206,33 @@ def main():
     analyze_parser.set_defaults(func=_handle_analyze)
 
     def config_command(args):
-        if any([args.provider, args.openai_model, args.openai_api_key_env, args.openai_base_url]):
+        if any([
+            args.provider,
+            # OpenAI
+            args.openai_model, args.openai_api_key_env, args.openai_base_url,
+            # Gemini
+            getattr(args, "gemini_model", None), getattr(args, "gemini_api_key_env", None),
+            # OpenRouter
+            getattr(args, "openrouter_model", None), getattr(args, "openrouter_api_key_env", None),
+            # Perplexity
+            getattr(args, "perplexity_model", None), getattr(args, "perplexity_api_key_env", None),
+            # Transformers
+            args.transformers_model_path, args.transformers_device,
+        ]):
             prov = args.provider or "openai"
             path = write_config(
                 provider=prov,
                 openai_model=args.openai_model,
                 openai_api_key_env=args.openai_api_key_env,
                 openai_base_url=args.openai_base_url,
+                gemini_model=getattr(args, "gemini_model", None),
+                gemini_api_key_env=getattr(args, "gemini_api_key_env", None),
+                openrouter_model=getattr(args, "openrouter_model", None),
+                openrouter_api_key_env=getattr(args, "openrouter_api_key_env", None),
+                perplexity_model=getattr(args, "perplexity_model", None),
+                perplexity_api_key_env=getattr(args, "perplexity_api_key_env", None),
+                transformers_model_path=args.transformers_model_path,
+                transformers_device=args.transformers_device,
             )
             print(f"Config saved to {path}")
             print(f"Active: {get_config_summary()}")

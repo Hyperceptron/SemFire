@@ -10,6 +10,8 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # allow creating tags/releases with GITHUB_TOKEN
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -26,27 +28,53 @@ jobs:
           python -m pip install --upgrade pip
           pip install build twine
 
+      - name: Releaser Pleaser (act stub)
+        if: ${{ env.ACT }}
+        id: releaser_act
+        run: |
+          echo "Simulating releaser outputs for act runs"
+          echo "release_created=true" >> $GITHUB_OUTPUT
+          echo "upload_url=https://example.invalid/upload" >> $GITHUB_OUTPUT
+          echo "new_version=0.0.0-act" >> $GITHUB_OUTPUT
+
       - name: Run Releaser Pleaser
+        if: ${{ !env.ACT }}
         uses: apricote/releaser-pleaser@v0.7.1
-        id: releaser
+        id: releaser_real
         with:
-          # Required: GitHub Token for creating releases and tags
-          token: ${{ secrets.GH_TOKEN }}
+          # Use the built-in GitHub token for tagging and releases
+          token: ${{ secrets.GITHUB_TOKEN }}
           branch: main
           # Optional: Commit message prefix for version bumps (default: 'chore(release):')
           # commit_message_prefix: 'chore: release'
-          # Optional: Whether to publish to PyPI (default: true)
-          # publish_to_pypi: true
           # Optional: Path to pyproject.toml or package.json (default: pyproject.toml)
           # config_file: 'pyproject.toml'
 
-      - name: Upload release assets (if any)
-        if: steps.releaser.outputs.release_created == 'true'
-        uses: actions/upload-release-asset@v1
+      - name: Normalize releaser outputs
+        id: releaser
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          CREATED_ACT: ${{ steps.releaser_act.outputs.release_created }}
+          UPLOAD_ACT: ${{ steps.releaser_act.outputs.upload_url }}
+          VERSION_ACT: ${{ steps.releaser_act.outputs.new_version }}
+          CREATED_REAL: ${{ steps.releaser_real.outputs.release_created }}
+          UPLOAD_REAL: ${{ steps.releaser_real.outputs.upload_url }}
+          VERSION_REAL: ${{ steps.releaser_real.outputs.new_version }}
+        run: |
+          created="${CREATED_ACT:-${CREATED_REAL}}"
+          upload="${UPLOAD_ACT:-${UPLOAD_REAL}}"
+          ver="${VERSION_ACT:-${VERSION_REAL}}"
+          echo "release_created=${created}" >> $GITHUB_OUTPUT
+          echo "upload_url=${upload}" >> $GITHUB_OUTPUT
+          echo "new_version=${ver}" >> $GITHUB_OUTPUT
+
+      - name: Build distributions
+        if: steps.releaser.outputs.release_created == 'true'
+        run: |
+          python -m build
+
+      - name: Upload release assets
+        if: steps.releaser.outputs.release_created == 'true'
+        uses: softprops/action-gh-release@v1
         with:
-          upload_url: ${{ steps.releaser.outputs.upload_url }}
-          asset_path: ./dist/*.whl
-          asset_name: semfire-${{ steps.releaser.outputs.new_version }}.whl
-          asset_content_type: application/zip
+          files: |
+            dist/*
