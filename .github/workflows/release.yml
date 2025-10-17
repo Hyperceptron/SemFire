@@ -27,7 +27,7 @@ jobs:
           pip install build twine
 
       - name: Run Releaser Pleaser
-        uses: apricote/releaser-pleaser@v1
+        uses: apricote/releaser-pleaser@v0.7.1
         id: releaser
         with:
           # Required: GitHub Token for creating releases and tags
