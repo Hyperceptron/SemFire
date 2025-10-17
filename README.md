@@ -54,7 +54,7 @@ pip install semfire
 **Complete Workflow**  
 [![Complete Workflow](https://asciinema.org/a/lJPq57UMvBQ5RX2UWS2B6dl19.svg)](https://asciinema.org/a/lJPq57UMvBQ5RX2UWS2B6dl19)
 
-**Library — Basic Usage**  
+<!-- **Library — Basic Usage**  
 [![Library — Basic Usage](https://asciinema.org/a/Mtk3RcSxwF66REU6ymdPKlFrd.svg)](https://asciinema.org/a/Mtk3RcSxwF66REU6ymdPKlFrd)
 
 **Library — Conversation Usage**  
@@ -66,7 +66,7 @@ pip install semfire
 **Transformers — Programmatic Config**  
 [![Transformers — Programmatic Config](https://asciinema.org/a/8uGbIpHrnU4cKuJm8hSPyYepf.svg)](https://asciinema.org/a/8uGbIpHrnU4cKuJm8hSPyYepf)
 
-
+ -->
 
 
 ## Contributing
