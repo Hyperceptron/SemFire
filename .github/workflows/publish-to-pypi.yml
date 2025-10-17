@@ -2,8 +2,9 @@
 name: Publish Python distribution to PyPI
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'v*.*.*'
 
 jobs:
   build-and-publish:
@@ -17,7 +18,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.release.tag_name }}
+          # For release event use its tag, otherwise use pushed tag name
+          ref: ${{ github.event.release.tag_name || github.ref_name }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
