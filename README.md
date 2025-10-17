@@ -54,6 +54,20 @@ pip install semfire
 **Complete Workflow**  
 [![Complete Workflow](https://asciinema.org/a/lJPq57UMvBQ5RX2UWS2B6dl19.svg)](https://asciinema.org/a/lJPq57UMvBQ5RX2UWS2B6dl19)
 
+**Library — Basic Usage**  
+[![Library — Basic Usage](https://asciinema.org/a/Mtk3RcSxwF66REU6ymdPKlFrd.svg)](https://asciinema.org/a/Mtk3RcSxwF66REU6ymdPKlFrd)
+
+**Library — Conversation Usage**  
+[![Library — Conversation Usage](https://asciinema.org/a/BiQD6IxghsAQuRn684uRbiNdK.svg)](https://asciinema.org/a/BiQD6IxghsAQuRn684uRbiNdK)
+
+**Transformers — Env Config**  
+[![Transformers — Env Config](https://asciinema.org/a/aPTMLqFhpiOQraWxcR2DtkrUM.svg)](https://asciinema.org/a/aPTMLqFhpiOQraWxcR2DtkrUM)
+
+**Transformers — Programmatic Config**  
+[![Transformers — Programmatic Config](https://asciinema.org/a/8uGbIpHrnU4cKuJm8hSPyYepf.svg)](https://asciinema.org/a/8uGbIpHrnU4cKuJm8hSPyYepf)
+
+
+
 
 ## Contributing
-Contributions are welcome! Please open an issue or submit a pull request.
+Contributions are welcome! Please open an issue or submit a pull request.Library — Basic Usage
