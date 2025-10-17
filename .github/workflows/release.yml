@@ -31,11 +31,8 @@ jobs:
         id: releaser
         with:
           # Required: GitHub Token for creating releases and tags
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          # Optional: PyPI API Token for publishing to PyPI
-          pypi_token: ${{ secrets.PYPI_API_TOKEN }}
-          # Optional: Base branch to analyze for changes (default: main)
-          base_branch: main
+          token: ${{ secrets.GH_TOKEN }}
+          branch: main
           # Optional: Commit message prefix for version bumps (default: 'chore(release):')
           # commit_message_prefix: 'chore: release'
           # Optional: Whether to publish to PyPI (default: true)
@@ -47,7 +44,7 @@ jobs:
         if: steps.releaser.outputs.release_created == 'true'
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           upload_url: ${{ steps.releaser.outputs.upload_url }}
           asset_path: ./dist/*.whl
