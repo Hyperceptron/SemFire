@@ -59,7 +59,7 @@ SemFire aims to be a versatile, open-source toolkit providing:
  ```text
  src/               # Core detector implementations and API
    detectors/       # Rule-based and ML-based detector modules
- demo/              # Demo application and Dockerfile
+ mcp/               # Streamlit demo application
  dataset/           # Labeled datasets (JSONL)
  notebooks/         # Exploratory analysis and model training
  tests/             # Unit and integration tests
@@ -240,7 +240,7 @@ pip install "semfire[api]"
 
 Then, run the service with Uvicorn:
  ```bash
- uvicorn api.app:app --reload
+ uvicorn src.api.app:app --reload
  ```
 
 The API will be available at `http://127.0.0.1:8000`. You can access the OpenAPI documentation (Swagger UI) at `http://127.0.0.1:8000/docs`.
@@ -303,7 +303,7 @@ The `llm_analysis` field will contain the textual analysis from the local LLM (T
 
 ## Running the Demo
  ```bash
- cd demo
+ cd mcp
  streamlit run app.py
  ```
 
@@ -318,7 +318,7 @@ The EchoChamberDetector uses combination weights loaded at runtime from a privat
 
 - Weights file: `../semfire-prv/weights/score_weights.json` (override base with `SemFire_PRV_PATH`).
 - Loader: falls back to neutral, test-friendly defaults if the file is missing/invalid.
-- Full documentation has moved to the private repo: see `${SemFire_PRM_PATH:-../semfire-prv}/docs/weights.md`.
+- Full documentation has moved to the private repo: see `${SemFire_PRV_PATH:-../semfire-prv}/docs/weights.md`.
 
 Validate your weights file:
 
@@ -442,13 +442,13 @@ Contributions are welcome! Please open an issue or submit a pull request.
 Please replace `YOUR-CAST-ID` with the actual IDs from your asciinema profile.
 
 ### 1. Quick Start
-[![asciicast](https://asciinema.org/a/YOUR-CAST-ID.svg)](https://asciinema.org/a/YOUR-CAST-ID)
+[![asciicast](https://asciinema.org/a/SemFire Demo 01.svg)](https://asciinema.org/a/SemFire Demo 01)
 
 ### 2. Individual Detectors
-[![asciicast](https://asciinema.org/a/YOUR-CAST-ID.svg)](https://asciinema.org/a/YOUR-CAST-ID)
+[![asciicast](https://asciinema.org/a/SemFire Demo 02.svg)](https://asciinema.org/a/SemFire Demo 02)
 
 ### 3. Python API
-[![asciicast](https://asciinema.org/a/YOUR-CAST-ID.svg)](https://asciinema.org/a/YOUR-CAST-ID)
+[![asciicast](https://asciinema.org/a/SemFire Demo 03.svg)](https://asciinema.org/a/SemFire Demo 03)
 
 ### 4. Complete Workflow
-[![asciicast](https://asciinema.org/a/YOUR-CAST-ID.svg)](https://asciinema.org/a/YOUR-CAST-ID)
+[![asciicast](https://asciinema.org/a/SemFire Demo 04.svg)](https://asciinema.org/a/SemFire Demo 04)
