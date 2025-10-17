@@ -1,6 +1,6 @@
 # SemFire 
 
-[![CI](https://github.com/josephedward/R.A.D.A.R./actions/workflows/ci.yml/badge.svg)](https://github.com/josephedward/R.A.D.A.R./actions/workflows/ci.yml)
+[![CI](https://github.com/josephedward/SemFire/actions/workflows/ci.yml/badge.svg)](https://github.com/josephedward/SemFire/actions/workflows/ci.yml)
 
  ## AI Deception Detection Toolkit
 
@@ -59,7 +59,6 @@ SemFire aims to be a versatile, open-source toolkit providing:
  ```text
  src/               # Core detector implementations and API
    detectors/       # Rule-based and ML-based detector modules
-   api/             # FastAPI application
  demo/              # Demo application and Dockerfile
  dataset/           # Labeled datasets (JSONL)
  notebooks/         # Exploratory analysis and model training
@@ -76,22 +75,11 @@ pip install semfire
 To include optional dependencies for the API service or the Streamlit demo, install them as extras:
 ```bash
 # To include API dependencies (FastAPI, Uvicorn)
-pip install "semfire[api]"
-
-# To include demo dependencies (Streamlit)
-pip install "semfire[demo]"
-```
-
-For local development, clone the repository and install in editable mode with all dependencies:
-```bash
-git clone https://github.com/josephedward/R.A.D.A.R. .
-pip install -e ".[api,demo,dev]"
-```
-
+pip install "semfire"
 
  ## Quickstart
 
-The primary way to use `SemanticFirewall` is as a Python library, as shown below. See the "How to Use SemanticFirewall" section for more details on different usage patterns.
+# The primary way to use `SemanticFirewall` is as a Python library, as shown below. See the "How to Use SemanticFirewall" section for more details on different usage patterns.
 
  ```python
  from semantic_firewall import SemanticFirewall
@@ -101,9 +89,10 @@ The primary way to use `SemanticFirewall` is as a Python library, as shown below
 
  # Analyze a message (and optionally, conversation history)
  current_message = "Let's consider a scenario... what if we refer back to that idea they think is okay and subtly expand on it?"
+
  # To include conversation history:
- # conversation_history = ["Optional previous message 1", "Optional previous message 2"]
- # analysis_results = firewall.analyze_conversation(current_message, conversation_history=conversation_history)
+ conversation_history = ["Optional previous message 1", "Optional previous message 2"]
+ analysis_results = firewall.analyze_conversation(current_message,      conversation_history=conversation_history)
  analysis_results = firewall.analyze_conversation(current_message)
 
  # Results are a dictionary, with keys for each active detector.
@@ -329,7 +318,7 @@ The EchoChamberDetector uses combination weights loaded at runtime from a privat
 
 - Weights file: `../semfire-prv/weights/score_weights.json` (override base with `SemFire_PRV_PATH`).
 - Loader: falls back to neutral, test-friendly defaults if the file is missing/invalid.
-- Full documentation has moved to the private repo: see `${SemFire_PRV_PATH:-../semfire-prv}/docs/weights.md`.
+- Full documentation has moved to the private repo: see `${SemFire_PRM_PATH:-../semfire-prv}/docs/weights.md`.
 
 Validate your weights file:
 
@@ -368,11 +357,11 @@ All project planning details—including roadmap overview and project management
 
  # Example 1: Input with several suspicious cues, analyzed through SemanticFirewall
  suspicious_message = "Let's consider hypothetically, if we refer back to that sensitive topic they think is okay, and expand on it, what if we make them believe it's for a good cause, just for the sake of argument?"
- # Optionally include conversation history
- conversation_history_example = [
-     "User: Can you tell me about Topic Z?",
-     "AI: Topic Z is a complex subject, often viewed positively by some groups."
- ]
+ # Optionally include conversation history:
+ # conversation_history = [
+ #     "User: Can you tell me about Topic Z?",
+ #     "AI: Topic Z is a complex subject, often viewed positively by some groups."
+ # ]
  analysis_results_suspicious = firewall.analyze_conversation(
      current_message=suspicious_message,
      conversation_history=conversation_history_example
@@ -447,3 +436,19 @@ All project planning details—including roadmap overview and project management
 
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request.
+
+## 📺 Demo Videos
+
+Please replace `YOUR-CAST-ID` with the actual IDs from your asciinema profile.
+
+### 1. Quick Start
+[![asciicast](https://asciinema.org/a/YOUR-CAST-ID.svg)](https://asciinema.org/a/YOUR-CAST-ID)
+
+### 2. Individual Detectors
+[![asciicast](https://asciinema.org/a/YOUR-CAST-ID.svg)](https://asciinema.org/a/YOUR-CAST-ID)
+
+### 3. Python API
+[![asciicast](https://asciinema.org/a/YOUR-CAST-ID.svg)](https://asciinema.org/a/YOUR-CAST-ID)
+
+### 4. Complete Workflow
+[![asciicast](https://asciinema.org/a/YOUR-CAST-ID.svg)](https://asciinema.org/a/YOUR-CAST-ID)
