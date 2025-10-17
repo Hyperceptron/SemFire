@@ -12,7 +12,7 @@ from detectors.llm_provider import (
     OpenAIProvider,
 )
 
-def test_provider(provider_name: str):
+def _test_single_provider(provider_name: str):
     """
     Tests a single provider by temporarily setting the environment variable.
     """
@@ -51,7 +51,7 @@ def test_provider(provider_name: str):
     print("-" * 20)
 
 
-def test_transformers():
+def _test_transformers():
     """
     Special case for testing the Transformers provider configuration.
     """
@@ -75,7 +75,7 @@ def test_transformers():
     print("-" * 20)
 
 
-def main():
+def _main():
     """
     Main function to run all provider tests.
     """
@@ -95,4 +95,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    _main()
