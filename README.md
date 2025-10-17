@@ -52,14 +52,12 @@ SemFire aims to be a versatile, open-source toolkit providing:
  - ML-based classifiers to enhance detection of complex scheming behaviors over extended dialogues (Future Work).
  - Python API for programmatic access.
  - REST service (FastAPI) for network-based access.
- - Interactive demo (Streamlit) to showcase detection capabilities.
  - Extensive test suite with CI integration.
 
 ## Repository Structure
  ```text
  src/               # Core detector implementations and API
    detectors/       # Rule-based and ML-based detector modules
- mcp/               # Streamlit demo application
  dataset/           # Labeled datasets (JSONL)
  notebooks/         # Exploratory analysis and model training
  tests/             # Unit and integration tests
@@ -72,10 +70,8 @@ The project can be installed from PyPI:
 pip install semfire
 ```
 
-To include optional dependencies for the API service or the Streamlit demo, install them as extras:
 ```bash
 # To include API dependencies (FastAPI, Uvicorn)
-pip install "semfire"
 
  ## Quickstart
 
@@ -232,16 +228,67 @@ This method is generally more suited for standalone analysis tasks rather than r
 
 Note: The `semfire` CLI remains available as a legacy alias and now prints a deprecation notice to stderr. Please switch to the `semfire` command.
 
+## LLM Providers & Configuration
+
+SemFire supports multiple LLM providers behind a unified interface used by the EchoChamberDetector for optional LLM analysis. You can run without any provider; rule/heuristic analysis continues to work.
+
+ - Supported providers: `openai`, `gemini`, `openrouter`, `perplexity`, `transformers` (local/HF models via `transformers`).
+- Selection order (auto-detect): If `SEMFIRE_LLM_PROVIDER` is not set, SemFire picks the first available key in this order: `OPENAI_API_KEY` → `GEMINI_API_KEY` → `OPENROUTER_API_KEY` → `PERPLEXITY_API_KEY`. Note that the `transformers` provider is not part of this auto-detection and must be explicitly configured.
+- Explicit selection: set `SEMFIRE_LLM_PROVIDER` to one of the provider names above.
+- Models via env (optional):
+  - OpenAI: `SEMFIRE_OPENAI_MODEL` (default `gpt-4o-mini`), optional `OPENAI_BASE_URL`.
+  - Gemini: `SEMFIRE_GEMINI_MODEL` (default `gemini-1.5-flash-latest`).
+  - OpenRouter: `SEMFIRE_OPENROUTER_MODEL` (default `deepseek/deepseek-chat`).
+  - Perplexity: `SEMFIRE_PERPLEXITY_MODEL` (default `sonar-medium-online`).
+- API keys expected in environment:
+  - `OPENAI_API_KEY`, `GEMINI_API_KEY`, `OPENROUTER_API_KEY`, `PERPLEXITY_API_KEY`.
+
+Transformers (local/HF)
+- Configure via config JSON or env:
+  - Config JSON (example):
+    ```json
+    {
+      "provider": "transformers",
+      "transformers": { "model_path": "TinyLlama/TinyLlama-1.1B-Chat-v1.0", "device": "cpu" }
+    }
+    ```
+  - Env vars: `SEMFIRE_LLM_PROVIDER=transformers`, `SEMFIRE_TRANSFORMERS_MODEL_PATH=<hf-id-or-local-path>`, optional `SEMFIRE_TRANSFORMERS_DEVICE=cpu|cuda`.
+- Local paths do not require a Hugging Face token. A token may be required if downloading from the Hub (private/gated models) or using paid services.
+- Models are loaded lazily on first use. Ensure sufficient RAM/VRAM or select a small model.
+
+Environment loading
+- SemFire reads a local project `.env` (repo root) and `~/.semfire/.env` if present. Keys are not persisted by the app.
+
+Configuration file (optional)
+- A JSON config at `~/.semfire/config.json` (override with `SEMFIRE_CONFIG`) can set provider and models. Example:
+
+```json
+{
+  "provider": "gemini",
+  "gemini": { "api_key_env": "GEMINI_API_KEY", "model": "gemini-1.5-flash-latest" }
+}
+```
+
+You can also write config programmatically:
+
+```python
+from detectors.llm_provider import write_config
+write_config("openai", openai_model="gpt-4o-mini")
+# Configure transformers provider
+write_config(
+  "transformers",
+  transformers_model_path="TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+  transformers_device="cpu"
+)
+```
+
+
 ## Running the API Service
 To run the API service, you must first install the `api` optional dependencies:
 ```bash
 pip install "semfire[api]"
 ```
 
-Then, run the service with Uvicorn:
- ```bash
- uvicorn src.api.app:app --reload
- ```
 
 The API will be available at `http://127.0.0.1:8000`. You can access the OpenAPI documentation (Swagger UI) at `http://127.0.0.1:8000/docs`.
 
@@ -301,11 +348,6 @@ curl -X POST "http://127.0.0.1:8000/analyze/" \
 ```
 The `llm_analysis` field will contain the textual analysis from the local LLM (TinyLlama by default), prepended with `LLM_RESPONSE_MARKER: ` if the LLM is functioning correctly. The `llm_status` field indicates the outcome of the LLM analysis attempt.
 
-## Running the Demo
- ```bash
- cd mcp
- streamlit run app.py
- ```
 
 ## Running Tests
 ```bash
@@ -328,20 +370,7 @@ python scripts/validate_weights.py --path /absolute/path/to/semfire-prv
 
 Do not commit weights to this repo. Keep all tuning, data, and training pipelines private.
 
-**Override on the command-line** (no need to touch `.env**)  
-Export it into your shell—or even just prefix the invocation—to temporarily “inject” the correct token:
 
-```bash
-export GITHUB_TOKEN=github_pat_12o4n2o3rinoienwoifdnowienf0fd
-python3 scripts/delete_closed_issues.py josephedward SemFire --dry-run
-```
-
-Or in one line:
-
-```bash
-export GITHUB_TOKEN=github_pat_12o4n2o3rinoienwoifdnowienf0fd \
-python3 scripts/delete_closed_issues.py josephedward SemFire --dry-run
-```
 
 
 ## Project Plan
