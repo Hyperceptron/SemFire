@@ -8,7 +8,7 @@
 
 ### Project Vision: A Toolkit for AI Deception Detection
 
-*see* [/docs/context.md](./docs/context.md)
+[History](./docs/context.md)
 
 SemFire aims to be a versatile, open-source toolkit providing:
 - A **Python library** for direct integration into applications and research.
@@ -34,13 +34,14 @@ The project can be installed from PyPI:
 pip install semfire
 ```
 
-- **LLM Providers for ai-as-judge features :** [/docs/providers.md](./docs/providers.md)
 - **Quickstart :**[/docs/quickstart.md](./docs/quickstart.md)
+- **Containerized CLI :** [/docs/docker-cli.md](./docs/docker-cli.md)
 - **Usage :** [/docs/usage.md](./docs/usage.md)
+- **LLM Providers for ai-as-judge features :** [/docs/providers.md](./docs/providers.md)
 
 ## Terminal Demos (GIFs)
 
-*see* [Examples](./docs/examples.md)
+[Examples](./docs/examples.md)
 
 The following terminal demo GIFs are available under `assets/demos/asciinema/`:
 
@@ -84,8 +85,8 @@ The following terminal demo GIFs are available under `assets/demos/asciinema/`:
 
 <!-- End Terminal Demos (GIFs) -->
 
+
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request.Library — Basic Usage
-
 
 
