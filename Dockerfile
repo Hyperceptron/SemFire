@@ -1,23 +1,25 @@
-# Use an official Python runtime as a parent image
+# SemFire CLI container
 FROM python:3.11-slim
 
-# Set the working directory in the container
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app
+
 WORKDIR /app
 
-# Copy the requirements file into the container at /app
-COPY requirements.txt .
+# Install minimal runtime deps for CLI usage and config menu
+RUN pip install --no-cache-dir \
+    requests \
+    rich \
+    python-dotenv
 
-# Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy the src directory into the container at /app
+# Copy source code (library + CLI) and supporting modules used by CLI
 COPY src/ ./src/
+COPY spotlighting/ ./spotlighting/
+COPY injection_defense/ ./injection_defense/
+COPY sitecustomize.py ./sitecustomize.py
 
-# Make port 8000 available to the world outside this container
-EXPOSE 8000
-
-# Define environment variable
-ENV PYTHONPATH=/app
-
-# Run app.py when the container launches
-CMD ["uvicorn", "src.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+# Default to printing help if no args are supplied
+ENTRYPOINT ["python", "-m", "src.cli"]
+CMD ["--help"]
