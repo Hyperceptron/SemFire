@@ -1,23 +1,27 @@
-# Use an official Python runtime as a parent image
+# SemFire CLI container
 FROM python:3.11-slim
 
-# Set the working directory in the container
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app
+
 WORKDIR /app
 
-# Copy the requirements file into the container at /app
-COPY requirements.txt .
+# Install dependencies
+# By default, install from requirements.txt to match local dev.
+# Set INSTALL_REQS=false to build a minimal image.
+ARG INSTALL_REQS=true
+COPY requirements.txt ./requirements.txt
 
-# Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN if [ "$INSTALL_REQS" = "true" ]; then \
+      pip install --no-cache-dir -r requirements.txt; \
+    else \
+      pip install --no-cache-dir requests rich python-dotenv; \
+    fi
 
-# Copy the src directory into the container at /app
-COPY src/ ./src/
+# Copy project (filtered by .dockerignore) to ensure new modules are included
+COPY . .
 
-# Make port 8000 available to the world outside this container
-EXPOSE 8000
-
-# Define environment variable
-ENV PYTHONPATH=/app
-
-# Run app.py when the container launches
-CMD ["uvicorn", "src.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+# Default behavior: print CLI help. Override CMD to run other commands.
+CMD ["python", "-m", "src.cli", "--help"]
