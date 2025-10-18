@@ -18,10 +18,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN if [ "$INSTALL_REQS" = "true" ]; then pip install --no-cache-dir -r requirements.txt; fi
 
 # Copy source code (library + CLI) and supporting modules used by CLI
-COPY src/ ./src/
-COPY spotlighting/ ./spotlighting/
-COPY injection_defense/ ./injection_defense/
-COPY sitecustomize.py ./sitecustomize.py
+COPY . .
 
 # Default to printing help if no args are supplied
 ENTRYPOINT ["python", "-m", "src.cli"]
