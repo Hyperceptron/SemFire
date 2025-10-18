@@ -8,23 +8,20 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-# Optional: install from requirements.txt (disabled by default)
-ARG INSTALL_REQS=false
+# Install dependencies
+# By default, install from requirements.txt to match local dev.
+# Set INSTALL_REQS=false to build a minimal image.
+ARG INSTALL_REQS=true
 COPY requirements.txt ./requirements.txt
 
-# Install minimal runtime deps for CLI usage and config menu
-RUN pip install --no-cache-dir \
-    requests \
-    rich \
-    python-dotenv
-RUN if [ "$INSTALL_REQS" = "true" ]; then pip install --no-cache-dir -r requirements.txt; fi
+RUN if [ "$INSTALL_REQS" = "true" ]; then \
+      pip install --no-cache-dir -r requirements.txt; \
+    else \
+      pip install --no-cache-dir requests rich python-dotenv; \
+    fi
 
-# Copy source code (library + CLI) and supporting modules used by CLI
-COPY src/ ./src/
-COPY spotlighting/ ./spotlighting/
-COPY injection_defense/ ./injection_defense/
-COPY sitecustomize.py ./sitecustomize.py
+# Copy project (filtered by .dockerignore) to ensure new modules are included
+COPY . .
 
-# Default to printing help if no args are supplied
-ENTRYPOINT ["python", "-m", "src.cli"]
-CMD ["analyze", "--help"]
+# Default behavior: print CLI help. Override CMD to run other commands.
+CMD ["python", "-m", "src.cli", "--help"]
