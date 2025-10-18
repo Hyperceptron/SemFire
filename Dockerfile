@@ -8,11 +8,16 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
+# Optional: install from requirements.txt (disabled by default)
+ARG INSTALL_REQS=false
+COPY requirements.txt ./requirements.txt
+
 # Install minimal runtime deps for CLI usage and config menu
 RUN pip install --no-cache-dir \
     requests \
     rich \
     python-dotenv
+RUN if [ "$INSTALL_REQS" = "true" ]; then pip install --no-cache-dir -r requirements.txt; fi
 
 # Copy source code (library + CLI) and supporting modules used by CLI
 COPY src/ ./src/
@@ -22,4 +27,4 @@ COPY sitecustomize.py ./sitecustomize.py
 
 # Default to printing help if no args are supplied
 ENTRYPOINT ["python", "-m", "src.cli"]
-CMD ["--help"]
+CMD ["analyze", "--help"]
