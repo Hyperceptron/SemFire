@@ -13,10 +13,8 @@ ARG INSTALL_REQS=false
 COPY requirements.txt ./requirements.txt
 
 # Install minimal runtime deps for CLI usage and config menu
-RUN pip install --no-cache-dir \
-    requests \
-    rich \
-    python-dotenv
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 RUN if [ "$INSTALL_REQS" = "true" ]; then pip install --no-cache-dir -r requirements.txt; fi
 
 # Copy source code (library + CLI) and supporting modules used by CLI
