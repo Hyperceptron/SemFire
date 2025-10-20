@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="assets/logo-v1_102025.jpg" alt="SemFire Logo" width="320">
+</div>
+
 # SemFire 
 
 [![CI](https://github.com/josephedward/SemFire/actions/workflows/test.yml/badge.svg)](https://github.com/josephedward/SemFire/actions/workflows/test.yml)
@@ -87,6 +91,4 @@ The following terminal demo GIFs are available under `assets/demos/asciinema/`:
 
 
 ## Contributing
-Contributions are welcome! Please open an issue or submit a pull request.Library — Basic Usage
-
-
+Contributions are welcome! Please open an issue or submit a pull request.
