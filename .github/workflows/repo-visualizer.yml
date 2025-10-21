@@ -10,10 +10,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Create assets directory
+        run: mkdir -p assets
       - name: Update diagram
         uses: githubocto/repo-visualizer@0.7.1
         with:
           output_file: "assets/repo-visualizer.svg"
           commit_message: "Docs: Update repository diagram"
-          branch: "main"
+          branch: ${{ github.ref_name }}
           excluded_paths: "dist,node_modules,.venv"
