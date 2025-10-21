@@ -68,19 +68,6 @@ The following terminal demo GIFs are available under `assets/demos/asciinema/`:
 ![demo](https://github.com/josephedward/SemFire/raw/main/assets/demos/asciinema/api_health_ready_zip.small.gif)
 
 
-<!-- **Library — Basic Usage**  
-[![Library — Basic Usage](https://asciinema.org/a/Mtk3RcSxwF66REU6ymdPKlFrd.svg)](https://asciinema.org/a/Mtk3RcSxwF66REU6ymdPKlFrd)
-
-**Library — Conversation Usage**  
-[![Library — Conversation Usage](https://asciinema.org/a/BiQD6IxghsAQuRn684uRbiNdK.svg)](https://asciinema.org/a/BiQD6IxghsAQuRn684uRbiNdK)
-
-**Transformers — Env Config**  
-[![Transformers — Env Config](https://asciinema.org/a/aPTMLqFhpiOQraWxcR2DtkrUM.svg)](https://asciinema.org/a/aPTMLqFhpiOQraWxcR2DtkrUM)
-
-**Transformers — Programmatic Config**  
-[![Transformers — Programmatic Config](https://asciinema.org/a/8uGbIpHrnU4cKuJm8hSPyYepf.svg)](https://asciinema.org/a/8uGbIpHrnU4cKuJm8hSPyYepf)
-
- -->
 <!-- - API: Analyze (DistilBERT Image Route)
   
   ![demo](assets/demos/asciinema/api_analyze_img.small.gif) -->
