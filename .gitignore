@@ -37,3 +37,4 @@ src/_version.py
 logs/*
 !logs/.gitkeep
 /src/semfire.egg-info
+appmap.log
