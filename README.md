@@ -26,11 +26,9 @@ SemFire aims to be a versatile, open-source toolkit providing:
  - Analyzes both current text input and conversation history to detect evolving deceptive narratives.
  - Heuristic-based detector (`HeuristicDetector`) for signals like text complexity and keyword usage.
  - ML-based classifiers to enhance detection of complex scheming behaviors over extended dialogues (Future Work).
- 
- *API Instructions forthcoming.* 
- - ~~Python API for programmatic access.~~
- - ~~REST service (FastAPI) for network-based access.~~
- 
+ - Free API Image 
+ - Enterprise API in Alpha 
+
 
 ## Installation
 The project can be installed from PyPI:
