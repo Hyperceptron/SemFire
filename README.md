@@ -90,3 +90,9 @@ The following terminal demo GIFs are available under `assets/demos/asciinema/`:
 
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request.
+
+<!-- REPO_VISUALIZER_DIAGRAM_START -->
+## Repository Diagram
+
+![Repository Diagram](./assets/repo-visualizer.svg)
+<!-- REPO_VISUALIZER_DIAGRAM_END -->

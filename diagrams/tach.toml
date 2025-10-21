@@ -1,0 +1,9 @@
+source_roots = ["src"]
+modules = [
+  { path = "src" },
+  { path = "tests" },
+  { path = "scripts" },
+  { path = "docs" },
+  { path = "spotlighting" },
+  { path = "injection_defense" },
+]

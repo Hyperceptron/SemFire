@@ -38,6 +38,4 @@ logs/*
 !logs/.gitkeep
 /src/semfire.egg-info
 appmap.log
-
 .pyirc
-/diagrams
