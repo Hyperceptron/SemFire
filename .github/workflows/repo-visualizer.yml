@@ -21,3 +21,28 @@ jobs:
           commit_message: "Docs: Update repository diagram"
           branch: ${{ github.ref_name }}
           excluded_paths: "dist,node_modules,.venv"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Convert SVG to other formats
+        run: python scripts/convert_svg.py assets/repo-visualizer.svg
+      - name: Update README with diagram
+        run: |
+          DIAGRAM_MARKDOWN="## Repository Diagram\n\n![Repository Diagram](assets/repo-visualizer.jpg)"
+          # Check if the markers exist in README.md
+          if grep -q "<!-- REPO_VISUALIZER_DIAGRAM_START -->" README.md && grep -q "<!-- REPO_VISUALIZER_DIAGRAM_END -->" README.md; then
+            # Replace content between markers
+            sed -i '/<!-- REPO_VISUALIZER_DIAGRAM_START -->/,/<!-- REPO_VISUALIZER_DIAGRAM_END -->/c\<!-- REPO_VISUALIZER_DIAGRAM_START -->\n'"$DIAGRAM_MARKDOWN"'\n<!-- REPO_VISUALIZER_DIAGRAM_END -->" README.md
+          else
+            # If markers don't exist, append the diagram at the end
+            echo -e "\n<!-- REPO_VISUALIZER_DIAGRAM_START -->\n$DIAGRAM_MARKDOWN\n<!-- REPO_VISUALIZER_DIAGRAM_END -->" >> README.md
+          fi
+      - name: Commit new files
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add assets/repo-visualizer.png assets/repo-visualizer.jpg assets/repo-visualizer.pdf README.md
+          git commit -m "Docs: Add repository diagram in multiple formats and update README" || echo "No changes to commit"
