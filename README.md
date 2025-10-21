@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/logo-v1_102025.jpg" alt="SemFire Logo" width="320">
+  <img src="https://github.com/josephedward/SemFire/raw/main/assets/logo-v1_102025.jpg" alt="SemFire Logo" width="320">
 </div>
 
 # SemFire 
@@ -51,23 +51,23 @@ The following terminal demo GIFs are available under `assets/demos/asciinema/`:
 
 **Quick Start**
 
-![demo](assets/demos/asciinema/demo_01.small.gif)
+![demo](https://github.com/josephedward/SemFire/raw/main/assets/demos/asciinema/demo_01.small.gif)
 
 **Individual Detectors**
 
-![demo](assets/demos/asciinema/demo_02.small.gif)
+![demo](https://raw.githubusercontent.com/josephedward/SemFire/main/assets/demos/asciinema/demo_02.small.gif)
 
 **Python API**
 
-![demo](assets/demos/asciinema/demo_03.small.gif)
+![demo](https://github.com/josephedward/SemFire/raw/main/assets/demos/asciinema/demo_03.small.gif)
 
 **Complete Workflow**
 
-![demo](assets/demos/asciinema/demo_04.small.gif)
+![demo](https://github.com/josephedward/SemFire/raw/main/assets/demos/asciinema/demo_04.small.gif)
 
 **API: Health/Ready/Zip Analyze**
 
-![demo](assets/demos/asciinema/api_health_ready_zip.small.gif)
+![demo](https://github.com/josephedward/SemFire/raw/main/assets/demos/asciinema/api_health_ready_zip.small.gif)
 
 
 <!-- **Library — Basic Usage**  
