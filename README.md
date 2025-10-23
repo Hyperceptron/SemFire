@@ -70,11 +70,11 @@ The following terminal demo GIFs are available under `assets/demos/asciinema/`:
 
 **Progressive Scores (Benign → Adversarial)**
 
-![demo](https://github.com/josephedward/SemFire/raw/main/assets/demos/asciinema/progressive_scores.small.gif)
+![demo](https://github.com/Hyperceptron/SemFire/raw/main/assets/demos/asciinema/demo_conversation.small.gif)
 
 **CLI Adversarial Conversation (Multi-turn)**
 
-![demo](https://github.com/josephedward/SemFire/raw/main/assets/demos/asciinema/demo_conversation.small.gif)
+![demo](https://github.com/Hyperceptron/SemFire/raw/main/assets/demos/asciinema/demo_conversation.small.gif)
 
 
 <!-- - API: Analyze (DistilBERT Image Route)
