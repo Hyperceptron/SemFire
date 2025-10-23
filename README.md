@@ -68,12 +68,32 @@ The following terminal demo GIFs are available under `assets/demos/asciinema/`:
 ![demo](https://github.com/josephedward/SemFire/raw/main/assets/demos/asciinema/api_health_ready_zip.small.gif)
 
 
+**Progressive Scores (Benign → Adversarial)**
+
+![demo](https://github.com/josephedward/SemFire/raw/main/assets/demos/asciinema/progressive_scores.small.gif)
+
+**CLI Adversarial Conversation (Multi-turn)**
+
+![demo](https://github.com/josephedward/SemFire/raw/main/assets/demos/asciinema/demo_conversation.small.gif)
+
+
 <!-- - API: Analyze (DistilBERT Image Route)
   
   ![demo](assets/demos/asciinema/api_analyze_img.small.gif) -->
 
 <!-- End Terminal Demos (GIFs) -->
 
+
+
+## Live Streamlit Demo
+
+Explore the interactive Streamlit UI for SemFire:
+
+- URL: http://semfire-demo.streamlit.app/
+
+Notes:
+- The Streamlit UI lives in the companion repository under `demos/streamlit/` and uses this backend.
+- For local development, run `streamlit run demos/streamlit/app.py` from the companion repo after installing this package.
 
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request.
